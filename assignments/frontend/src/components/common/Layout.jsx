@@ -14,46 +14,56 @@ const Layout = () => {
   };
 
   return (
-    <AntLayout style={{ minHeight: "100vh" }}>
-      {/* Sidebar */}
-      <Sider
-        theme="dark"
-        width={250}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        trigger={null}
-      >
-        <Sidebar collapsed={collapsed} />
-      </Sider>
-
-      {/* Main Content */}
-      <AntLayout>
-        {/* Navbar */}
-        <Header
+    <div className="dynamic-bg">
+      <AntLayout style={{ minHeight: "100vh", background: "transparent" }}>
+        {/* Sidebar - Glass Effect */}
+        <Sider
+          width={280}
+          collapsible
+          collapsed={collapsed}
+          onCollapse={setCollapsed}
+          trigger={null}
           style={{
-            background: "#fff",
-            padding: "0 24px",
-            display: "flex",
-            alignItems: "center",
+            background: "rgba(15, 23, 42, 0.85)",
+            backdropFilter: "blur(20px)",
+            borderRight: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "4px 0 24px rgba(0, 0, 0, 0.12)",
           }}
         >
-          <Navbar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
-        </Header>
+          <Sidebar collapsed={collapsed} />
+        </Sider>
 
-        {/* Page Content */}
-        <Content
-          style={{
-            margin: "24px 16px",
-            padding: 24,
-            background: "#fff",
-            borderRadius: 8,
-          }}
-        >
-          <Outlet />
-        </Content>
+        {/* Main Content */}
+        <AntLayout style={{ background: "transparent" }}>
+          {/* Navbar - Glass Effect */}
+          <Header
+            style={{
+              background: "rgba(255, 255, 255, 0.7)",
+              backdropFilter: "blur(20px)",
+              padding: "0 32px",
+              display: "flex",
+              alignItems: "center",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.06)",
+              height: "72px",
+            }}
+          >
+            <Navbar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+          </Header>
+
+          {/* Page Content - Transparent */}
+          <Content
+            style={{
+              margin: "24px 24px",
+              padding: 0,
+              background: "transparent",
+            }}
+          >
+            <Outlet />
+          </Content>
+        </AntLayout>
       </AntLayout>
-    </AntLayout>
+    </div>
   );
 };
 

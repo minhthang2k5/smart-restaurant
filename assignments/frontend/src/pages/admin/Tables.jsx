@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { Button, Space, Input, Select, Card } from "antd";
-import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
+import { Plus, Search, Filter } from "lucide-react";
 import TableList from "../../components/tables/TableList";
 import TableForm from "../../components/tables/TableForm";
 import QRCodeModal from "../../components/tables/QRCodeModal";
-import DownloadButtons from "../../components/tables/DownloadButtons"; // ← Updated import
+import DownloadButtons from "../../components/tables/DownloadButtons";
 import { useTables } from "../../hooks/useTables";
-
-const { Option } = Select;
 
 const Tables = () => {
   const {
@@ -21,155 +18,120 @@ const Tables = () => {
     deleteTable,
     toggleStatus,
   } = useTables();
-
-  // Modal states
   const [formOpen, setFormOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
 
-  // ========== Table Form Handlers ==========
-  const handleCreate = () => {
-    setSelectedTable(null);
-    setFormOpen(true);
-  };
-
-  const handleEdit = (table) => {
-    setSelectedTable(table);
-    setFormOpen(true);
-  };
-
-  const handleFormSubmit = async (values) => {
-    if (selectedTable) {
-      return await updateTable(selectedTable.id, values);
-    } else {
-      return await createTable(values);
-    }
-  };
-
-  const handleFormClose = () => {
-    setFormOpen(false);
-    setSelectedTable(null);
-  };
-
-  // ========== QR Modal Handlers ==========
-  const handleGenerateQR = (table) => {
-    setSelectedTable(table);
-    setQrModalOpen(true);
-  };
-
-  const handleQrModalClose = (e) => {
-    if (e) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-
-    setQrModalOpen(false);
-    setSelectedTable(null);
-  };
-
-  const handleQrRegenerate = () => {
-    fetchTables();
-  };
-
-  // ========== Filter Handlers ==========
-  const handleSearch = (value) => {
-    setFilters({ ...filters, search: value });
-  };
-
-  const handleStatusFilter = (value) => {
-    setFilters({ ...filters, status: value });
-  };
-
-  const handleLocationFilter = (value) => {
-    setFilters({ ...filters, location: value });
-  };
-
   return (
-    <div>
-      {/* Header Section */}
-      <Card style={{ marginBottom: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h2 style={{ margin: 0 }}>Table Management</h2>
-          <Space>
-            <DownloadButtons tableCount={tables.length} />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
+    <div className="p-8 min-h-screen">
+      <div className="glass-card rounded-3xl p-8 mb-6 shadow-xl border-2 border-white/40">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+            <h2
+              className="text-3xl font-black tracking-tight mb-2"
+              style={{
+                background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
             >
-              Add New Table
-            </Button>
-          </Space>
+              Quản lý không gian bàn
+            </h2>
+            <p className="text-slate-500 text-sm font-medium">
+              Tổ chức và quản lý {tables.length} bàn trong hệ thống
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <DownloadButtons tableCount={tables.length} />
+            <button
+              onClick={() => {
+                setSelectedTable(null);
+                setFormOpen(true);
+              }}
+              className="neon-button flex items-center gap-2 text-white px-8 py-3.5 rounded-2xl transition-all shadow-xl font-bold text-sm tracking-wide"
+              style={{
+                background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
+              }}
+            >
+              <Plus size={20} />
+              <span>Thêm bàn mới</span>
+            </button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <Space style={{ marginTop: 16, width: "100%" }} size="middle" wrap>
-          <Input
-            placeholder="Search table number..."
-            prefix={<SearchOutlined />}
-            style={{ width: 250 }}
-            allowClear
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-
-          <Select
-            placeholder="Filter by status"
-            style={{ width: 150 }}
-            allowClear
-            onChange={handleStatusFilter}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+          <div className="relative group">
+            <Search
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Tìm kiếm số bàn..."
+              className="w-full pl-14 pr-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-medium text-slate-700 placeholder:text-slate-400"
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
+            />
+          </div>
+          <select
+            className="px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-semibold text-slate-700 cursor-pointer"
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
-            <Option value="active">Active</Option>
-            <Option value="inactive">Inactive</Option>
-          </Select>
-
-          <Select
-            placeholder="Filter by location"
-            style={{ width: 180 }}
-            allowClear
-            onChange={handleLocationFilter}
+            <option value="">🎯 Trạng thái: Tất cả</option>
+            <option value="active">✅ Đang hoạt động</option>
+            <option value="inactive">⛔ Ngừng hoạt động</option>
+          </select>
+          <select
+            className="px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-semibold text-slate-700 cursor-pointer"
+            onChange={(e) =>
+              setFilters({ ...filters, location: e.target.value })
+            }
           >
-            <Option value="Main Hall">Main Hall</Option>
-            <Option value="Outdoor">Outdoor</Option>
-            <Option value="VIP Room">VIP Room</Option>
-            <Option value="Terrace">Terrace</Option>
-            <Option value="Bar Area">Bar Area</Option>
-          </Select>
-        </Space>
-      </Card>
+            <option value="">📍 Khu vực: Tất cả</option>
+            <option value="Main Hall">🏛️ Sảnh chính</option>
+            <option value="Outdoor">🌳 Ngoài trời</option>
+            <option value="VIP Room">👑 Phòng VIP</option>
+          </select>
+        </div>
+      </div>
 
-      {/* Table List */}
-      <Card>
+      <div className="glass-card rounded-3xl overflow-hidden shadow-xl border-2 border-white/40">
         <TableList
           tables={tables}
           loading={loading}
-          onEdit={handleEdit}
+          onEdit={(t) => {
+            setSelectedTable(t);
+            setFormOpen(true);
+          }}
           onDelete={deleteTable}
           onToggleStatus={toggleStatus}
-          onGenerateQR={handleGenerateQR}
+          onGenerateQR={(t) => {
+            setSelectedTable(t);
+            setQrModalOpen(true);
+          }}
         />
-      </Card>
+      </div>
 
-      {/* Modals */}
-      <TableForm
-        open={formOpen}
-        onCancel={handleFormClose}
-        onSubmit={handleFormSubmit}
-        initialValues={selectedTable}
-        loading={loading}
-      />
+      {formOpen && (
+        <TableForm
+          open={formOpen}
+          onCancel={() => setFormOpen(false)}
+          onSubmit={async (v) =>
+            selectedTable ? updateTable(selectedTable.id, v) : createTable(v)
+          }
+          initialValues={selectedTable}
+        />
+      )}
 
-      <QRCodeModal
-        open={qrModalOpen}
-        onCancel={handleQrModalClose}
-        table={selectedTable}
-        onRegenerate={handleQrRegenerate}
-      />
+      {qrModalOpen && (
+        <QRCodeModal
+          open={qrModalOpen}
+          onCancel={() => setQrModalOpen(false)}
+          table={selectedTable}
+          onRegenerate={fetchTables}
+        />
+      )}
     </div>
   );
 };

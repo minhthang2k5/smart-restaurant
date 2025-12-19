@@ -44,14 +44,33 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
       }}
     >
       {/* Left: Toggle Button + Title */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           onClick={onToggleCollapse}
-          style={{ fontSize: "16px", width: 48, height: 48 }}
+          style={{
+            fontSize: "18px",
+            width: 48,
+            height: 48,
+            borderRadius: "12px",
+            transition: "all 0.3s",
+          }}
+          className="hover:bg-rose-50"
         />
-        <h2 style={{ margin: 0 }}>Table Management</h2>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "22px",
+            fontWeight: "700",
+            background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            letterSpacing: "-0.5px",
+          }}
+        >
+          Table Management
+        </h2>
       </div>
 
       {/* Right: User Menu */}
@@ -62,7 +81,15 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
         <Button
           type="text"
           icon={<UserOutlined />}
-          style={{ fontSize: "16px", height: 48 }}
+          style={{
+            fontSize: "16px",
+            height: 48,
+            borderRadius: "12px",
+            padding: "0 20px",
+            fontWeight: "600",
+            transition: "all 0.3s",
+          }}
+          className="hover:bg-gradient-to-r hover:from-rose-50 hover:to-purple-50"
         >
           Admin
         </Button>

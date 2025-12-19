@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.dynamic-bg {
+  background: linear-gradient(-45deg, #fff1f2, #fffafb, #fdf2f8, #f5f5f5);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(225, 29, 72, 0.1);
+}
