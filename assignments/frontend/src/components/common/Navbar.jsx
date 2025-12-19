@@ -27,8 +27,10 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
 
   const handleMenuClick = ({ key }) => {
     if (key === "logout") {
-      console.log("Logout clicked");
-      // TODO: Implement logout logic
+      localStorage.removeItem("token");
+      sessionStorage.clear();
+      message.success("Logged out successfully");
+      window.location.href = "/admin/tables";
     }
   };
 
