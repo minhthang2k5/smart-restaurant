@@ -33,11 +33,12 @@ const TableList = ({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
-          {tables.map((table) => (
+        <tbody className="divide-y divide-pink-50">
+          {tables.map((table, index) => (
             <tr
               key={table.id}
-              className="hover:bg-rose-50/30 transition-colors group"
+              className="hover:bg-gradient-to-r hover:from-pink-50/50 hover:to-rose-50/30 transition-all duration-300 group stagger-item"
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
               <td className="px-6 py-4 font-semibold text-slate-700">
                 {table.tableNumber}
@@ -67,22 +68,22 @@ const TableList = ({
                 )}
               </td>
               <td className="px-6 py-4 text-right">
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <button
                     onClick={() => onGenerateQR(table)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                    className="p-3 text-pink-600 hover:bg-pink-50 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
                   >
                     <QrCode size={18} />
                   </button>
                   <button
                     onClick={() => onEdit(table)}
-                    className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                    className="p-3 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
                   >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => onToggleStatus(table.id, table.status)}
-                    className={`p-2 rounded-xl transition-all ${
+                    className={`p-3 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm ${
                       table.status === "active"
                         ? "text-amber-600 hover:bg-amber-50"
                         : "text-emerald-600 hover:bg-emerald-50"
@@ -96,7 +97,7 @@ const TableList = ({
                   </button>
                   <button
                     onClick={() => onDelete(table.id)}
-                    className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                    className="p-3 text-rose-600 hover:bg-rose-50 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
                   >
                     <Trash2 size={18} />
                   </button>

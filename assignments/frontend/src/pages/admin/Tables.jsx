@@ -28,54 +28,51 @@ const Tables = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h2
-              className="text-3xl font-black tracking-tight mb-2"
+              className="text-4xl font-bold tracking-tight mb-3"
               style={{
-                background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
+                background: "linear-gradient(135deg, #EC4899, #FB7185)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
               }}
             >
               Quản lý không gian bàn
             </h2>
-            <p className="text-slate-500 text-sm font-medium">
+            <p className="text-pink-400 text-base font-medium">
               Tổ chức và quản lý {tables.length} bàn trong hệ thống
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <DownloadButtons tableCount={tables.length} />
             <button
               onClick={() => {
                 setSelectedTable(null);
                 setFormOpen(true);
               }}
-              className="neon-button flex items-center gap-2 text-white px-8 py-3.5 rounded-2xl transition-all shadow-xl font-bold text-sm tracking-wide"
-              style={{
-                background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
-              }}
+              className="cta-button flex items-center gap-3"
             >
-              <Plus size={20} />
+              <Plus size={22} />
               <span>Thêm bàn mới</span>
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
           <div className="relative group">
             <Search
-              className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-rose-500 transition-colors"
+              className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-pink-500 transition-all duration-300"
               size={20}
             />
             <input
               type="text"
               placeholder="Tìm kiếm số bàn..."
-              className="w-full pl-14 pr-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-medium text-slate-700 placeholder:text-slate-400"
+              className="w-full pl-16 pr-6 py-5 bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-300 transition-all shadow-lg font-medium text-slate-700 placeholder:text-slate-400 hover:bg-white/85"
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
               }
             />
           </div>
           <select
-            className="px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-semibold text-slate-700 cursor-pointer"
+            className="px-6 py-5 bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-300 transition-all shadow-lg font-semibold text-slate-700 cursor-pointer hover:bg-white/85"
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
           >
             <option value="">🎯 Trạng thái: Tất cả</option>
@@ -83,7 +80,7 @@ const Tables = () => {
             <option value="inactive">⛔ Ngừng hoạt động</option>
           </select>
           <select
-            className="px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-white/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all shadow-md font-semibold text-slate-700 cursor-pointer"
+            className="px-6 py-5 bg-white/75 backdrop-blur-xl border border-white/60 rounded-3xl focus:outline-none focus:ring-2 focus:ring-pink-400/40 focus:border-pink-300 transition-all shadow-lg font-semibold text-slate-700 cursor-pointer hover:bg-white/85"
             onChange={(e) =>
               setFilters({ ...filters, location: e.target.value })
             }

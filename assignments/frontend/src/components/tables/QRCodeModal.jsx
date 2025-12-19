@@ -50,16 +50,16 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
   if (!open || !table) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className="glass-modal w-full max-w-lg rounded-[3rem] overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
         {/* Header */}
         <div className="flex justify-between items-center p-8 pb-4">
-          <h3 className="text-xl font-bold text-slate-800">
+          <h3 className="text-2xl font-bold text-slate-800 leading-relaxed drop-shadow-sm">
             Mã QR Bàn {table.tableNumber}
           </h3>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-rose-50 rounded-full transition-colors"
+            className="p-3 hover:bg-rose-50 rounded-full transition-colors"
           >
             <X size={20} />
           </button>

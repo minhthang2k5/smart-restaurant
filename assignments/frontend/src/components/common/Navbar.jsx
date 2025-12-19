@@ -44,29 +44,31 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
       }}
     >
       {/* Left: Toggle Button + Title */}
-      <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
         <Button
           type="text"
           icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           onClick={onToggleCollapse}
           style={{
-            fontSize: "18px",
-            width: 48,
-            height: 48,
-            borderRadius: "12px",
+            fontSize: "20px",
+            width: 52,
+            height: 52,
+            borderRadius: "16px",
             transition: "all 0.3s",
+            color: "white",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
           }}
-          className="hover:bg-rose-50"
+          className="hover:bg-white/20"
         />
         <h2
           style={{
             margin: 0,
-            fontSize: "22px",
-            fontWeight: "700",
-            background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
+            fontSize: "28px",
+            fontWeight: "800",
+            color: "white",
             letterSpacing: "-0.5px",
+            textShadow: "0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)",
+            lineHeight: "1.2",
           }}
         >
           Table Management
@@ -83,13 +85,15 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
           icon={<UserOutlined />}
           style={{
             fontSize: "16px",
-            height: 48,
-            borderRadius: "12px",
-            padding: "0 20px",
-            fontWeight: "600",
+            height: 52,
+            borderRadius: "16px",
+            padding: "0 24px",
+            fontWeight: "700",
             transition: "all 0.3s",
+            color: "white",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
           }}
-          className="hover:bg-gradient-to-r hover:from-rose-50 hover:to-purple-50"
+          className="hover:bg-white/20"
         >
           Admin
         </Button>

@@ -23,11 +23,11 @@ const DownloadButtons = ({ tableCount }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ overflow: "visible" }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={tableCount === 0}
-        className="flex items-center gap-2 bg-white border-2 border-slate-100 px-6 py-2.5 rounded-2xl text-slate-700 font-bold hover:border-rose-200 hover:text-rose-600 transition-all shadow-sm disabled:opacity-50"
+        className="flex items-center gap-2 bg-white border-2 border-slate-100 px-6 py-3.5 rounded-2xl text-slate-700 font-bold hover:border-rose-200 hover:text-rose-600 transition-all shadow-sm disabled:opacity-50 leading-tight"
       >
         <Download size={18} />
         <span>Xuất dữ liệu QR</span>
@@ -42,10 +42,10 @@ const DownloadButtons = ({ tableCount }) => {
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[150]"
             onClick={() => setIsOpen(false)}
           ></div>
-          <div className="absolute right-0 mt-3 w-72 z-50 bg-white/90 backdrop-blur-xl border border-rose-50 rounded-4xl shadow-2xl p-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="absolute right-0 mt-3 w-72 z-[200] bg-white/95 backdrop-blur-xl border border-rose-50 rounded-3xl shadow-2xl p-3 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="p-4 mb-2 border-b border-slate-50">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                 Định dạng tệp tin

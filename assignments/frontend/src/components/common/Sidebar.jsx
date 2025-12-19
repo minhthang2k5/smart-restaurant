@@ -32,31 +32,31 @@ const Sidebar = ({ collapsed }) => {
           alignItems: "center",
           justifyContent: collapsed ? "center" : "flex-start",
           padding: collapsed ? 0 : "0 28px",
-          color: "white",
           fontSize: 20,
-          fontWeight: "800",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          background: "linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(139, 92, 246, 0.15))",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-          letterSpacing: "-0.5px",
+          fontWeight: "700",
+          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+          background: "rgba(255, 182, 193, 0.08)",
+          borderBottom: "1px solid rgba(255, 182, 193, 0.2)",
+          letterSpacing: "-0.3px",
         }}
       >
         <QrcodeOutlined
           style={{
-            fontSize: 28,
+            fontSize: 32,
             marginRight: collapsed ? 0 : 12,
-            background: "linear-gradient(135deg, #f43f5e, #8b5cf6)",
+            background: "linear-gradient(135deg, #FF6B9D, #FFA8B6)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            filter: "drop-shadow(0 0 8px rgba(244, 63, 94, 0.5))",
+            filter: "drop-shadow(0 2px 4px rgba(255, 107, 157, 0.3))",
           }}
         />
         {!collapsed && (
           <span
             style={{
-              background: "linear-gradient(135deg, #fff, #fce7f3)",
+              background: "linear-gradient(135deg, #EC4899, #FB7185)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              fontWeight: "700",
             }}
           >
             Smart Restaurant

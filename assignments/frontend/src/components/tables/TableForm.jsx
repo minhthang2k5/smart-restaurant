@@ -17,12 +17,12 @@ const TableForm = ({ open, onCancel, onSubmit, initialValues, loading }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white w-full max-w-xl rounded-[2.5rem] p-10 shadow-2xl shadow-rose-900/10">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold text-slate-800">
+          <h2 className="text-3xl font-bold text-slate-800 leading-tight drop-shadow-sm">
             {initialValues ? "Cập nhật bàn" : "Thiết lập bàn mới"}
           </h2>
           <button
             onClick={onCancel}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-all"
           >
             <X size={24} />
           </button>
@@ -36,7 +36,7 @@ const TableForm = ({ open, onCancel, onSubmit, initialValues, loading }) => {
           }}
         >
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-500 flex items-center gap-2 px-1 italic uppercase tracking-wider">
+            <label className="text-sm font-semibold text-slate-500 flex items-center gap-2 px-1 italic uppercase tracking-wider leading-relaxed">
               <Layout size={14} /> Mã số bàn
             </label>
             <input
@@ -102,13 +102,13 @@ const TableForm = ({ open, onCancel, onSubmit, initialValues, loading }) => {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all"
+              className="flex-1 py-4 px-6 text-slate-500 font-bold hover:bg-slate-50 rounded-2xl transition-all leading-tight"
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
-              className="flex-1 py-4 bg-rose-600 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all"
+              className="flex-1 py-4 px-6 bg-rose-600 text-white font-bold rounded-2xl shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all leading-tight"
             >
               Lưu thông tin
             </button>

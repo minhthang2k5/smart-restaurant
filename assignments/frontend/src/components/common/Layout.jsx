@@ -16,7 +16,7 @@ const Layout = () => {
   return (
     <div className="dynamic-bg">
       <AntLayout style={{ minHeight: "100vh", background: "transparent" }}>
-        {/* Sidebar - Glass Effect */}
+        {/* Sidebar - Modern Glass */}
         <Sider
           width={280}
           collapsible
@@ -24,10 +24,11 @@ const Layout = () => {
           onCollapse={setCollapsed}
           trigger={null}
           style={{
-            background: "rgba(15, 23, 42, 0.85)",
-            backdropFilter: "blur(20px)",
-            borderRight: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "4px 0 24px rgba(0, 0, 0, 0.12)",
+            background: "rgba(255, 255, 255, 0.65)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            borderRight: "1px solid rgba(255, 182, 193, 0.25)",
+            boxShadow: "4px 0 40px rgba(255, 182, 193, 0.1)",
           }}
         >
           <Sidebar collapsed={collapsed} />
@@ -35,17 +36,17 @@ const Layout = () => {
 
         {/* Main Content */}
         <AntLayout style={{ background: "transparent" }}>
-          {/* Navbar - Glass Effect */}
+          {/* Navbar - Distinct Gradient */}
           <Header
             style={{
-              background: "rgba(255, 255, 255, 0.7)",
-              backdropFilter: "blur(20px)",
-              padding: "0 32px",
+              position: "relative",
+              background: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
+              padding: "0 40px",
               display: "flex",
               alignItems: "center",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.3)",
-              boxShadow: "0 4px 24px rgba(0, 0, 0, 0.06)",
-              height: "72px",
+              borderBottom: "2px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 10px 40px rgba(236, 72, 153, 0.3), 0 4px 12px rgba(139, 92, 246, 0.2)",
+              height: "80px",
             }}
           >
             <Navbar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
