@@ -297,6 +297,11 @@ exports.deleteTable = async (req, res) => {
 };
 
 // ==================== QR CODE OPERATIONS ====================
+
+/**
+ * Generate and save QR code for a table
+ */
+exports.generateTableQRCode = async (req, res) => {
     try {
         const { id } = req.params;
 
