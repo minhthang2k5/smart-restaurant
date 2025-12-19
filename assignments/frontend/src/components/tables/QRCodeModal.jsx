@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   Button,
   Space,
   Divider,
   Switch,
-  message,
   Spin,
   Alert,
+  App,
 } from "antd";
 import {
   DownloadOutlined,
@@ -25,7 +25,43 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
   const [includeWifi, setIncludeWifi] = useState(false);
   const [qrData, setQrData] = useState(null);
 
-  // Generate QR khi mở modal (nếu chưa có)
+  // Use Ant Design App context for modal and message
+  const { modal, message } = App.useApp();
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      setQrData(null);
+      setLoading(false);
+    };
+  }, []);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setQrData(null);
+      setLoading(false);
+      setIncludeWifi(false);
+    }
+  }, [open]);
+
+  // Auto-generate QR when modal opens (only if no existing qrToken)
+  useEffect(() => {
+    if (open && table && !table.qrToken && !qrData) {
+      handleGenerate();
+    }
+  }, [open, table]);
+
+  // Wrapper to prevent event bubbling when closing modal
+  const handleModalClose = (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    onCancel();
+  };
+
+  // Generate QR when open modal
   const handleGenerate = async () => {
     if (!table) return;
 
@@ -44,7 +80,7 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
 
   // Regenerate QR
   const handleRegenerate = async () => {
-    Modal.confirm({
+    modal.confirm({
       title: "Regenerate QR Code?",
       content:
         "The old QR code will no longer work. Any printed codes will become invalid.",
@@ -53,7 +89,7 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
       cancelText: "Cancel",
       onOk: async () => {
         await handleGenerate();
-        onRegenerate?.(); // Callback để refresh table list
+        onRegenerate?.();
       },
     });
   };
@@ -96,20 +132,30 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
     }
   };
 
-  // Build QR URL (giống backend)
+  // Build QR URL
   const getQRUrl = () => {
-    if (!qrData?.token) return "";
+    // Check table exists first
+    if (!table) return "";
+    
+    const token = qrData?.token || table?.qrToken;
+    if (!token) return "";
+    
     const frontendUrl =
       import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-    return `${frontendUrl}/menu?table=${table.id}&token=${qrData.token}`;
+    return `${frontendUrl}/menu?table=${table.id}&token=${token}`;
   };
+
+  // Early return if modal not open or table is null
+  if (!open || !table) {
+    return null;
+  }
 
   return (
     <Modal
       title={
         <Space>
-          <span>QR Code for Table {table?.tableNumber}</span>
-          {table?.qrToken && (
+          <span>QR Code for Table {table.tableNumber}</span>
+          {(table.qrToken || qrData) && (
             <Button
               size="small"
               icon={<ReloadOutlined />}
@@ -122,9 +168,13 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
         </Space>
       }
       open={open}
-      onCancel={onCancel}
+      onCancel={handleModalClose}
       footer={null}
       width={600}
+      centered
+      destroyOnHidden
+      maskClosable={false}
+      keyboard={true}
     >
       <Spin spinning={loading}>
         {/* QR Preview Section */}
@@ -143,7 +193,7 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
                 <QRCode
                   value={getQRUrl()}
                   size={256}
-                  level="H" // High error correction
+                  level="H"
                   style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                 />
               </div>

@@ -4,7 +4,7 @@ import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import TableList from "../../components/tables/TableList";
 import TableForm from "../../components/tables/TableForm";
 import QRCodeModal from "../../components/tables/QRCodeModal";
-import DownloadButtons from "../../components/tables/BulkDownloadButton"; // ← Updated import
+import DownloadButtons from "../../components/tables/DownloadButtons"; // ← Updated import
 import { useTables } from "../../hooks/useTables";
 
 const { Option } = Select;
@@ -57,7 +57,12 @@ const Tables = () => {
     setQrModalOpen(true);
   };
 
-  const handleQrModalClose = () => {
+  const handleQrModalClose = (e) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     setQrModalOpen(false);
     setSelectedTable(null);
   };
