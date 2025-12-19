@@ -55,14 +55,17 @@ const tableService = {
 
   /**
    * Download single QR code
+   * @param {string} id - Table ID
    * @param {string} format - 'png' | 'pdf'
-   * @param {boolean} includeWifi - true | false
+   * @param {boolean} includeWifi - Include WiFi info in PDF
    */
   downloadQRCode: async (id, format = "png", includeWifi = false) => {
-    return api.get(`/admin/tables/${id}/qr/download`, {
+    const response = await api.get(`/admin/tables/${id}/qr/download`, {
       params: { format, includeWifi },
       responseType: "blob",
     });
+
+    return response instanceof Blob ? response : response.data;
   },
 
   /**
@@ -70,10 +73,12 @@ const tableService = {
    * @param {string} format - 'zip' | 'pdf'
    */
   downloadAllQRCodes: async (format = "zip") => {
-    return api.get("/admin/tables/qr/download-all", {
+    const response = await api.get("/admin/tables/qr/download-all", {
       params: { format },
       responseType: "blob",
     });
+
+    return response instanceof Blob ? response : response.data;
   },
 };
 
