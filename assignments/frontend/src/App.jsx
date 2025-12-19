@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import Layout from "./components/common/Layout";
 import Tables from "./pages/admin/Tables";
-import Dashboard from "./pages/admin/Dashboard";
+//import Dashboard from "./pages/admin/Dashboard";
 import "./styles/global.css";
 
 // Ant Design theme config
@@ -21,7 +21,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin" element={<Layout />}>
             <Route index element={<Navigate to="/admin/tables" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            {/* <Route path="dashboard" element={<Dashboard />} /> */}
             <Route path="tables" element={<Tables />} />
           </Route>
 
