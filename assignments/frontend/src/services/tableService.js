@@ -47,6 +47,14 @@ const tableService = {
   // ========== QR Code Operations ==========
 
   /**
+   * Verify QR token (Customer endpoint)
+   * GET /api/menu/verify?token={token}
+   */
+  verifyQRToken: async (token) => {
+    return api.get("/menu/verify", { params: { token } });
+  },
+
+  /**
    * Generate QR code for table
    */
   generateQRCode: async (id) => {
