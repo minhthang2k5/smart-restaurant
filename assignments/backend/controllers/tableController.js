@@ -478,7 +478,6 @@ exports.downloadAllQR = async (req, res) => {
             status: "error",
             message: "An error occurred while generating the download.",
             error: err.message,
->>>>>>> 72991a5f649a7e4339f2546a83fe91b340386845
         });
     }
 };
