@@ -28,7 +28,7 @@ const Tables = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h2
-              className="text-4xl font-bold tracking-tight mb-3"
+              className="text-4xl font-bold tracking-tight pb-3"
               style={{
                 background: "linear-gradient(135deg, #EC4899, #FB7185)",
                 WebkitBackgroundClip: "text",
@@ -37,9 +37,6 @@ const Tables = () => {
             >
               Quản lý không gian bàn
             </h2>
-            <p className="text-pink-400 text-base font-medium">
-              Tổ chức và quản lý {tables.length} bàn trong hệ thống
-            </p>
           </div>
           <div className="flex gap-4">
             <DownloadButtons tableCount={tables.length} />
