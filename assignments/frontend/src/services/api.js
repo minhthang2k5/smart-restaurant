@@ -8,6 +8,7 @@ const api = axios.create({
   },
 });
 
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -19,8 +20,28 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    if (response.config.responseType === "blob") {
+      return response.data; // Return blob directly
+    }
+
+    return response.data;
+  },
   (error) => {
+    // Handle blob errors (e.g., 404 when downloading)
+    if (error.response?.config?.responseType === "blob") {
+      // Convert blob error to JSON
+      return error.response.data.text().then((text) => {
+        try {
+          const json = JSON.parse(text);
+          console.error("Download error:", json.message);
+        } catch {
+          console.error("Download error:", text);
+        }
+        return Promise.reject(error);
+      });
+    }
+
     const message = error.response?.data?.message || "Something went wrong";
     console.error("API Error:", message);
     return Promise.reject(error);
