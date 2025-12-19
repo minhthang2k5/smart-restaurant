@@ -21,21 +21,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.message || "Đã có lỗi xảy ra";
-
-      if (status === 401) {
-        console.warn("Your login session has expired, trying to log in...");
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-      }
-
-      console.error(`API Error [${status}]:`, message);
-    } else {
-      console.error("Network Error:", error.message);
-    }
-
+    const message = error.response?.data?.message || "Something went wrong";
+    console.error("API Error:", message);
     return Promise.reject(error);
   }
 );
