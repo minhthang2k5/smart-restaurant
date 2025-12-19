@@ -28,18 +28,9 @@ const Menu = () => {
     }
 
     try {
-      // TODO: Call API to verify token
-      // const response = await tableService.verifyQRToken(tableId, token);
-
-      // Mock verification
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      const response = await tableService.verifyQRToken(token);
       setVerified(true);
-      setTableInfo({
-        tableNumber: "T-01",
-        location: "Main Hall",
-        capacity: 4,
-      });
+      setTableInfo(response.data.table);
     } catch (err) {
       setError(err.message || "Failed to verify QR token");
     } finally {
