@@ -3,9 +3,9 @@ import { ConfigProvider } from "antd";
 import Layout from "./components/common/Layout";
 import Tables from "./pages/admin/Tables";
 import Dashboard from "./pages/admin/Dashboard";
+import Menu from "./pages/customer/Menu"; // ← New import
 import "./styles/global.css";
 
-// Ant Design theme config
 const theme = {
   token: {
     colorPrimary: "#1890ff",
@@ -25,8 +25,8 @@ function App() {
             <Route path="tables" element={<Tables />} />
           </Route>
 
-          {/* Customer Routes (future) */}
-          {/* <Route path="/menu" element={<Menu />} /> */}
+          {/* Customer Routes */}
+          <Route path="/menu" element={<Menu />} />
 
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/admin/tables" replace />} />

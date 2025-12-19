@@ -4,7 +4,7 @@ import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import TableList from "../../components/tables/TableList";
 import TableForm from "../../components/tables/TableForm";
 import QRCodeModal from "../../components/tables/QRCodeModal";
-import BulkDownloadButton from "../../components/tables/BulkDownloadButton";
+import DownloadButtons from "../../components/tables/DownloadButtons"; // ← Updated import
 import { useTables } from "../../hooks/useTables";
 
 const { Option } = Select;
@@ -63,7 +63,7 @@ const Tables = () => {
   };
 
   const handleQrRegenerate = () => {
-    fetchTables(); // Refresh table list after regenerate
+    fetchTables();
   };
 
   // ========== Filter Handlers ==========
@@ -92,7 +92,7 @@ const Tables = () => {
         >
           <h2 style={{ margin: 0 }}>Table Management</h2>
           <Space>
-            <BulkDownloadButton tableCount={tables.length} />
+            <DownloadButtons tableCount={tables.length} />
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -104,7 +104,7 @@ const Tables = () => {
         </div>
 
         {/* Filters */}
-        <Space style={{ marginTop: 16, width: "100%" }} size="middle">
+        <Space style={{ marginTop: 16, width: "100%" }} size="middle" wrap>
           <Input
             placeholder="Search table number..."
             prefix={<SearchOutlined />}
