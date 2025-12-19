@@ -7,7 +7,7 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         dialect: "postgres",
-        logging: false, // Tắt log query để console sạch hơn
+        logging: false, // Disable log queries for a cleaner console.
         pool: {
             max: 5,
             min: 0,
