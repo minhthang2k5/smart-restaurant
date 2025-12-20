@@ -2,150 +2,172 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, Result, Spin, Alert } from "antd";
 import { QrcodeOutlined, CheckCircleOutlined } from "@ant-design/icons";
+import tableService from "../../services/tableService";
 
 const Menu = () => {
-  const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
-  const [verified, setVerified] = useState(false);
-  const [tableInfo, setTableInfo] = useState(null);
-  const [error, setError] = useState(null);
+    const [searchParams] = useSearchParams();
+    const [loading, setLoading] = useState(true);
+    const [verified, setVerified] = useState(false);
+    const [tableInfo, setTableInfo] = useState(null);
+    const [error, setError] = useState(null);
 
-  const tableId = searchParams.get("table");
-  const token = searchParams.get("token");
+    const tableId = searchParams.get("table");
+    const token = searchParams.get("token");
 
-  useEffect(() => {
-    verifyQRToken();
-  }, [tableId, token]);
+    useEffect(() => {
+        verifyQRToken();
+    }, [tableId, token]);
 
-  const verifyQRToken = async () => {
-    setLoading(true);
-    setError(null);
+    const verifyQRToken = async () => {
+        setLoading(true);
+        setError(null);
 
-    if (!tableId || !token) {
-      setError("Invalid QR code. Missing table or token parameter.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await tableService.verifyQRToken(token);
-      setVerified(true);
-      setTableInfo(response.data.table);
-    } catch (err) {
-      setError(err.message || "Failed to verify QR token");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
-        <Spin size="large" />
-        <p>Verifying QR code...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          padding: 24,
-        }}
-      >
-        <Result
-          status="error"
-          title="Invalid QR Code"
-          subTitle={error}
-          icon={<QrcodeOutlined />}
-        />
-      </div>
-    );
-  }
-
-  if (!verified) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          padding: 24,
-        }}
-      >
-        <Result
-          status="warning"
-          title="Verification Required"
-          subTitle="Please scan a valid QR code to access the menu."
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: 24,
-        minHeight: "100vh",
-      }}
-    >
-      {/* Success Banner */}
-      <Alert
-        message={
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <CheckCircleOutlined />
-            <span>
-              Welcome to Table {tableInfo.tableNumber} ({tableInfo.location})
-            </span>
-          </div>
+        if (!tableId || !token) {
+            setError("Invalid QR code. Missing table or token parameter.");
+            setLoading(false);
+            return;
         }
-        type="success"
-        showIcon={false}
-        style={{ marginBottom: 24 }}
-      />
 
-      {/* Menu Content */}
-      <Card>
-        <Result
-          status="info"
-          title="Menu Coming Soon"
-          subTitle={
-            <div>
-              <p>This is a placeholder for the customer menu page.</p>
-              <p>
-                Table: <strong>{tableInfo.tableNumber}</strong>
-              </p>
-              <p>
-                Location: <strong>{tableInfo.location}</strong>
-              </p>
-              <p>
-                Capacity: <strong>{tableInfo.capacity} people</strong>
-              </p>
+        try {
+            const response = await tableService.verifyQRToken(token);
+            setVerified(true);
+            // Map backend response (snake_case) to frontend format
+            const table = response.data.data.table;
+            setTableInfo({
+                id: table.id,
+                tableNumber: table.table_number,
+                location: table.location,
+            });
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                    err.message ||
+                    "Failed to verify QR token"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "100vh",
+                    flexDirection: "column",
+                    gap: 16,
+                }}
+            >
+                <Spin size="large" />
+                <p>Verifying QR code...</p>
             </div>
-          }
-        />
+        );
+    }
 
-        {/* TODO: Add menu items, cart, checkout flow */}
-      </Card>
-    </div>
-  );
+    if (error) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "100vh",
+                    padding: 24,
+                }}
+            >
+                <Result
+                    status="error"
+                    title="Invalid QR Code"
+                    subTitle={error}
+                    icon={<QrcodeOutlined />}
+                />
+            </div>
+        );
+    }
+
+    if (!verified) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "100vh",
+                    padding: 24,
+                }}
+            >
+                <Result
+                    status="warning"
+                    title="Verification Required"
+                    subTitle="Please scan a valid QR code to access the menu."
+                />
+            </div>
+        );
+    }
+
+    return (
+        <div
+            style={{
+                maxWidth: 1200,
+                margin: "0 auto",
+                padding: 24,
+                minHeight: "100vh",
+            }}
+        >
+            {/* Success Banner */}
+            <Alert
+                message={
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                        }}
+                    >
+                        <CheckCircleOutlined />
+                        <span>
+                            Welcome to Table {tableInfo.tableNumber} (
+                            {tableInfo.location})
+                        </span>
+                    </div>
+                }
+                type="success"
+                showIcon={false}
+                style={{ marginBottom: 24 }}
+            />
+
+            {/* Menu Content */}
+            <Card>
+                <Result
+                    status="info"
+                    title="Menu Coming Soon"
+                    subTitle={
+                        <div>
+                            <p>
+                                This is a placeholder for the customer menu
+                                page.
+                            </p>
+                            <p>
+                                Table: <strong>{tableInfo.tableNumber}</strong>
+                            </p>
+                            <p>
+                                Location: <strong>{tableInfo.location}</strong>
+                            </p>
+                            <p>
+                                Capacity:{" "}
+                                <strong>{tableInfo.capacity} people</strong>
+                            </p>
+                        </div>
+                    }
+                />
+
+                {/* TODO: Add menu items, cart, checkout flow */}
+            </Card>
+        </div>
+    );
 };
 
 export default Menu;
