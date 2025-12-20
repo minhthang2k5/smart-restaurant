@@ -7,13 +7,24 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         dialect: "postgres",
-        logging: false, // Disable log queries for a cleaner console.
+        logging: process.env.NODE_ENV !== "production", // No logs in production
         pool: {
             max: 5,
             min: 0,
             acquire: 30000,
             idle: 10000,
         },
+
+        // Add SSL support for production
+        dialectOptions:
+            process.env.NODE_ENV === "production"
+                ? {
+                      ssl: {
+                          require: true,
+                          rejectUnauthorized: false, // For self-signed certificates
+                      },
+                  }
+                : {},
     }
 );
 

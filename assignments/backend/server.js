@@ -12,7 +12,11 @@ const startServer = async () => {
         console.log("✅ Database connection established successfully");
 
         // Sync models (create tables if not exists)
-        await sequelize.sync({ alter: true }); // Set to true in development to auto-update schema
+        if (process.env.NODE_ENV === "production") {
+            await sequelize.sync({ alter: false }); // Don't alter schema in production
+        } else {
+            await sequelize.sync({ alter: true }); // Auto-update in development
+        }
         console.log("✅ Database models synced");
 
         // Start server
