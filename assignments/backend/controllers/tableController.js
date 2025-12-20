@@ -16,7 +16,12 @@ const archiver = require("archiver");
  */
 exports.getAllTables = async (req, res) => {
     try {
-        const { status, location, sortBy = "createdAt", order = "ASC" } = req.query;
+        const {
+            status,
+            location,
+            sortBy = "createdAt",
+            order = "ASC",
+        } = req.query;
 
         // Build filter object
         const where = {};
@@ -186,7 +191,8 @@ exports.updateTable = async (req, res) => {
             tableNumber: tableNumber || table.tableNumber,
             capacity: capacity || table.capacity,
             location: location || table.location,
-            description: description !== undefined ? description : table.description,
+            description:
+                description !== undefined ? description : table.description,
         });
 
         res.json({
@@ -250,7 +256,9 @@ exports.updateTableStatus = async (req, res) => {
 
         res.json({
             success: true,
-            message: `Table ${status === "active" ? "activated" : "deactivated"} successfully`,
+            message: `Table ${
+                status === "active" ? "activated" : "deactivated"
+            } successfully`,
             data: table,
         });
     } catch (error) {
@@ -482,6 +490,99 @@ exports.downloadAllQR = async (req, res) => {
         res.status(500).json({
             status: "error",
             message: "An error occurred while generating the download.",
+            error: err.message,
+        });
+    }
+};
+
+/**
+ * Regenerate QR codes for all active tables
+ * Requires admin confirmation via request body
+ */
+exports.regenerateAllQR = async (req, res) => {
+    try {
+        const { confirm } = req.body;
+
+        // Require explicit confirmation
+        if (!confirm || confirm !== true) {
+            return res.status(400).json({
+                status: "fail",
+                message:
+                    "Confirmation required. Set 'confirm: true' in request body.",
+            });
+        }
+
+        // Get all active tables
+        const tables = await Table.findAll({
+            where: { status: "active" },
+            order: [["tableNumber", "ASC"]],
+        });
+
+        if (tables.length === 0) {
+            return res.status(404).json({
+                status: "fail",
+                message: "No active tables found to regenerate QR codes.",
+            });
+        }
+
+        // Track results
+        const results = {
+            total: tables.length,
+            successful: 0,
+            failed: 0,
+            details: [],
+        };
+
+        // Regenerate QR code for each table
+        for (const table of tables) {
+            try {
+                // Generate new token
+                const token = await qrService.generateQrToken(table);
+
+                results.successful++;
+                results.details.push({
+                    tableId: table.id,
+                    tableNumber: table.tableNumber,
+                    status: "success",
+                    message: "QR code regenerated successfully",
+                });
+            } catch (error) {
+                results.failed++;
+                results.details.push({
+                    tableId: table.id,
+                    tableNumber: table.tableNumber,
+                    status: "error",
+                    message: error.message,
+                });
+                console.error(
+                    `Failed to regenerate QR for table ${table.tableNumber}:`,
+                    error
+                );
+            }
+        }
+
+        // Return summary
+        res.status(200).json({
+            status: "success",
+            message: `Bulk regeneration completed. ${results.successful} successful, ${results.failed} failed.`,
+            data: {
+                summary: {
+                    totalTables: results.total,
+                    successful: results.successful,
+                    failed: results.failed,
+                    successRate: `${Math.round(
+                        (results.successful / results.total) * 100
+                    )}%`,
+                },
+                affectedTables: results.details,
+                timestamp: new Date().toISOString(),
+            },
+        });
+    } catch (err) {
+        console.error("Error in regenerateAllQR:", err);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred during bulk regeneration.",
             error: err.message,
         });
     }

@@ -1,24 +1,8 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
+require("dotenv").config({ path: "./config.env" });
+const app = require("./app");
 const sequelize = require("./config/database");
-const tableRoutes = require("./routes/tableRoutes");
 
-const app = express();
 const PORT = process.env.PORT || 3000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Routes
-app.use("/api/admin/tables", tableRoutes);
-
-// Health check
-app.get("/", (req, res) => {
-    res.json({ message: "Smart Restaurant API is running" });
-});
 
 // Database connection and server start
 const startServer = async () => {
@@ -28,7 +12,7 @@ const startServer = async () => {
         console.log("✅ Database connection established successfully");
 
         // Sync models (create tables if not exists)
-        await sequelize.sync({ alter: false }); // Set to true in development to auto-update schema
+        await sequelize.sync({ alter: true }); // Set to true in development to auto-update schema
         console.log("✅ Database models synced");
 
         // Start server
@@ -42,5 +26,3 @@ const startServer = async () => {
 };
 
 startServer();
-
-module.exports = app;
