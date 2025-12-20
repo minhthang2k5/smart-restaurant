@@ -285,7 +285,7 @@ const QRCodeModal = ({ open, onCancel, table, onRegenerate }) => {
                   <button
                     onClick={() => handleDownload("png")}
                     disabled={loading}
-                    className="flex flex-col items-center justify-center gap-2 py-4 bg-slate-800 text-white rounded-2xl hover:bg-slate-900 transition-all shadow-lg shadow-slate-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-col items-center justify-center gap-2 py-4 border-2 border-slate-800 text-slate-800 rounded-2xl hover:bg-slate-50 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ImageIcon size={18} />
                     <span className="text-xs">PNG</span>

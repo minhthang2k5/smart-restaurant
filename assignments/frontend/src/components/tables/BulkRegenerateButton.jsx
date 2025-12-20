@@ -22,11 +22,15 @@ const BulkRegenerateButton = ({ tableCount, onSuccess }) => {
     try {
       const response = await tableService.regenerateAllQR(true);
 
-      if (response.data && response.data.status === "success") {
+      console.log("Regenerate Response:", response); // Debug log
+
+      // api.js interceptor returns response.data, so response is already the backend's response body
+      // Backend format: { status: "success", data: { summary, affectedTables } }
+      if (response && response.status === "success") {
         setResult({
           type: "success",
-          summary: response.data.data.summary,
-          details: response.data.data.affectedTables,
+          summary: response.data.summary,
+          details: response.data.affectedTables,
         });
 
         // Show success overlay
@@ -39,6 +43,9 @@ const BulkRegenerateButton = ({ tableCount, onSuccess }) => {
           setResult(null);
           if (onSuccess) onSuccess();
         }, 2000);
+      } else {
+        // If response exists but not successful
+        throw new Error(response?.message || "Unknown error occurred");
       }
     } catch (error) {
       console.error("Error regenerating QR codes:", error);
@@ -76,7 +83,7 @@ const BulkRegenerateButton = ({ tableCount, onSuccess }) => {
           {/* Success Overlay */}
           {showSuccess && (
             <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-[3rem] flex flex-col items-center justify-center z-50 animate-in fade-in zoom-in duration-300">
-              <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-full p-6 shadow-2xl shadow-green-500/30 animate-in zoom-in duration-500">
+              <div className="bg-linear-to-br from-green-400 to-emerald-500 rounded-full p-6 shadow-2xl shadow-green-500/30 animate-in zoom-in duration-500">
                 <CheckCircle size={64} className="text-white" strokeWidth={2.5} />
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mt-6">
