@@ -3,7 +3,7 @@ import { LayoutDashboard, CheckCircle, XCircle, QrCode } from "lucide-react";
 import tableService from "../../services/tableService";
 
 const StatCard = ({ title, value, icon: Icon, gradient, delay }) => (
-  <div 
+  <div
     className="glass-card p-8 rounded-3xl shadow-lg transition-all duration-500 hover:scale-105 cursor-pointer stagger-item"
     style={{ animationDelay: `${delay}s` }}
   >
@@ -75,7 +75,7 @@ const Dashboard = () => {
         </div>
         <div>
           <h2
-            className="text-5xl font-bold tracking-tight"
+            className="text-5xl font-bold tracking-tight pb-2"
             style={{
               background: "linear-gradient(135deg, #EC4899, #FB7185)",
               WebkitBackgroundClip: "text",
@@ -84,9 +84,6 @@ const Dashboard = () => {
           >
             Hệ thống quản trị
           </h2>
-          <p className="text-pink-400 text-base mt-2 font-medium">
-            Theo dõi và quản lý toàn bộ hệ thống bàn
-          </p>
         </div>
       </div>
 

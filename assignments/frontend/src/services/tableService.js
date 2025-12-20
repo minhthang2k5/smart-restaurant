@@ -88,6 +88,14 @@ const tableService = {
 
     return response instanceof Blob ? response : response.data;
   },
+
+  /**
+   * Regenerate all QR codes (bulk operation)
+   * @param {boolean} confirm - Must be true to proceed
+   */
+  regenerateAllQR: async (confirm = true) => {
+    return api.post("/admin/tables/qr/regenerate-all", { confirm });
+  },
 };
 
 export default tableService;

@@ -4,6 +4,7 @@ import TableList from "../../components/tables/TableList";
 import TableForm from "../../components/tables/TableForm";
 import QRCodeModal from "../../components/tables/QRCodeModal";
 import DownloadButtons from "../../components/tables/DownloadButtons";
+import BulkRegenerateButton from "../../components/tables/BulkRegenerateButton";
 import { useTables } from "../../hooks/useTables";
 
 const Tables = () => {
@@ -24,7 +25,7 @@ const Tables = () => {
 
   return (
     <div className="h-full flex flex-col overflow-visible p-8">
-      <div className="glass-card rounded-3xl p-8 mb-6 shadow-xl border-2 border-white/40 flex-shrink-0">
+      <div className="glass-card rounded-3xl p-8 mb-6 shadow-xl border-2 border-white/40 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
             <h2
@@ -39,6 +40,10 @@ const Tables = () => {
             </h2>
           </div>
           <div className="flex gap-4" style={{ overflow: "visible" }}>
+            <BulkRegenerateButton 
+              tableCount={tables.filter(t => t.status === 'active').length}
+              onSuccess={fetchTables}
+            />
             <DownloadButtons tableCount={tables.length} />
             <button
               onClick={() => {
