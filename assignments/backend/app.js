@@ -1,11 +1,17 @@
 const express = require("express");
 const morgan = require("morgan");
+const cors = require("cors");
 const tableRouter = require("./routes/tableRoutes");
 const menuRouter = require("./routes/menuRoutes");
 
 const app = express();
 
+// Enable CORS for all routes
+app.use(cors());
+
+// Body parsers
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
