@@ -32,7 +32,7 @@ const Menu = () => {
             const response = await tableService.verifyQRToken(token);
             setVerified(true);
             // Map backend response (snake_case) to frontend format
-            const table = response.data.data.table;
+            const table = response.data.table;
             setTableInfo({
                 id: table.id,
                 tableNumber: table.table_number,
