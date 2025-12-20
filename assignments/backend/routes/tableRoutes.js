@@ -25,10 +25,10 @@ router.delete("/:id", tableController.deleteTable);
 // Generate QR code
 router.post("/:id/qr/generate", tableController.generateTableQRCode);
 
-// Download single table QR code
-router.get("/:id/qr/download", tableController.downloadTableQR);
-
 // Download all QR codes
 router.get("/qr/download-all", tableController.downloadAllQR);
+
+// Download single table QR code
+router.get("/:id/qr/download", tableController.downloadTableQR);
 
 module.exports = router;
