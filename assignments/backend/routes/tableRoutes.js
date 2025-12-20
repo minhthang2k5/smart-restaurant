@@ -31,4 +31,7 @@ router.get("/:id/qr/download", tableController.downloadTableQR);
 // Download all QR codes
 router.get("/qr/download-all", tableController.downloadAllQR);
 
+// Bulk regenerate QR codes
+router.post("/qr/regenerate-all", tableController.regenerateAllQR);
+
 module.exports = router;
