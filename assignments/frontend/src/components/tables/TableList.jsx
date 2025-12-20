@@ -61,7 +61,7 @@ const TableList = ({
           {currentTables.map((table, index) => (
             <tr
               key={table.id}
-              className="hover:bg-gradient-to-r hover:from-pink-50/50 hover:to-rose-50/30 transition-all duration-300 group"
+              className="hover:bg-linear-to-r hover:from-pink-50/50 hover:to-rose-50/30 transition-all duration-300 group"
             >
               <td className="px-6 py-4 font-semibold text-slate-700">
                 {table.tableNumber}
@@ -134,7 +134,7 @@ const TableList = ({
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-pink-50 bg-white/50 backdrop-blur-sm flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-pink-50 bg-white/50 backdrop-blur-sm shrink-0">
           <div className="text-sm text-slate-600 font-medium">
             Hiển thị <span className="font-bold text-pink-600">{startIndex + 1}</span> đến{" "}
             <span className="font-bold text-pink-600">{Math.min(endIndex, tables.length)}</span> trong tổng số{" "}
@@ -159,7 +159,7 @@ const TableList = ({
                   onClick={() => goToPage(page)}
                   className={`w-10 h-10 rounded-xl font-semibold transition-all duration-300 ${
                     currentPage === page
-                      ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg scale-110"
+                      ? "bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg scale-110"
                       : "border border-pink-200 text-slate-600 hover:bg-pink-50 hover:scale-105"
                   }`}
                 >

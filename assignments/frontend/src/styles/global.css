@@ -11,7 +11,6 @@
   }
 }
 
-/* 3. Smart Restaurant 2025: Dynamic Background & Glassmorphism */
 @layer components {
   /* Animated Gradient Background */
   @keyframes gradient-shift {
@@ -82,7 +81,7 @@
 
   /* Glass Card - Enhanced Glassmorphism */
   .glass-card {
-    @apply bg-white/75 backdrop-blur-2xl border border-white/60 shadow-2xl;
+    @apply bg-white/75 backdrop-blur-2xl border border-white/60 shadow-2xl overflow-visible;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 8px 32px rgba(255, 182, 193, 0.1), 0 2px 8px rgba(255, 222, 233, 0.15);
   }
@@ -143,7 +142,7 @@
   }
 }
 
-/* 4. Custom Scrollbar (Hiện đại & Gradient) */
+/* 4. Custom Scrollbar*/
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -164,7 +163,7 @@
   box-shadow: 0 0 10px rgba(251, 113, 133, 0.4);
 }
 
-/* 5. Print Styles (Dành cho việc in QR Code) */
+/* 5. Print Styles*/
 @media print {
   .no-print {
     display: none !important;
@@ -174,7 +173,6 @@
     background: white !important;
   }
 
-  /* Đảm bảo QR code in ra sắc nét nhất */
   .qr-print-container {
     @apply block m-0 p-0 shadow-none border-none;
     page-break-inside: avoid;
@@ -182,7 +180,6 @@
 }
 
 /* 6. Form Logic Overrides (Optional) */
-/* Loại bỏ vòng xanh mặc định của trình duyệt để dùng vòng Rose của Tailwind */
 input:focus,
 select:focus,
 textarea:focus {

@@ -23,7 +23,7 @@ const Tables = () => {
   const [selectedTable, setSelectedTable] = useState(null);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden p-8">
+    <div className="h-full flex flex-col overflow-visible p-8">
       <div className="glass-card rounded-3xl p-8 mb-6 shadow-xl border-2 border-white/40 flex-shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
@@ -38,7 +38,7 @@ const Tables = () => {
               Quản lý không gian bàn
             </h2>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4" style={{ overflow: "visible" }}>
             <DownloadButtons tableCount={tables.length} />
             <button
               onClick={() => {

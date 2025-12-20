@@ -322,8 +322,8 @@ exports.generateTableQRCode = async (req, res) => {
             });
         }
 
-        // 1. Call the service to generate and save the token
-        const token = await qrService.getOrGenerateToken(table);
+        // ✅ FIX: Luôn tạo token MỚI (không dùng token cũ)
+        const token = await qrService.generateQrToken(table);
 
         const qrCodeImage = await qrService.generateQrCodeImage(
             token,
