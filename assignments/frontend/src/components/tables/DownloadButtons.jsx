@@ -23,7 +23,7 @@ const DownloadButtons = ({ tableCount }) => {
   };
 
   return (
-    <div className="relative" style={{ overflow: "visible" }}>
+    <div className="relative z-[100]" style={{ overflow: "visible" }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={tableCount === 0}

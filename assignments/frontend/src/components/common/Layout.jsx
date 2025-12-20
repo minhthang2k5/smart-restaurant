@@ -14,9 +14,9 @@ const Layout = () => {
   };
 
   return (
-    <div className="dynamic-bg">
-      <AntLayout style={{ minHeight: "100vh", background: "transparent" }}>
-        {/* Sidebar - Modern Glass */}
+    <div className="dynamic-bg h-screen overflow-hidden">
+      <AntLayout style={{ height: "100vh", background: "transparent", overflow: "hidden" }}>
+        {/* Sidebar - Modern Glass - Fixed */}
         <Sider
           width={280}
           collapsible
@@ -29,14 +29,16 @@ const Layout = () => {
             WebkitBackdropFilter: "blur(24px)",
             borderRight: "1px solid rgba(255, 182, 193, 0.25)",
             boxShadow: "4px 0 40px rgba(255, 182, 193, 0.1)",
+            height: "100vh",
+            overflow: "hidden",
           }}
         >
           <Sidebar collapsed={collapsed} />
         </Sider>
 
         {/* Main Content */}
-        <AntLayout style={{ background: "transparent" }}>
-          {/* Navbar - Distinct Gradient */}
+        <AntLayout style={{ background: "transparent", height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* Navbar - Distinct Gradient - Fixed */}
           <Header
             style={{
               position: "relative",
@@ -47,17 +49,21 @@ const Layout = () => {
               borderBottom: "2px solid rgba(255, 255, 255, 0.3)",
               boxShadow: "0 10px 40px rgba(236, 72, 153, 0.3), 0 4px 12px rgba(139, 92, 246, 0.2)",
               height: "80px",
+              flexShrink: 0,
             }}
           >
             <Navbar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
           </Header>
 
-          {/* Page Content - Transparent */}
+          {/* Page Content - Scrollable Area Only */}
           <Content
             style={{
-              margin: "24px 24px",
               padding: 0,
               background: "transparent",
+              flex: 1,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
             }}
           >
             <Outlet />
