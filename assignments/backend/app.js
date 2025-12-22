@@ -4,6 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const tableRouter = require("./routes/tableRoutes");
 const menuRouter = require("./routes/menuRoutes");
+const menuItemRouter = require("./routes/menuItemRoutes");
 
 const app = express();
 
@@ -38,5 +39,6 @@ app.use((req, res, next) => {
 
 app.use("/api/admin/tables", tableRouter); // admin-facing routes
 app.use("/api/menu", menuRouter); // Public/customer-facing routes
+app.use("/api/admin/menu/items", menuItemRouter); // admin-facing menu item routes
 
 module.exports = app;
