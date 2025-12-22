@@ -20,43 +20,54 @@ const Sidebar = ({ collapsed }) => {
       icon: <TableOutlined />,
       label: <Link to="/admin/tables">Tables</Link>,
     },
+    {
+      key: "/admin/categories",
+      label: <Link to="/admin/categories">Categories</Link>,
+    },
+    {
+      key: "/admin/menu-items",
+      label: <Link to="/admin/menu-items">Menu Items</Link>,
+    },
+    {
+      key: "/admin/modifiers",
+      label: <Link to="/admin/modifiers">Modifiers</Link>,
+    },
   ];
 
   return (
-    <>
-      {/* Logo Section - Enhanced */}
+    <div
+      style={{
+        height: "100%",
+        background: "#fff1f5", // rose-50
+        borderRight: "1px solid #fbcfe8", // pink-200
+      }}
+    >
+      {/* 🌸 Logo */}
       <div
         style={{
           height: 72,
           display: "flex",
           alignItems: "center",
           justifyContent: collapsed ? "center" : "flex-start",
-          padding: collapsed ? 0 : "0 28px",
+          padding: collapsed ? 0 : "0 24px",
           fontSize: 20,
-          fontWeight: "700",
-          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-          background: "rgba(255, 182, 193, 0.08)",
-          borderBottom: "1px solid rgba(255, 182, 193, 0.2)",
-          letterSpacing: "-0.3px",
+          fontWeight: 700,
+          background: "#ffe4e6", // rose-100
+          borderBottom: "1px solid #fbcfe8",
         }}
       >
         <QrcodeOutlined
           style={{
-            fontSize: 32,
+            fontSize: 30,
             marginRight: collapsed ? 0 : 12,
-            background: "linear-gradient(135deg, #FF6B9D, #FFA8B6)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            filter: "drop-shadow(0 2px 4px rgba(255, 107, 157, 0.3))",
+            color: "#db2777", // pink-600
           }}
         />
         {!collapsed && (
           <span
             style={{
-              background: "linear-gradient(135deg, #EC4899, #FB7185)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              fontWeight: "700",
+              color: "#db2777",
+              fontWeight: 700,
             }}
           >
             Smart Restaurant
@@ -64,20 +75,20 @@ const Sidebar = ({ collapsed }) => {
         )}
       </div>
 
-      {/* Menu - Enhanced */}
+      {/* 🌸 Menu */}
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
         items={menuItems}
+        theme="light"
         style={{
-          borderRight: 0,
           background: "transparent",
-          color: "white",
-          fontSize: "15px",
+          borderRight: 0,
+          color: "#374151", // gray-700
+          fontSize: 15,
         }}
-        theme="dark"
       />
-    </>
+    </div>
   );
 };
 
