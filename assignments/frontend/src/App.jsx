@@ -10,7 +10,6 @@ import MenuItemDetail from "./pages/admin/MenuItemDetail";
 import Modifiers from "./pages/admin/Modifiers";
 import GuestItemDetail from "./pages/customer/GuestItemDetail";
 import "./styles/global.css";
-import { MenuProvider } from "./context/MenuContext";
 
 const theme = {
   token: {
@@ -23,35 +22,27 @@ function App() {
   return (
     <ConfigProvider theme={theme}>
       <AntApp>
-        <MenuProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Admin Routes */}
-              <Route path="/admin" element={<Layout />}>
-                <Route
-                  index
-                  element={<Navigate to="/admin/tables" replace />}
-                />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="tables" element={<Tables />} />
-                <Route path="categories" element={<Categories />} />
-                <Route path="menu-items" element={<MenuItems />} />
-                <Route path="menu-items/:id" element={<MenuItemDetail />} />
-                <Route path="modifiers" element={<Modifiers />} />
-              </Route>
+        <BrowserRouter>
+          <Routes>
+            {/* Admin Routes */}
+            <Route path="/admin" element={<Layout />}>
+              <Route index element={<Navigate to="/admin/tables" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="tables" element={<Tables />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="menu-items" element={<MenuItems />} />
+              <Route path="menu-items/:id" element={<MenuItemDetail />} />
+              <Route path="modifiers" element={<Modifiers />} />
+            </Route>
 
-              {/* Customer Routes */}
-              <Route path="/menu" element={<Menu />} />
-              <Route path="/menu/:itemId" element={<GuestItemDetail />} />
+            {/* Customer Routes */}
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/menu/:itemId" element={<GuestItemDetail />} />
 
-              {/* Default redirect */}
-              <Route
-                path="/"
-                element={<Navigate to="/admin/tables" replace />}
-              />
-            </Routes>
-          </BrowserRouter>
-        </MenuProvider>
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/admin/tables" replace />} />
+          </Routes>
+        </BrowserRouter>
       </AntApp>
     </ConfigProvider>
   );

@@ -1,335 +1,477 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
 import {
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  Modal,
-  Pagination,
   Row,
+  Col,
+  Card,
+  Button,
+  Input,
   Select,
   Space,
-  Switch,
   Tag,
-  Typography,
+  Modal,
+  Form,
+  InputNumber,
+  Switch,
+  message,
+  Pagination,
+  Spin,
+  Empty,
 } from "antd";
-import { useMenu } from "../../context/MenuContext.jsx";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import * as menuService from "../../services/menuService";
 
-const statusColor = { available: "green", sold_out: "red", hidden: "default" };
+const statusColor = {
+  available: "green",
+  unavailable: "orange",
+  sold_out: "red",
+  hidden: "default",
+};
 
 export default function MenuItems() {
-  const { items, categories, addItem, updateItem, deleteItem } = useMenu();
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
 
+  // Data states
+  const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Filter states
   const [q, setQ] = useState("");
   const [categoryId, setCategoryId] = useState("all");
   const [status, setStatus] = useState("all");
-  const [sort, setSort] = useState("createdAt_desc");
+  const [sort, setSort] = useState("created_at_desc");
 
-  // Pagination state
+  // Pagination
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(9);
+  const [total, setTotal] = useState(0);
 
+  // Modal
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form] = Form.useForm();
 
-  const categoryMap = useMemo(() => {
-    const m = new Map();
-    categories.forEach((c) => m.set(c.id, c));
-    return m;
-  }, [categories]);
+  // Fetch categories on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const filtered = useMemo(() => {
-    let arr = [...items];
+  // Fetch items when filters change
+  useEffect(() => {
+    fetchItems();
+  }, [q, categoryId, status, sort, page, pageSize]);
 
-    if (q.trim()) {
-      const s = q.trim().toLowerCase();
-      arr = arr.filter((it) => it.name.toLowerCase().includes(s));
+  const fetchCategories = async () => {
+    try {
+      const response = await menuService.getCategories();
+      setCategories(response.data || []);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
     }
-    if (categoryId !== "all")
-      arr = arr.filter((it) => it.categoryId === categoryId);
-    if (status !== "all") arr = arr.filter((it) => it.status === status);
+  };
 
-    const [key, dir] = sort.split("_");
-    arr.sort((a, b) => {
-      let va = a[key],
-        vb = b[key];
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
 
-      if (key === "price") {
-        va = Number(va);
-        vb = Number(vb);
-      }
-      if (key === "createdAt") {
-        va = new Date(va).getTime();
-        vb = new Date(vb).getTime();
-      }
+      // Build query params
+      const params = {
+        page,
+        limit: pageSize,
+      };
 
-      if (va < vb) return dir === "asc" ? -1 : 1;
-      if (va > vb) return dir === "asc" ? 1 : -1;
-      return 0;
-    });
+      // Add filters
+      if (q) params.name = q;
+      if (categoryId !== "all") params.category_id = categoryId;
+      if (status !== "all") params.status = status;
 
-    return arr;
-  }, [items, q, categoryId, status, sort]);
+      // Add sorting
+      const [sortField, sortOrder] = sort.split("_");
+      params.sort = sortField;
+      params.order = sortOrder.toUpperCase();
 
-  // If filters change -> reset to page 1 (better UX)
-  useEffect(() => {
-    setPage(1);
-  }, [q, categoryId, status, sort]);
+      const response = await menuService.getMenuItems(params);
 
-  // Ensure page not out of range when filtered list shrinks
-  const total = filtered.length;
-  const maxPage = Math.max(1, Math.ceil(total / pageSize));
-  useEffect(() => {
-    if (page > maxPage) setPage(maxPage);
-  }, [page, maxPage]);
+      setItems(response.data || []);
+      setTotal(response.pagination?.totalItems || 0);
+    } catch (error) {
+      message.error("Failed to load menu items");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const pagedItems = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filtered.slice(start, start + pageSize);
-  }, [filtered, page, pageSize]);
-
-  function openCreate() {
+  const openCreate = () => {
     setEditing(null);
     form.resetFields();
+    form.setFieldsValue({ status: "available" });
     setOpen(true);
-  }
+  };
 
-  function openEdit(item) {
+  const openEdit = (item) => {
     setEditing(item);
-    form.setFieldsValue({
-      name: item.name,
-      description: item.description,
-      categoryId: item.categoryId,
-      price: item.price,
-      prepTime: item.prepTime,
-      status: item.status,
-      chefRecommended: item.chefRecommended,
-    });
+    form.setFieldsValue(item);
     setOpen(true);
-  }
+  };
 
-  function onSave() {
-    form.validateFields().then((vals) => {
-      const payload = {
-        ...vals,
-        price: Number(vals.price),
-        prepTime: Number(vals.prepTime),
-      };
-      if (editing) updateItem(editing.id, payload);
-      else addItem(payload);
+  const onSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      if (editing) {
+        await menuService.updateMenuItem(editing.id, values);
+        message.success("Item updated successfully");
+      } else {
+        await menuService.createMenuItem(values);
+        message.success("Item created successfully");
+      }
+
       setOpen(false);
+      form.resetFields();
+      fetchItems();
+    } catch (error) {
+      if (error.errorFields) {
+        message.error("Please check the form fields");
+      } else {
+        message.error(
+          editing ? "Failed to update item" : "Failed to create item"
+        );
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    Modal.confirm({
+      title: "Delete menu item?",
+      content: "This action cannot be undone.",
+      okText: "Delete",
+      okType: "danger",
+      onOk: async () => {
+        try {
+          setLoading(true);
+          await menuService.deleteMenuItem(id);
+          message.success("Item deleted successfully");
+          fetchItems();
+        } catch (error) {
+          message.error("Failed to delete item");
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      },
     });
-  }
+  };
+
+  const categoryMap = useMemo(() => {
+    const map = {};
+    categories.forEach((c) => {
+      map[c.id] = c.name;
+    });
+    return map;
+  }, [categories]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <Space style={{ width: "100%", justifyContent: "space-between" }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Menu Items
-        </Typography.Title>
-        <Button type="primary" onClick={openCreate}>
-          + Add Menu Item
+    <div style={{ padding: 24 }}>
+      {/* Header */}
+      <div
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <h2>Menu Items</h2>
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          Add Item
         </Button>
-      </Space>
+      </div>
 
       {/* Filters */}
-      <Card style={{ marginTop: 16 }}>
-        <Row gutter={[12, 12]}>
-          <Col xs={24} md={8}>
-            <Input
-              placeholder="Search by name..."
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              allowClear
-            />
-          </Col>
-
-          <Col xs={24} md={6}>
-            <Select
-              style={{ width: "100%" }}
-              value={categoryId}
-              onChange={setCategoryId}
-              options={[
-                { value: "all", label: "All Categories" },
-                ...categories.map((c) => ({ value: c.id, label: c.name })),
-              ]}
-            />
-          </Col>
-
-          <Col xs={24} md={5}>
-            <Select
-              style={{ width: "100%" }}
-              value={status}
-              onChange={setStatus}
-              options={[
-                { value: "all", label: "All Status" },
-                { value: "available", label: "Available" },
-                { value: "sold_out", label: "Sold out" },
-                { value: "hidden", label: "Hidden" },
-              ]}
-            />
-          </Col>
-
-          <Col xs={24} md={5}>
-            <Select
-              style={{ width: "100%" }}
-              value={sort}
-              onChange={setSort}
-              options={[
-                { value: "createdAt_desc", label: "Newest" },
-                { value: "createdAt_asc", label: "Oldest" },
-                { value: "price_asc", label: "Price: Low → High" },
-                { value: "price_desc", label: "Price: High → Low" },
-                // UI chuẩn bị cho backend popularity (nếu muốn)
-                // { value: "popularity_desc", label: "Popularity (coming soon)" },
-              ]}
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* List */}
-      <Card style={{ marginTop: 16 }}>
-        <Row gutter={[12, 12]}>
-          {pagedItems.map((it) => {
-            const catName = categoryMap.get(it.categoryId)?.name ?? "Unknown";
-            return (
-              <Col key={it.id} xs={24} md={12} lg={8}>
-                <Card
-                  title={
-                    <Space>
-                      <span>{it.name}</span>
-                      {it.chefRecommended ? <Tag color="pink">Chef</Tag> : null}
-                    </Space>
-                  }
-                  extra={
-                    <Tag color={statusColor[it.status] || "default"}>
-                      {it.status}
-                    </Tag>
-                  }
-                >
-                  <Space direction="vertical" style={{ width: "100%" }}>
-                    <Typography.Text type="secondary">
-                      {catName}
-                    </Typography.Text>
-                    <Typography.Text strong>
-                      {it.price.toLocaleString()}đ
-                    </Typography.Text>
-
-                    <Space
-                      style={{ justifyContent: "space-between", width: "100%" }}
-                    >
-                      <Link to={`/admin/menu-items/${it.id}`}>Detail</Link>
-                      <Space>
-                        <Button size="small" onClick={() => openEdit(it)}>
-                          Edit
-                        </Button>
-                        <Button
-                          size="small"
-                          danger
-                          onClick={() => deleteItem(it.id)}
-                        >
-                          Delete
-                        </Button>
-                      </Space>
-                    </Space>
-                  </Space>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
-
-        {/* Pagination bar */}
-        <div
-          style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}
-        >
-          <Pagination
-            current={page}
-            pageSize={pageSize}
-            total={total}
-            showSizeChanger
-            pageSizeOptions={[6, 9, 12, 24]}
-            onChange={(p, ps) => {
-              setPage(p);
-              setPageSize(ps);
+      <Card style={{ marginBottom: 24 }}>
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Input
+            placeholder="Search by name..."
+            prefix={<SearchOutlined />}
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1); // Reset to page 1
             }}
-            showTotal={(t, range) => `${range[0]}-${range[1]} of ${t} items`}
+            allowClear
           />
-        </div>
+          <Space wrap>
+            <Select
+              style={{ width: 200 }}
+              placeholder="Filter by category"
+              value={categoryId}
+              onChange={(val) => {
+                setCategoryId(val);
+                setPage(1);
+              }}
+            >
+              <Select.Option value="all">All Categories</Select.Option>
+              {categories.map((cat) => (
+                <Select.Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Select.Option>
+              ))}
+            </Select>
+
+            <Select
+              style={{ width: 150 }}
+              placeholder="Filter by status"
+              value={status}
+              onChange={(val) => {
+                setStatus(val);
+                setPage(1);
+              }}
+            >
+              <Select.Option value="all">All Status</Select.Option>
+              <Select.Option value="available">Available</Select.Option>
+              <Select.Option value="unavailable">Unavailable</Select.Option>
+              <Select.Option value="sold_out">Sold Out</Select.Option>
+              <Select.Option value="hidden">Hidden</Select.Option>
+            </Select>
+
+            <Select
+              style={{ width: 180 }}
+              placeholder="Sort by"
+              value={sort}
+              onChange={(val) => {
+                setSort(val);
+                setPage(1);
+              }}
+            >
+              <Select.Option value="created_at_desc">
+                Newest First
+              </Select.Option>
+              <Select.Option value="created_at_asc">Oldest First</Select.Option>
+              <Select.Option value="price_asc">
+                Price: Low to High
+              </Select.Option>
+              <Select.Option value="price_desc">
+                Price: High to Low
+              </Select.Option>
+              <Select.Option value="name_asc">Name: A-Z</Select.Option>
+              <Select.Option value="name_desc">Name: Z-A</Select.Option>
+            </Select>
+          </Space>
+        </Space>
       </Card>
 
-      {/* Modal */}
+      {/* Items Grid */}
+      <Spin spinning={loading}>
+        {items.length === 0 ? (
+          <Empty
+            description={
+              q || categoryId !== "all" || status !== "all"
+                ? "No items match your filters"
+                : "No menu items yet. Create one to get started!"
+            }
+          />
+        ) : (
+          <>
+            <Row gutter={[16, 16]}>
+              {items.map((item) => (
+                <Col key={item.id} xs={24} sm={12} md={8}>
+                  <Card
+                    hoverable
+                    onClick={() => navigate(`/admin/menu-items/${item.id}`)}
+                    actions={[
+                      <EditOutlined
+                        key="edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(item);
+                        }}
+                      />,
+                      <DeleteOutlined
+                        key="delete"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(item.id);
+                        }}
+                      />,
+                    ]}
+                  >
+                    <Card.Meta
+                      title={
+                        <Space
+                          direction="vertical"
+                          size={4}
+                          style={{ width: "100%" }}
+                        >
+                          <span>{item.name}</span>
+                          <Space>
+                            <Tag color={statusColor[item.status]}>
+                              {item.status}
+                            </Tag>
+                            {item.is_chef_recommended && (
+                              <Tag color="gold">Chef's Pick</Tag>
+                            )}
+                          </Space>
+                        </Space>
+                      }
+                      description={
+                        <Space
+                          direction="vertical"
+                          size={4}
+                          style={{ width: "100%" }}
+                        >
+                          <div style={{ color: "#666", fontSize: 12 }}>
+                            {categoryMap[item.category_id] || "Unknown"}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            ${Number(item.price).toFixed(2)}
+                          </div>
+                          {item.description && (
+                            <div
+                              style={{
+                                fontSize: 13,
+                                color: "#999",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                              }}
+                            >
+                              {item.description}
+                            </div>
+                          )}
+                        </Space>
+                      }
+                    />
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            {/* Pagination */}
+            <div style={{ marginTop: 24, textAlign: "center" }}>
+              <Pagination
+                current={page}
+                pageSize={pageSize}
+                total={total}
+                showSizeChanger
+                pageSizeOptions={[6, 9, 12, 24]}
+                onChange={(p, ps) => {
+                  setPage(p);
+                  setPageSize(ps);
+                }}
+                showTotal={(t, range) =>
+                  `${range[0]}-${range[1]} of ${t} items`
+                }
+              />
+            </div>
+          </>
+        )}
+      </Spin>
+
+      {/* Create/Edit Modal */}
       <Modal
+        title={editing ? "Edit Menu Item" : "Create Menu Item"}
         open={open}
-        onCancel={() => setOpen(false)}
         onOk={onSave}
-        okText="Save"
-        title={editing ? "Edit Menu Item" : "Add Menu Item"}
+        onCancel={() => {
+          setOpen(false);
+          form.resetFields();
+        }}
+        confirmLoading={loading}
+        width={600}
       >
-        <Form
-          layout="vertical"
-          form={form}
-          initialValues={{ status: "available", chefRecommended: false }}
-        >
+        <Form form={form} layout="vertical">
           <Form.Item
-            label="Name"
             name="name"
-            rules={[{ required: true, message: "Enter item name" }]}
+            label="Item Name"
+            rules={[
+              { required: true, message: "Please enter item name" },
+              { min: 2, max: 80, message: "Name must be 2-80 characters" },
+            ]}
           >
-            <Input />
-          </Form.Item>
-
-          <Form.Item label="Description" name="description">
-            <Input.TextArea rows={3} />
+            <Input placeholder="e.g., Grilled Salmon" />
           </Form.Item>
 
           <Form.Item
+            name="category_id"
             label="Category"
-            name="categoryId"
-            rules={[{ required: true, message: "Choose category" }]}
+            rules={[{ required: true, message: "Please select category" }]}
           >
-            <Select
-              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+            <Select placeholder="Select category">
+              {categories.map((cat) => (
+                <Select.Option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="price"
+            label="Price"
+            rules={[
+              { required: true, message: "Please enter price" },
+              { type: "number", min: 0.01, message: "Price must be positive" },
+            ]}
+          >
+            <InputNumber
+              style={{ width: "100%" }}
+              min={0.01}
+              step={0.01}
+              precision={2}
+              prefix="$"
             />
           </Form.Item>
 
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item
-                label="Price"
-                name="price"
-                rules={[{ required: true, message: "Enter price" }]}
-              >
-                <Input type="number" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Prep time (min)" name="prepTime">
-                <Input type="number" min={0} />
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={3} placeholder="Optional description" />
+          </Form.Item>
 
-          <Form.Item label="Status" name="status">
-            <Select
-              options={[
-                { value: "available", label: "available" },
-                { value: "sold_out", label: "sold_out" },
-                { value: "hidden", label: "hidden" },
-              ]}
+          <Form.Item name="prep_time_minutes" label="Prep Time (minutes)">
+            <InputNumber
+              style={{ width: "100%" }}
+              min={0}
+              max={240}
+              placeholder="0"
             />
           </Form.Item>
 
           <Form.Item
-            label="Chef recommended"
-            name="chefRecommended"
+            name="status"
+            label="Status"
+            rules={[{ required: true, message: "Please select status" }]}
+          >
+            <Select>
+              <Select.Option value="available">Available</Select.Option>
+              <Select.Option value="unavailable">Unavailable</Select.Option>
+              <Select.Option value="sold_out">Sold Out</Select.Option>
+              <Select.Option value="hidden">Hidden</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="is_chef_recommended"
+            label="Chef's Recommendation"
             valuePropName="checked"
           >
-            <Switch />
+            <Switch checkedChildren="Yes" unCheckedChildren="No" />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,387 +1,458 @@
-import { useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Button,
-  Card,
+  Row,
   Col,
+  Card,
+  Table,
+  Button,
+  Modal,
   Form,
   Input,
-  Modal,
-  Row,
   Select,
-  Space,
+  InputNumber,
   Switch,
-  Table,
-  Tag,
-  Typography,
+  Space,
+  message,
+  Popconfirm,
+  Spin,
 } from "antd";
-import { useMenu } from "../../context/MenuContext.jsx";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import * as menuService from "../../services/menuService";
 
 export default function Modifiers() {
-  const {
-    modifierGroups,
-    addModifierGroup,
-    updateModifierGroup,
-    deleteModifierGroup,
-    addModifierOption,
-    updateModifierOption,
-    deleteModifierOption,
-  } = useMenu();
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [selectedGroupId, setSelectedGroupId] = useState(
-    modifierGroups[0]?.id || null
-  );
-  const selectedGroup =
-    modifierGroups.find((g) => g.id === selectedGroupId) || null;
-
-  // ---- Group modal state
+  // Modals
   const [groupModalOpen, setGroupModalOpen] = useState(false);
+  const [optionModalOpen, setOptionModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [editingOption, setEditingOption] = useState(null);
+
   const [groupForm] = Form.useForm();
+  const [optionForm] = Form.useForm();
 
-  // ---- Option modal state
-  const [optModalOpen, setOptModalOpen] = useState(false);
-  const [editingOpt, setEditingOpt] = useState(null);
-  const [optForm] = Form.useForm();
+  useEffect(() => {
+    fetchGroups();
+  }, []);
 
-  const groupData = useMemo(
-    () => modifierGroups.map((g) => ({ key: g.id, ...g })),
-    [modifierGroups]
-  );
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchOptions(selectedGroup.id);
+    }
+  }, [selectedGroup]);
 
-  function openCreateGroup() {
+  const fetchGroups = async () => {
+    try {
+      setLoading(true);
+      const response = await menuService.getModifierGroups();
+      setGroups(response.data || []);
+    } catch (error) {
+      message.error("Failed to load modifier groups");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOptions = async (groupId) => {
+    try {
+      const response = await menuService.getModifierOptions(groupId);
+      setOptions(response.data || []);
+    } catch (error) {
+      message.error("Failed to load options");
+      console.error(error);
+    }
+  };
+
+  // Group CRUD
+  const openCreateGroup = () => {
     setEditingGroup(null);
     groupForm.resetFields();
-    groupForm.setFieldsValue({
-      selectionType: "single",
-      required: false,
-      min: 0,
-      max: 1,
-      status: "active",
-    });
+    groupForm.setFieldsValue({ selection_type: "single", is_required: false });
     setGroupModalOpen(true);
-  }
+  };
 
-  function openEditGroup(g) {
-    setEditingGroup(g);
-    groupForm.setFieldsValue({
-      name: g.name,
-      selectionType: g.selectionType,
-      required: g.required,
-      min: g.min,
-      max: g.max,
-      status: g.status,
-    });
+  const openEditGroup = (group) => {
+    setEditingGroup(group);
+    groupForm.setFieldsValue(group);
     setGroupModalOpen(true);
-  }
+  };
 
-  function saveGroup() {
-    groupForm.validateFields().then((vals) => {
-      const payload = {
-        ...vals,
-        min: Number(vals.min ?? 0),
-        max: Number(vals.max ?? 0),
-      };
-
-      // basic UI validation for min/max
-      if (payload.min < 0 || payload.max < 0) return;
-      if (payload.selectionType === "single") {
-        payload.min = 1;
-        payload.max = 1;
-      } else {
-        if (payload.max < payload.min) {
-          // swap or force sensible value
-          payload.max = payload.min;
-        }
-      }
+  const saveGroup = async () => {
+    try {
+      const values = await groupForm.validateFields();
+      setLoading(true);
 
       if (editingGroup) {
-        updateModifierGroup(editingGroup.id, payload);
+        await menuService.updateModifierGroup(editingGroup.id, values);
+        message.success("Group updated");
       } else {
-        const g = addModifierGroup(payload);
-        setSelectedGroupId(g.id);
+        await menuService.createModifierGroup(values);
+        message.success("Group created");
       }
+
       setGroupModalOpen(false);
-    });
-  }
-
-  function onDeleteGroup(groupId) {
-    deleteModifierGroup(groupId);
-    if (groupId === selectedGroupId) {
-      const next = modifierGroups.filter((g) => g.id !== groupId)[0];
-      setSelectedGroupId(next?.id || null);
+      groupForm.resetFields();
+      fetchGroups();
+    } catch (error) {
+      if (!error.errorFields) {
+        message.error("Failed to save group");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // ---- Options
-  function openCreateOption() {
-    if (!selectedGroup) return;
-    setEditingOpt(null);
-    optForm.resetFields();
-    optForm.setFieldsValue({ priceAdjustment: 0, status: "active" });
-    setOptModalOpen(true);
-  }
+  const deleteGroup = async (id) => {
+    try {
+      setLoading(true);
+      await menuService.deleteModifierGroup(id);
+      message.success("Group deleted");
+      if (selectedGroup?.id === id) {
+        setSelectedGroup(null);
+        setOptions([]);
+      }
+      fetchGroups();
+    } catch (error) {
+      message.error("Failed to delete group");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  function openEditOption(opt) {
-    setEditingOpt(opt);
-    optForm.setFieldsValue({
-      name: opt.name,
-      priceAdjustment: opt.priceAdjustment,
-      status: opt.status,
-    });
-    setOptModalOpen(true);
-  }
+  // Option CRUD
+  const openCreateOption = () => {
+    if (!selectedGroup) {
+      message.warning("Please select a group first");
+      return;
+    }
+    setEditingOption(null);
+    optionForm.resetFields();
+    optionForm.setFieldsValue({ price_adjustment: 0 });
+    setOptionModalOpen(true);
+  };
 
-  function saveOption() {
-    if (!selectedGroup) return;
-    optForm.validateFields().then((vals) => {
-      const payload = {
-        ...vals,
-        priceAdjustment: Number(vals.priceAdjustment ?? 0),
-      };
+  const openEditOption = (option) => {
+    setEditingOption(option);
+    optionForm.setFieldsValue(option);
+    setOptionModalOpen(true);
+  };
 
-      if (editingOpt)
-        updateModifierOption(selectedGroup.id, editingOpt.id, payload);
-      else addModifierOption(selectedGroup.id, payload);
+  const saveOption = async () => {
+    try {
+      const values = await optionForm.validateFields();
+      setLoading(true);
 
-      setOptModalOpen(false);
-    });
-  }
+      if (editingOption) {
+        await menuService.updateModifierOption(editingOption.id, values);
+        message.success("Option updated");
+      } else {
+        await menuService.createModifierOption(selectedGroup.id, values);
+        message.success("Option created");
+      }
+
+      setOptionModalOpen(false);
+      optionForm.resetFields();
+      fetchOptions(selectedGroup.id);
+    } catch (error) {
+      if (!error.errorFields) {
+        message.error("Failed to save option");
+        console.error(error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteOption = async (id) => {
+    try {
+      setLoading(true);
+      await menuService.deleteModifierOption(id);
+      message.success("Option deleted");
+      fetchOptions(selectedGroup.id);
+    } catch (error) {
+      message.error("Failed to delete option");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const groupColumns = [
+    {
+      title: "Group Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Type",
+      dataIndex: "selection_type",
+      key: "selection_type",
+      render: (type) =>
+        type === "single" ? "Single Select" : "Multiple Select",
+    },
+    {
+      title: "Required",
+      dataIndex: "is_required",
+      key: "is_required",
+      render: (required) => (required ? "Yes" : "No"),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEditGroup(record)}
+          >
+            Edit
+          </Button>
+          <Popconfirm
+            title="Delete group?"
+            onConfirm={() => deleteGroup(record.id)}
+          >
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
   const optionColumns = [
-    { title: "Name", dataIndex: "name" },
+    {
+      title: "Option Name",
+      dataIndex: "name",
+      key: "name",
+    },
     {
       title: "Price Adjustment",
-      dataIndex: "priceAdjustment",
-      render: (v) => `${Number(v || 0).toLocaleString()}đ`,
+      dataIndex: "price_adjustment",
+      key: "price_adjustment",
+      render: (price) => `$${Number(price).toFixed(2)}`,
     },
     {
       title: "Status",
       dataIndex: "status",
-      render: (v) =>
-        v === "active" ? <Tag color="green">active</Tag> : <Tag>inactive</Tag>,
+      key: "status",
     },
     {
       title: "Actions",
+      key: "actions",
       render: (_, record) => (
-        <Space>
-          <Button size="small" onClick={() => openEditOption(record)}>
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => openEditOption(record)}
+          >
             Edit
           </Button>
-          <Button
-            size="small"
-            danger
-            onClick={() => deleteModifierOption(selectedGroup.id, record.id)}
+          <Popconfirm
+            title="Delete option?"
+            onConfirm={() => deleteOption(record.id)}
           >
-            Delete
-          </Button>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: 20 }}>
-      <Space style={{ width: "100%", justifyContent: "space-between" }}>
-        <Typography.Title level={3} style={{ margin: 0 }}>
-          Modifiers
-        </Typography.Title>
-        <Button type="primary" onClick={openCreateGroup}>
-          + Add Group
-        </Button>
-      </Space>
+    <div style={{ padding: 24 }}>
+      <h2 style={{ marginBottom: 24 }}>Modifier Groups & Options</h2>
 
-      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-        {/* Left: Groups */}
-        <Col xs={24} lg={10}>
-          <Card title="Modifier Groups">
-            <Table
-              size="small"
-              dataSource={groupData}
-              pagination={{ pageSize: 6 }}
-              rowClassName={(r) =>
-                r.id === selectedGroupId ? "ant-table-row-selected" : ""
+      <Spin spinning={loading}>
+        <Row gutter={16}>
+          {/* Left: Groups */}
+          <Col span={12}>
+            <Card
+              title="Modifier Groups"
+              extra={
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<PlusOutlined />}
+                  onClick={openCreateGroup}
+                >
+                  Add Group
+                </Button>
               }
-              onRow={(record) => ({
-                onClick: () => setSelectedGroupId(record.id),
-                style: { cursor: "pointer" },
-              })}
-              columns={[
-                { title: "Name", dataIndex: "name" },
-                {
-                  title: "Type",
-                  dataIndex: "selectionType",
-                  render: (v) => <Tag color="blue">{v}</Tag>,
-                },
-                {
-                  title: "Required",
-                  dataIndex: "required",
-                  render: (v) =>
-                    v ? (
-                      <Tag color="purple">required</Tag>
-                    ) : (
-                      <Tag>optional</Tag>
-                    ),
-                },
-                {
-                  title: "Rule",
-                  render: (_, g) =>
-                    g.selectionType === "single"
-                      ? "min=1, max=1"
-                      : `min=${g.min}, max=${g.max}`,
-                },
-                {
-                  title: "Status",
-                  dataIndex: "status",
-                  render: (v) =>
-                    v === "active" ? (
-                      <Tag color="green">active</Tag>
-                    ) : (
-                      <Tag>inactive</Tag>
-                    ),
-                },
-                {
-                  title: "Actions",
-                  render: (_, g) => (
-                    <Space>
-                      <Button size="small" onClick={() => openEditGroup(g)}>
-                        Edit
-                      </Button>
-                      <Button
-                        size="small"
-                        danger
-                        onClick={() => onDeleteGroup(g.id)}
-                      >
-                        Delete
-                      </Button>
-                    </Space>
-                  ),
-                },
-              ]}
-            />
-          </Card>
-        </Col>
-
-        {/* Right: Options */}
-        <Col xs={24} lg={14}>
-          <Card
-            title={
-              selectedGroup ? `Options of: ${selectedGroup.name}` : "Options"
-            }
-            extra={
-              <Button onClick={openCreateOption} disabled={!selectedGroup}>
-                + Add Option
-              </Button>
-            }
-          >
-            {!selectedGroup ? (
-              <Typography.Text type="secondary">
-                Select a group first.
-              </Typography.Text>
-            ) : (
+            >
               <Table
-                size="small"
-                dataSource={selectedGroup.options.map((o) => ({
-                  key: o.id,
-                  ...o,
-                }))}
-                columns={optionColumns}
-                pagination={{ pageSize: 6 }}
+                dataSource={groups}
+                columns={groupColumns}
+                rowKey="id"
+                pagination={{ pageSize: 10 }}
+                onRow={(record) => ({
+                  onClick: () => setSelectedGroup(record),
+                  style: {
+                    cursor: "pointer",
+                    background:
+                      selectedGroup?.id === record.id ? "#e6f7ff" : undefined,
+                  },
+                })}
               />
-            )}
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+
+          {/* Right: Options */}
+          <Col span={12}>
+            <Card
+              title={
+                selectedGroup
+                  ? `Options for "${selectedGroup.name}"`
+                  : "Select a group"
+              }
+              extra={
+                selectedGroup && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={openCreateOption}
+                  >
+                    Add Option
+                  </Button>
+                )
+              }
+            >
+              {selectedGroup ? (
+                <Table
+                  dataSource={options}
+                  columns={optionColumns}
+                  rowKey="id"
+                  pagination={{ pageSize: 10 }}
+                />
+              ) : (
+                <div
+                  style={{ textAlign: "center", padding: 40, color: "#999" }}
+                >
+                  Select a modifier group to view options
+                </div>
+              )}
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
 
       {/* Group Modal */}
       <Modal
+        title={editingGroup ? "Edit Group" : "Create Group"}
         open={groupModalOpen}
-        onCancel={() => setGroupModalOpen(false)}
         onOk={saveGroup}
-        okText="Save"
-        title={editingGroup ? "Edit Group" : "Add Group"}
+        onCancel={() => {
+          setGroupModalOpen(false);
+          groupForm.resetFields();
+        }}
+        confirmLoading={loading}
       >
-        <Form layout="vertical" form={groupForm}>
+        <Form form={groupForm} layout="vertical">
           <Form.Item
-            label="Group name"
             name="name"
-            rules={[{ required: true }]}
+            label="Group Name"
+            rules={[{ required: true, message: "Please enter group name" }]}
           >
             <Input placeholder="e.g., Size" />
           </Form.Item>
 
           <Form.Item
-            label="Selection type"
-            name="selectionType"
+            name="selection_type"
+            label="Selection Type"
             rules={[{ required: true }]}
           >
-            <Select
-              options={[
-                { value: "single", label: "single (radio)" },
-                { value: "multiple", label: "multiple (checkbox)" },
-              ]}
-            />
+            <Select>
+              <Select.Option value="single">Single Select</Select.Option>
+              <Select.Option value="multiple">Multiple Select</Select.Option>
+            </Select>
           </Form.Item>
 
-          <Form.Item label="Required" name="required" valuePropName="checked">
+          <Form.Item
+            name="is_required"
+            label="Required"
+            valuePropName="checked"
+          >
             <Switch />
           </Form.Item>
 
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item label="Min (only for multiple)" name="min">
-                <Input type="number" min={0} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Max (only for multiple)" name="max">
-                <Input type="number" min={0} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item label="Status" name="status">
-            <Select
-              options={[
-                { value: "active", label: "active" },
-                { value: "inactive", label: "inactive" },
-              ]}
-            />
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, curr) =>
+              prev.selection_type !== curr.selection_type
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("selection_type") === "multiple" && (
+                <>
+                  <Form.Item name="min_selections" label="Min Selections">
+                    <InputNumber min={0} style={{ width: "100%" }} />
+                  </Form.Item>
+                  <Form.Item name="max_selections" label="Max Selections">
+                    <InputNumber min={0} style={{ width: "100%" }} />
+                  </Form.Item>
+                </>
+              )
+            }
           </Form.Item>
 
-          <Typography.Text type="secondary">
-            Note: If selection type is <b>single</b>, UI will force min=max=1.
-          </Typography.Text>
+          <Form.Item name="display_order" label="Display Order">
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
         </Form>
       </Modal>
 
       {/* Option Modal */}
       <Modal
-        open={optModalOpen}
-        onCancel={() => setOptModalOpen(false)}
+        title={editingOption ? "Edit Option" : "Create Option"}
+        open={optionModalOpen}
         onOk={saveOption}
-        okText="Save"
-        title={editingOpt ? "Edit Option" : "Add Option"}
+        onCancel={() => {
+          setOptionModalOpen(false);
+          optionForm.resetFields();
+        }}
+        confirmLoading={loading}
       >
-        <Form layout="vertical" form={optForm}>
+        <Form form={optionForm} layout="vertical">
           <Form.Item
-            label="Option name"
             name="name"
-            rules={[{ required: true }]}
+            label="Option Name"
+            rules={[{ required: true, message: "Please enter option name" }]}
           >
             <Input placeholder="e.g., Large" />
           </Form.Item>
 
-          <Form.Item label="Price adjustment" name="priceAdjustment">
-            <Input type="number" />
+          <Form.Item
+            name="price_adjustment"
+            label="Price Adjustment"
+            rules={[{ required: true }, { type: "number", min: 0 }]}
+          >
+            <InputNumber
+              min={0}
+              step={0.01}
+              precision={2}
+              prefix="$"
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
-          <Form.Item label="Status" name="status">
-            <Select
-              options={[
-                { value: "active", label: "active" },
-                { value: "inactive", label: "inactive" },
-              ]}
-            />
+          <Form.Item name="status" label="Status" initialValue="active">
+            <Select>
+              <Select.Option value="active">Active</Select.Option>
+              <Select.Option value="inactive">Inactive</Select.Option>
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
