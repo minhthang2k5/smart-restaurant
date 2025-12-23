@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -36,6 +37,9 @@ app.use((req, res, next) => {
     console.log("Hello from middleware 👋");
     next();
 });
+
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/admin/tables", tableRouter); // admin-facing routes
 app.use("/api/menu", menuRouter); // Public/customer-facing routes

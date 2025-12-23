@@ -2,6 +2,9 @@
 node_modules/
 package-lock.json
 
+# Uploaded files (generated at runtime)
+assignments/backend/uploads/
+
 # Environment variables
 .env
 .env.local
