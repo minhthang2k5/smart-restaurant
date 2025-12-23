@@ -1,173 +1,283 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Card, Result, Spin, Alert } from "antd";
-import { QrcodeOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import tableService from "../../services/tableService";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Row,
+  Col,
+  Card,
+  Input,
+  Segmented,
+  Tag,
+  Space,
+  Empty,
+  Spin,
+  message,
+} from "antd";
+import {
+  SearchOutlined,
+  StarFilled,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
+import * as menuService from "../../services/menuService";
 
-const Menu = () => {
-    const [searchParams] = useSearchParams();
-    const [loading, setLoading] = useState(true);
-    const [verified, setVerified] = useState(false);
-    const [tableInfo, setTableInfo] = useState(null);
-    const [error, setError] = useState(null);
+const { Meta } = Card;
 
-    const tableId = searchParams.get("table");
-    const token = searchParams.get("token");
-
-    useEffect(() => {
-        verifyQRToken();
-    }, [tableId, token]);
-
-    const verifyQRToken = async () => {
-        setLoading(true);
-        setError(null);
-
-        if (!tableId || !token) {
-            setError("Invalid QR code. Missing table or token parameter.");
-            setLoading(false);
-            return;
-        }
-
-        try {
-            const response = await tableService.verifyQRToken(token);
-            setVerified(true);
-            // Map backend response (snake_case) to frontend format
-            const table = response.data.table;
-            setTableInfo({
-                id: table.id,
-                tableNumber: table.table_number,
-                location: table.location,
-            });
-        } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                    err.message ||
-                    "Failed to verify QR token"
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                    flexDirection: "column",
-                    gap: 16,
-                }}
-            >
-                <Spin size="large" />
-                <p>Verifying QR code...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                    padding: 24,
-                }}
-            >
-                <Result
-                    status="error"
-                    title="Invalid QR Code"
-                    subTitle={error}
-                    icon={<QrcodeOutlined />}
-                />
-            </div>
-        );
-    }
-
-    if (!verified) {
-        return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
-                    padding: 24,
-                }}
-            >
-                <Result
-                    status="warning"
-                    title="Verification Required"
-                    subTitle="Please scan a valid QR code to access the menu."
-                />
-            </div>
-        );
-    }
-
-    return (
-        <div
-            style={{
-                maxWidth: 1200,
-                margin: "0 auto",
-                padding: 24,
-                minHeight: "100vh",
-            }}
-        >
-            {/* Success Banner */}
-            <Alert
-                message={
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                        }}
-                    >
-                        <CheckCircleOutlined />
-                        <span>
-                            Welcome to Table {tableInfo.tableNumber} (
-                            {tableInfo.location})
-                        </span>
-                    </div>
-                }
-                type="success"
-                showIcon={false}
-                style={{ marginBottom: 24 }}
-            />
-
-            {/* Menu Content */}
-            <Card>
-                <Result
-                    status="info"
-                    title="Menu Coming Soon"
-                    subTitle={
-                        <div>
-                            <p>
-                                This is a placeholder for the customer menu
-                                page.
-                            </p>
-                            <p>
-                                Table: <strong>{tableInfo.tableNumber}</strong>
-                            </p>
-                            <p>
-                                Location: <strong>{tableInfo.location}</strong>
-                            </p>
-                            <p>
-                                Capacity:{" "}
-                                <strong>{tableInfo.capacity} people</strong>
-                            </p>
-                        </div>
-                    }
-                />
-
-                {/* TODO: Add menu items, cart, checkout flow */}
-            </Card>
-        </div>
-    );
+const statusColor = {
+  available: "green",
+  unavailable: "orange",
+  sold_out: "red",
 };
 
-export default Menu;
+export default function Menu() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // State
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Filters from URL
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchCategories();
+    fetchItems();
+  }, []);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = {};
+    if (search) params.q = search;
+    if (selectedCategory !== "all") params.category = selectedCategory;
+    setSearchParams(params, { replace: true });
+  }, [search, selectedCategory, setSearchParams]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await menuService.getCategories();
+      // Only show active categories for guests
+      const activeCategories = (response.data || []).filter(
+        (cat) => cat.status === "active"
+      );
+      setCategories(activeCategories);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  };
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      const response = await menuService.getPublicMenu({
+        status: "available", // Only show available items
+      });
+      setItems(response.data || []);
+    } catch (error) {
+      message.error("Failed to load menu");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter items by category and search
+  const filteredItems = useMemo(() => {
+    let filtered = items;
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(
+        (item) => item.category_id === selectedCategory
+      );
+    }
+
+    // Filter by search query
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.name.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
+      );
+    }
+
+    // Hide "hidden" status items
+    filtered = filtered.filter((item) => item.status !== "hidden");
+
+    return filtered;
+  }, [items, selectedCategory, search]);
+
+  // Category options for Segmented control
+  const categoryOptions = [
+    { label: "All", value: "all" },
+    ...categories.map((cat) => ({
+      label: cat.name,
+      value: cat.id,
+    })),
+  ];
+
+  const getCategoryName = (categoryId) => {
+    const cat = categories.find((c) => c.id === categoryId);
+    return cat ? cat.name : "Unknown";
+  };
+
+  return (
+    <div
+      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "24px 0" }}
+    >
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        {/* Header */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h1 style={{ fontSize: 32, marginBottom: 8 }}>Our Menu</h1>
+          <p style={{ color: "#666", fontSize: 16 }}>
+            Browse our delicious selection
+          </p>
+        </div>
+
+        {/* Filters */}
+        <Card style={{ marginBottom: 24 }}>
+          <Space direction="vertical" style={{ width: "100%" }} size="large">
+            {/* Search */}
+            <Input
+              size="large"
+              placeholder="Search menu items..."
+              prefix={<SearchOutlined />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              allowClear
+            />
+
+            {/* Category Filter */}
+            <div>
+              <div style={{ marginBottom: 12, fontWeight: 500 }}>
+                Filter by Category:
+              </div>
+              <Segmented
+                options={categoryOptions}
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                block
+              />
+            </div>
+          </Space>
+        </Card>
+
+        {/* Items Grid */}
+        <Spin spinning={loading}>
+          {filteredItems.length === 0 ? (
+            <Empty
+              description={
+                search || selectedCategory !== "all"
+                  ? "No items match your filters"
+                  : "No menu items available"
+              }
+              style={{ marginTop: 60 }}
+            />
+          ) : (
+            <Row gutter={[16, 16]}>
+              {filteredItems.map((item) => (
+                <Col key={item.id} xs={24} sm={12} md={8}>
+                  <Card
+                    hoverable
+                    onClick={() => navigate(`/menu/${item.id}`)}
+                    style={{
+                      height: "100%",
+                      opacity: item.status === "sold_out" ? 0.6 : 1,
+                    }}
+                  >
+                    {/* Category & Status Tags */}
+                    <Space
+                      style={{
+                        marginBottom: 12,
+                        width: "100%",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Tag color="blue">
+                        {getCategoryName(item.category_id)}
+                      </Tag>
+                      <Tag color={statusColor[item.status]}>
+                        {item.status.replace("_", " ").toUpperCase()}
+                      </Tag>
+                    </Space>
+
+                    {/* Item Info */}
+                    <Meta
+                      title={
+                        <Space>
+                          <span>{item.name}</span>
+                          {item.is_chef_recommended && (
+                            <StarFilled style={{ color: "#faad14" }} />
+                          )}
+                        </Space>
+                      }
+                      description={
+                        <Space
+                          direction="vertical"
+                          size={8}
+                          style={{ width: "100%" }}
+                        >
+                          {/* Description */}
+                          {item.description && (
+                            <div
+                              style={{
+                                color: "#666",
+                                fontSize: 13,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                              }}
+                            >
+                              {item.description}
+                            </div>
+                          )}
+
+                          {/* Prep Time */}
+                          {item.prep_time_minutes > 0 && (
+                            <div style={{ color: "#999", fontSize: 12 }}>
+                              <ClockCircleOutlined /> {item.prep_time_minutes}{" "}
+                              mins
+                            </div>
+                          )}
+
+                          {/* Price */}
+                          <div
+                            style={{
+                              fontSize: 20,
+                              fontWeight: "bold",
+                              color: "#1890ff",
+                            }}
+                          >
+                            ${Number(item.price).toFixed(2)}
+                          </div>
+
+                          {/* Chef's Pick Badge */}
+                          {item.is_chef_recommended && (
+                            <Tag color="gold" icon={<StarFilled />}>
+                              Chef's Pick
+                            </Tag>
+                          )}
+
+                          {/* Sold Out Warning */}
+                          {item.status === "sold_out" && (
+                            <Tag color="red">SOLD OUT</Tag>
+                          )}
+                        </Space>
+                      }
+                    />
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Spin>
+      </div>
+    </div>
+  );
+}

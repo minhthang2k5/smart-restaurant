@@ -185,3 +185,22 @@ select:focus,
 textarea:focus {
   @apply outline-none ring-2 ring-rose-500/20 border-rose-300;
 }
+
+/* Selected item */
+.ant-menu-item-selected {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  border-radius: 8px;
+  margin: 4px 8px;
+}
+
+.ant-menu-item-selected a {
+  color: white !important;
+}
+
+/* Hover */
+.ant-menu-item:hover {
+  background: rgba(236, 72, 153, 0.12) !important;
+  border-radius: 8px;
+  margin: 4px 8px;
+}

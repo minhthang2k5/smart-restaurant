@@ -3,7 +3,12 @@ import { ConfigProvider, App as AntApp } from "antd";
 import Layout from "./components/common/Layout";
 import Tables from "./pages/admin/Tables";
 import Dashboard from "./pages/admin/Dashboard";
-import Menu from "./pages/customer/Menu"; // ← New import
+import Menu from "./pages/customer/Menu";
+import Categories from "./pages/admin/Categories";
+import MenuItems from "./pages/admin/MenuItems";
+import MenuItemDetail from "./pages/admin/MenuItemDetail";
+import Modifiers from "./pages/admin/Modifiers";
+import GuestItemDetail from "./pages/customer/GuestItemDetail";
 import "./styles/global.css";
 
 const theme = {
@@ -24,10 +29,15 @@ function App() {
               <Route index element={<Navigate to="/admin/tables" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="tables" element={<Tables />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="menu-items" element={<MenuItems />} />
+              <Route path="menu-items/:id" element={<MenuItemDetail />} />
+              <Route path="modifiers" element={<Modifiers />} />
             </Route>
 
             {/* Customer Routes */}
             <Route path="/menu" element={<Menu />} />
+            <Route path="/menu/:itemId" element={<GuestItemDetail />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/admin/tables" replace />} />
