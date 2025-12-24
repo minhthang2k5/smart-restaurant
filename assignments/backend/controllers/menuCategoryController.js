@@ -1,5 +1,6 @@
 const MenuCategory = require("../models/MenuCategory");
 const MenuItem = require("../models/MenuItem");
+const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 
 /**
@@ -106,8 +107,12 @@ exports.getCategories = async (req, res) => {
       order: orderClause,
       attributes: {
         include: [
-          // TODO: Add count of items when MenuItem model is created
-          // [sequelize.literal('(SELECT COUNT(*) FROM menu_items WHERE menu_items.category_id = MenuCategory.id)'), 'itemCount']
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM menu_items mi WHERE mi.category_id = "MenuCategory"."id" AND mi.restaurant_id = '${restaurantId}' AND mi.is_deleted = false)`
+            ),
+            "itemCount",
+          ],
         ],
       },
     });
@@ -142,6 +147,16 @@ exports.getCategoryById = async (req, res) => {
       where: {
         id,
         restaurantId,
+      },
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              `(SELECT COUNT(*) FROM menu_items mi WHERE mi.category_id = "MenuCategory"."id" AND mi.restaurant_id = '${restaurantId}' AND mi.is_deleted = false)`
+            ),
+            "itemCount",
+          ],
+        ],
       },
     });
 
