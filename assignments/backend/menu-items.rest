@@ -3,7 +3,7 @@
 
 @baseUrl = http://localhost:3000/api/admin/menu/items
 @categoryId = ee8c998b-3078-4e15-8fb3-4e0af3b46315
-@itemId = REPLACE_WITH_ITEM_ID
+@itemId = aa80c2ea-10bd-4c91-a954-f2b6d545c43a
 
 ###
 ### 1. CREATE Menu Item - Basic
@@ -72,7 +72,7 @@ Content-Type: application/json
 ### 7. MOVE Item to Another Category
 ###    Replace newCategoryId with another valid category ID
 ###
-@newCategoryId = REPLACE_WITH_ANOTHER_CATEGORY_ID
+@newCategoryId = 2e686925-1936-4bb1-b28d-9b6e05e95e69
 
 PUT {{baseUrl}}/{{itemId}}
 Content-Type: application/json

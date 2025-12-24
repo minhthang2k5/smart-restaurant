@@ -7,6 +7,8 @@ const tableRouter = require("./routes/tableRoutes");
 const menuRouter = require("./routes/menuRoutes");
 const menuItemRouter = require("./routes/menuItemRoutes");
 const menuCategoryRouter = require("./routes/menuCategoryRoutes");
+const modifierGroupRouter = require("./routes/modifierGroupRoutes");
+const modifierOptionRouter = require("./routes/modifierOptionRoutes");
 
 const app = express();
 
@@ -46,5 +48,7 @@ app.use("/api/admin/tables", tableRouter); // admin-facing routes
 app.use("/api/menu", menuRouter); // Public/customer-facing routes
 app.use("/api/admin/menu/items", menuItemRouter); // admin-facing menu item routes
 app.use("/api/admin/menu/categories", menuCategoryRouter); // admin-facing menu category routes
+app.use("/api/admin/menu/modifier-groups", modifierGroupRouter); // admin-facing modifier group routes
+app.use("/api/admin/menu/modifier-options", modifierOptionRouter); // admin-facing modifier option routes
 
 module.exports = app;

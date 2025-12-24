@@ -1,0 +1,294 @@
+### Menu Item Modifiers API Testing
+### Use REST Client extension in VS Code to run these requests
+
+@baseUrl = http://localhost:3000/api/admin/menu/modifier-groups
+@baseUrlOptions = http://localhost:3000/api/admin/menu/modifier-options
+@baseUrlItems = http://localhost:3000/api/admin/menu/items
+
+### Variables (Update these with actual IDs from responses)
+@groupId = 10653880-0bd6-44c3-ad69-8535b58b9426
+@optionId = 5b375e31-6da4-4a54-8ccf-27969b4c675e
+@menuItemId = 60b85b58-1675-4bb3-b02a-254ecd6c579a
+
+### ============================================
+### MODIFIER GROUPS CRUD
+### ============================================
+
+### 1. CREATE Modifier Group - Size (Single-select, Required)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Size",
+  "selection_type": "single",
+  "is_required": true,
+  "display_order": 10,
+  "status": "active"
+}
+
+### 2. CREATE Modifier Group - Extras (Multi-select, Optional)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Extras",
+  "selection_type": "multiple",
+  "is_required": false,
+  "min_selections": 0,
+  "max_selections": 5,
+  "display_order": 20,
+  "status": "active"
+}
+
+### 3. CREATE Modifier Group - Spice Level (Single-select, Optional)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Spice Level",
+  "selection_type": "single",
+  "is_required": false,
+  "display_order": 30,
+  "status": "active"
+}
+
+### 4. GET All Modifier Groups
+GET {{baseUrl}}
+
+### 5. GET All Modifier Groups - Filter by active status
+GET {{baseUrl}}?status=active
+
+### 6. GET All Modifier Groups - Sort by name
+GET {{baseUrl}}?sortBy=name&order=ASC
+
+### 7. GET Single Modifier Group by ID (with options)
+GET {{baseUrl}}/{{groupId}}
+
+### 8. UPDATE Modifier Group
+PUT {{baseUrl}}/{{groupId}}
+Content-Type: application/json
+
+{
+  "name": "Size Options",
+  "display_order": 5,
+  "is_required": true
+}
+
+### 9. UPDATE Modifier Group Status - Deactivate
+PATCH {{baseUrl}}/{{groupId}}/status
+Content-Type: application/json
+
+{
+  "status": "inactive"
+}
+
+### 10. UPDATE Modifier Group Status - Reactivate
+PATCH {{baseUrl}}/{{groupId}}/status
+Content-Type: application/json
+
+{
+  "status": "active"
+}
+
+### 11. DELETE Modifier Group (Soft Delete)
+DELETE {{baseUrl}}/{{groupId}}
+
+### ============================================
+### MODIFIER OPTIONS CRUD
+### ============================================
+
+### 12. CREATE Modifier Option - Small (for Size group)
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Small",
+  "price_adjustment": 0,
+  "status": "active"
+}
+
+### 13. CREATE Modifier Option - Medium (for Size group)
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Medium",
+  "price_adjustment": 1.00,
+  "status": "active"
+}
+
+### 14. CREATE Modifier Option - Large (for Size group)
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Large",
+  "price_adjustment": 2.00,
+  "status": "active"
+}
+
+### 15. CREATE Modifier Option - Cheese (for Extras group)
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Extra Cheese",
+  "price_adjustment": 0.50,
+  "status": "active"
+}
+
+### 16. CREATE Modifier Option - Bacon (for Extras group)
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Bacon",
+  "price_adjustment": 1.00,
+  "status": "active"
+}
+
+### 17. GET All Options for a Modifier Group
+GET {{baseUrl}}/{{groupId}}/options
+
+### 18. GET All Options - Filter by active status
+GET {{baseUrl}}/{{groupId}}/options?status=active
+
+### 19. GET Single Modifier Option by ID
+GET {{baseUrlOptions}}/{{optionId}}
+
+### 20. UPDATE Modifier Option
+PUT {{baseUrlOptions}}/{{optionId}}
+Content-Type: application/json
+
+{
+  "name": "Medium Size",
+  "price_adjustment": 1.50
+}
+
+### 21. UPDATE Modifier Option Status - Deactivate
+PATCH {{baseUrlOptions}}/{{optionId}}/status
+Content-Type: application/json
+
+{
+  "status": "inactive"
+}
+
+### 22. UPDATE Modifier Option Status - Reactivate
+PATCH {{baseUrlOptions}}/{{optionId}}/status
+Content-Type: application/json
+
+{
+  "status": "active"
+}
+
+### 23. DELETE Modifier Option (Soft Delete)
+DELETE {{baseUrlOptions}}/{{optionId}}
+
+### ============================================
+### ATTACH MODIFIER GROUPS TO MENU ITEMS
+### ============================================
+
+### 24. ATTACH Modifier Groups to Menu Item
+POST {{baseUrlItems}}/{{menuItemId}}/modifier-groups
+Content-Type: application/json
+
+{
+  "groupIds": [
+    "10653880-0bd6-44c3-ad69-8535b58b9426",
+    "8a3c1457-5e59-46ec-8884-eab06550a7af"
+  ]
+}
+
+### 25. GET Modifier Groups for a Menu Item
+GET {{baseUrlItems}}/{{menuItemId}}/modifier-groups
+
+### 26. DETACH All Modifier Groups from Menu Item
+DELETE {{baseUrlItems}}/{{menuItemId}}/modifier-groups
+
+### ============================================
+### ERROR CASES - Testing validation
+### ============================================
+
+### Test Error: Missing Group Name
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "selection_type": "single",
+  "is_required": true
+}
+
+### Test Error: Invalid Selection Type
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Test Group",
+  "selection_type": "invalid",
+  "is_required": true
+}
+
+### Test Error: Min > Max Selections
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Test Group",
+  "selection_type": "multiple",
+  "min_selections": 5,
+  "max_selections": 3
+}
+
+### Test Error: Negative Price Adjustment
+POST {{baseUrl}}/{{groupId}}/options
+Content-Type: application/json
+
+{
+  "name": "Test Option",
+  "price_adjustment": -1.00
+}
+
+### Test Error: Attach Groups - Empty Array
+POST {{baseUrlItems}}/{{menuItemId}}/modifier-groups
+Content-Type: application/json
+
+{
+  "groupIds": []
+}
+
+### Test Error: Attach Groups - Invalid Menu Item ID
+POST {{baseUrlItems}}/99999999-9999-9999-9999-999999999999/modifier-groups
+Content-Type: application/json
+
+{
+  "groupIds": ["{{groupId}}"]
+}
+
+### Test Error: Get Non-existent Modifier Group
+GET {{baseUrl}}/99999999-9999-9999-9999-999999999999
+
+### Test Error: Update Non-existent Modifier Group
+PUT {{baseUrl}}/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+{
+  "name": "Non-existent"
+}
+
+### Test Error: Delete Non-existent Modifier Group
+DELETE {{baseUrl}}/99999999-9999-9999-9999-999999999999
+
+### NOTES:
+# 1. Replace IDs ({{groupId}}, {{optionId}}, {{menuItemId}}) with actual IDs from API responses
+# 2. If authentication is required, add Authorization header:
+#    Authorization: Bearer YOUR_JWT_TOKEN
+# 3. Use REST Client extension for VS Code to run these requests
+# 4. Ctrl+Alt+R (or Cmd+Alt+R on Mac) to send individual request
+# 5. Variables can be saved from previous responses
+# 6. Test flow:
+#    - Create modifier groups first
+#    - Create options for each group
+#    - Create menu items (use menu-items.rest)
+#    - Attach modifier groups to menu items
+#    - Test guest menu endpoint to see modifiers
+

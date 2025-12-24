@@ -2,6 +2,9 @@ require("dotenv").config({ path: "./config.env" });
 const app = require("./app");
 const sequelize = require("./config/database");
 
+// Load models and set up associations
+require("./models/associations");
+
 const PORT = process.env.PORT || 3000;
 
 // Database connection and server start

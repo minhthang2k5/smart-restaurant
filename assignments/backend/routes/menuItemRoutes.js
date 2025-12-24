@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const menuItemController = require("../controllers/menuItemController");
 const photoController = require("../controllers/photoController");
+const menuItemModifierController = require("../controllers/menuItemModifierController");
 const { photosUpload } = require("../services/uploadService");
 
 // Menu Item CRUD routes
@@ -26,5 +27,10 @@ router.post(
 router.delete("/:id/photos/:photoId", photoController.deletePhoto);
 
 router.patch("/:id/photos/:photoId/primary", photoController.setPrimaryPhoto);
+
+// Modifier Groups: attach/detach groups to items
+router.post("/:id/modifier-groups", menuItemModifierController.attachModifierGroups);
+router.get("/:id/modifier-groups", menuItemModifierController.getMenuItemModifierGroups);
+router.delete("/:id/modifier-groups", menuItemModifierController.detachAllModifierGroups);
 
 module.exports = router;
