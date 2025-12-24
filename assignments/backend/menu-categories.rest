@@ -1,0 +1,207 @@
+### Menu Categories API Testing
+### Use REST Client extension in VS Code to run these requests
+
+@baseUrl = http://localhost:3000/api/admin/menu/categories
+
+
+### 1. CREATE Category - Appetizers
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Appetizers",
+  "description": "Delicious starters to kick off your meal",
+  "displayOrder": 10,
+  "status": "active"
+}
+
+
+### 2. CREATE Category - Main Courses
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Main Courses",
+  "description": "Our signature main dishes cooked fresh",
+  "displayOrder": 20,
+  "status": "active"
+}
+
+
+### 3. CREATE Category - Desserts
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Desserts",
+  "description": "Sweet endings to your meal",
+  "displayOrder": 30,
+  "status": "active"
+}
+
+
+### 4. CREATE Category - Beverages
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Beverages",
+  "description": "Refreshing drinks and beverages",
+  "displayOrder": 40,
+  "status": "active"
+}
+
+
+### 5. GET All Categories (Default - sorted by displayOrder)
+GET {{baseUrl}}
+
+
+### 6. GET All Categories - Filter by active status
+GET {{baseUrl}}?status=active
+
+
+### 7. GET All Categories - Sort by name (ascending)
+GET {{baseUrl}}?sortBy=name&order=ASC
+
+
+### 8. GET All Categories - Sort by creation date (descending)
+GET {{baseUrl}}?sortBy=createdAt&order=DESC
+
+
+### 9. GET Single Category by ID
+# Note: Replace the ID with actual category ID from response
+GET {{baseUrl}}/0e4e5df0-26db-4c2f-a543-3451de17e5de
+
+
+### 10. UPDATE Category - Change Appetizers to Starters
+# Note: Replace the ID with actual category ID
+PUT {{baseUrl}}/0e4e5df0-26db-4c2f-a543-3451de17e5de
+Content-Type: application/json
+
+{
+  "name": "Starters",
+  "description": "Amazing appetizers and starters",
+  "displayOrder": 15
+}
+
+
+### 11. UPDATE Category - Change multiple fields
+PUT {{baseUrl}}/550e8400-e29b-41d4-a716-446655440000
+Content-Type: application/json
+
+{
+  "name": "Premium Appetizers",
+  "displayOrder": 5,
+  "status": "active"
+}
+
+
+### 12. UPDATE Category Status - Deactivate (Soft Delete)
+PATCH {{baseUrl}}/0e4e5df0-26db-4c2f-a543-3451de17e5de/status
+Content-Type: application/json
+
+{
+  "status": "inactive"
+}
+
+
+### 13. UPDATE Category Status - Reactivate
+PATCH {{baseUrl}}/550e8400-e29b-41d4-a716-446655440000/status
+Content-Type: application/json
+
+{
+  "status": "active"
+}
+
+
+### 14. DELETE Category (Soft Delete)
+DELETE {{baseUrl}}/0e4e5df0-26db-4c2f-a543-3451de17e5de
+
+
+### ERROR CASES - Testing validation
+
+### Test Error: Missing Name
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "description": "Test without name",
+  "displayOrder": 50
+}
+
+
+### Test Error: Name too short (less than 2 chars)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "A",
+  "description": "Name too short",
+  "displayOrder": 50
+}
+
+
+### Test Error: Name too long (more than 50 chars)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "This is a very long category name that exceeds the maximum length of fifty characters allowed",
+  "description": "Name too long test"
+}
+
+
+### Test Error: Duplicate name (create two with same name)
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Appetizers",
+  "description": "This should fail - duplicate name",
+  "displayOrder": 100
+}
+
+
+### Test Error: Negative displayOrder
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Invalid Order",
+  "displayOrder": -5
+}
+
+
+### Test Error: Invalid status on update
+PATCH {{baseUrl}}/550e8400-e29b-41d4-a716-446655440000/status
+Content-Type: application/json
+
+{
+  "status": "pending"
+}
+
+
+### Test Error: Get non-existent category
+GET {{baseUrl}}/99999999-9999-9999-9999-999999999999
+
+
+### Test Error: Update non-existent category
+PUT {{baseUrl}}/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+{
+  "name": "Non-existent"
+}
+
+
+### Test Error: Delete non-existent category
+DELETE {{baseUrl}}/99999999-9999-9999-9999-999999999999
+
+
+### NOTES:
+# 1. Replace IDs (550e8400-e29b-41d4-a716-446655440000) with actual category IDs from API responses
+# 2. If authentication is required, add Authorization header:
+#    Authorization: Bearer YOUR_JWT_TOKEN
+# 3. Use REST Client extension for VS Code to run these requests
+# 4. Ctrl+Alt+R (or Cmd+Alt+R on Mac) to send individual request
+# 5. Variables can be saved from previous responses

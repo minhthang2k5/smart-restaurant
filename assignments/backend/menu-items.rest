@@ -1,0 +1,130 @@
+### Menu Items API Testing
+### Use REST Client extension in VS Code / Cursor to run these requests
+
+@baseUrl = http://localhost:3000/api/admin/menu/items
+@categoryId = ee8c998b-3078-4e15-8fb3-4e0af3b46315
+@itemId = REPLACE_WITH_ITEM_ID
+
+###
+### 1. CREATE Menu Item - Basic
+###
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "category_id": "{{categoryId}}",
+  "name": "Grilled Chicken",
+  "description": "Juicy grilled chicken with herbs",
+  "price": 9.99,
+  "prep_time_minutes": 20,
+  "status": "available",
+  "is_chef_recommended": true
+}
+
+###
+### 2. CREATE Menu Item - Another Item
+###
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "category_id": "{{categoryId}}",
+  "name": "Caesar Salad",
+  "description": "Fresh salad with croutons and parmesan",
+  "price": 6.50,
+  "prep_time_minutes": 10,
+  "status": "available",
+  "is_chef_recommended": false
+}
+
+###
+### 3. GET All Items (default - sorted by created_at DESC, paginated)
+###
+GET {{baseUrl}}
+
+###
+### 4. GET All Items - Filter by name (search), status, and category
+###    Supports query: ?page=&limit=&sort=&order=&name=&category_id=&status=
+###
+GET {{baseUrl}}?name=chicken&status=available&category_id={{categoryId}}&page=1&limit=5&sort=price&order=ASC
+
+###
+### 5. GET Single Item by ID
+###    Replace itemId with actual item ID from create response
+###
+GET {{baseUrl}}/{{itemId}}
+
+###
+### 6. UPDATE Item - Change name, price, status
+###
+PUT {{baseUrl}}/{{itemId}}
+Content-Type: application/json
+
+{
+  "name": "Grilled Chicken Special",
+  "price": 11.50,
+  "status": "available",
+  "prep_time_minutes": 25,
+  "is_chef_recommended": true
+}
+
+###
+### 7. MOVE Item to Another Category
+###    Replace newCategoryId with another valid category ID
+###
+@newCategoryId = REPLACE_WITH_ANOTHER_CATEGORY_ID
+
+PUT {{baseUrl}}/{{itemId}}
+Content-Type: application/json
+
+{
+  "category_id": "{{newCategoryId}}"
+}
+
+###
+### 8. DELETE Item (Soft delete)
+###
+DELETE {{baseUrl}}/{{itemId}}
+
+###
+### 9. ERROR CASES
+###
+
+### 9.1 Create item with missing required fields
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "name": "Invalid Item Without Category And Price"
+}
+
+### 9.2 Create item with invalid category_id
+POST {{baseUrl}}
+Content-Type: application/json
+
+{
+  "category_id": "00000000-0000-0000-0000-000000000000",
+  "name": "Item With Invalid Category",
+  "price": 5.00
+}
+
+### 9.3 Update non-existent item
+PUT {{baseUrl}}/99999999-9999-9999-9999-999999999999
+Content-Type: application/json
+
+{
+  "name": "Non-existent Item"
+}
+
+### 9.4 Delete non-existent item
+DELETE {{baseUrl}}/99999999-9999-9999-9999-999999999999
+
+###
+### NOTES:
+### 1. Trước tiên dùng file menu-categories.rest để tạo category, copy id gán vào {{categoryId}}
+### 2. Sau khi tạo item, lấy id từ response gán vào {{itemId}} để test GET/PUT/DELETE
+### 3. Nếu backend yêu cầu auth, thêm header:
+###    Authorization: Bearer YOUR_JWT_TOKEN
+###
+
+
