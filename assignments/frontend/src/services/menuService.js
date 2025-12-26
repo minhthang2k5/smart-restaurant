@@ -2,123 +2,97 @@ import api from "./api";
 
 // ========== CATEGORIES ==========
 export const getCategories = async (params) => {
-  const response = await api.get("/admin/menu/categories", { params });
-  return response.data;
+  return api.get("/admin/menu/categories", { params });
 };
 
 export const createCategory = async (data) => {
-  const response = await api.post("/admin/menu/categories", data);
-  return response.data;
+  return api.post("/admin/menu/categories", data);
 };
 
 export const updateCategory = async (id, data) => {
-  const response = await api.put(`/admin/menu/categories/${id}`, data);
-  return response.data;
+  return api.put(`/admin/menu/categories/${id}`, data);
 };
 
 export const deleteCategory = async (id) => {
-  const response = await api.delete(`/admin/menu/categories/${id}`);
-  return response.data;
+  return api.delete(`/admin/menu/categories/${id}`);
 };
 
 // ========== MENU ITEMS ==========
 export const getMenuItems = async (params) => {
-  const response = await api.get("/admin/menu/items", { params });
-  return response.data;
+  return api.get("/admin/menu/items", { params });
 };
 
 export const getMenuItemById = async (id) => {
-  const response = await api.get(`/admin/menu/items/${id}`);
-  return response.data;
+  return api.get(`/admin/menu/items/${id}`);
 };
 
 export const createMenuItem = async (data) => {
-  const response = await api.post("/admin/menu/items", data);
-  return response.data;
+  return api.post("/admin/menu/items", data);
 };
 
 export const updateMenuItem = async (id, data) => {
-  const response = await api.put(`/admin/menu/items/${id}`, data);
-  return response.data;
+  return api.put(`/admin/menu/items/${id}`, data);
 };
 
 export const deleteMenuItem = async (id) => {
-  const response = await api.delete(`/admin/menu/items/${id}`);
-  return response.data;
+  return api.delete(`/admin/menu/items/${id}`);
 };
 
 // ========== MODIFIERS ==========
 export const getModifierGroups = async () => {
-  const response = await api.get("/admin/menu/modifier-groups");
-  return response.data;
+  return api.get("/admin/menu/modifier-groups");
 };
 
 export const createModifierGroup = async (data) => {
-  const response = await api.post("/admin/menu/modifier-groups", data);
-  return response.data;
+  return api.post("/admin/menu/modifier-groups", data);
 };
 
 export const updateModifierGroup = async (id, data) => {
-  const response = await api.put(`/admin/menu/modifier-groups/${id}`, data);
-  return response.data;
+  return api.put(`/admin/menu/modifier-groups/${id}`, data);
 };
 
 export const deleteModifierGroup = async (id) => {
-  const response = await api.delete(`/admin/menu/modifier-groups/${id}`);
-  return response.data;
+  return api.delete(`/admin/menu/modifier-groups/${id}`);
 };
 
 // Modifier Options
 export const getModifierOptions = async (groupId) => {
-  const response = await api.get(
-    `/admin/menu/modifier-groups/${groupId}/options`
-  );
-  return response.data;
+  return api.get(`/admin/menu/modifier-groups/${groupId}/options`);
 };
 
 export const createModifierOption = async (groupId, data) => {
-  const response = await api.post(
+  return api.post(
     `/admin/menu/modifier-groups/${groupId}/options`,
     data
   );
-  return response.data;
 };
 
 export const updateModifierOption = async (id, data) => {
-  const response = await api.put(`/admin/menu/modifier-options/${id}`, data);
-  return response.data;
+  return api.put(`/admin/menu/modifier-options/${id}`, data);
 };
 
 export const deleteModifierOption = async (id) => {
-  const response = await api.delete(`/admin/menu/modifier-options/${id}`);
-  return response.data;
+  return api.delete(`/admin/menu/modifier-options/${id}`);
 };
 
 // Attach modifiers to items
 export const attachModifiersToItem = async (itemId, groupIds) => {
-  const response = await api.post(
-    `/admin/menu/items/${itemId}/modifier-groups`,
-    {
-      group_ids: groupIds,
-    }
-  );
-  return response.data;
+  return api.post(`/admin/menu/items/${itemId}/modifier-groups`, {
+    groupIds: groupIds,
+  });
 };
 
 export const getItemModifiers = async (itemId) => {
-  const response = await api.get(`/admin/menu/items/${itemId}/modifier-groups`);
-  return response.data;
+  return api.get(`/admin/menu/items/${itemId}/modifier-groups`);
 };
 
 // ========== PUBLIC MENU (Guest) ==========
 export const getPublicMenu = async (params) => {
-  const response = await api.get("/menu", { params });
-  return response.data;
+  return api.get("/menu", { params });
 };
 
 export const getPublicMenuItem = async (itemId) => {
-  const response = await api.get(`/menu/items/${itemId}`);
-  return response.data;
+  return api.get(`/menu/items/${itemId}`);
 };
 
 // ========== MENU ITEM PHOTOS ==========
@@ -128,7 +102,7 @@ export const uploadPhotos = async (itemId, files) => {
     formData.append("photos", file);
   });
 
-  const response = await api.post(
+  return api.post(
     `/admin/menu/items/${itemId}/photos`,
     formData,
     {
@@ -137,19 +111,14 @@ export const uploadPhotos = async (itemId, files) => {
       },
     }
   );
-  return response.data;
 };
 
 export const deletePhoto = async (itemId, photoId) => {
-  const response = await api.delete(
-    `/admin/menu/items/${itemId}/photos/${photoId}`
-  );
-  return response.data;
+  return api.delete(`/admin/menu/items/${itemId}/photos/${photoId}`);
 };
 
 export const setPrimaryPhoto = async (itemId, photoId) => {
-  const response = await api.patch(
+  return api.patch(
     `/admin/menu/items/${itemId}/photos/${photoId}/primary`
   );
-  return response.data;
 };

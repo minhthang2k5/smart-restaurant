@@ -25,8 +25,12 @@ const corsOptions = {
 // Enable CORS for all routes
 app.use(cors(corsOptions));
 
-// Add security headers
-app.use(helmet());
+// Add security headers (with CORS exceptions)
+app.use(
+    helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+);
 
 // Body parsers
 app.use(express.json());

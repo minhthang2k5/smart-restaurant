@@ -6,10 +6,26 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  
+  // Helper to build full image URL
+  const getImageUrl = (url) => {
+    console.log('getImageUrl input:', url);
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    // Backend is at localhost:3000
+    const fullUrl = `http://localhost:3000${url}`;
+    console.log('getImageUrl output:', fullUrl);
+    return fullUrl;
+  };
 
   useEffect(() => {
+    console.log('PhotoManager initialPhotos:', initialPhotos);
     setPhotos(initialPhotos);
   }, [initialPhotos]);
+  
+  useEffect(() => {
+    console.log('PhotoManager photos state:', photos);
+  }, [photos]);
 
   const handleUpload = async (files) => {
     if (files.length === 0) return;
@@ -18,9 +34,14 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
     setError("");
 
     try {
-      const data = await menuService.uploadPhotos(itemId, Array.from(files));
-      setPhotos([...photos, ...data.photos]);
+      const response = await menuService.uploadPhotos(itemId, Array.from(files));
+      console.log('Upload response:', response);
+      // Backend returns { status: "success", data: [...] }
+      const uploadedPhotos = response.data || [];
+      setPhotos([...photos, ...uploadedPhotos]);
+      setError("");
     } catch (err) {
+      console.error('Upload error:', err);
       setError(err.response?.data?.message || "Failed to upload photos");
     } finally {
       setUploading(false);
@@ -87,9 +108,14 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
         {photos.map((photo) => (
           <div key={photo.id} className="relative group">
             <img
-              src={photo.url}
+              src={photo.url?.startsWith('http') ? photo.url : `http://localhost:3000${photo.url}`}
               alt="Menu item"
               className="w-full h-32 object-cover rounded-lg"
+              onError={(e) => {
+                console.error('Image load error:', photo.url);
+                console.error('Tried to load:', e.target.src);
+                e.target.style.display = 'none';
+              }}
             />
 
             {/* Primary badge */}

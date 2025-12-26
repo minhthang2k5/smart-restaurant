@@ -284,28 +284,64 @@ export default function MenuItems() {
         ) : (
           <>
             <Row gutter={[16, 16]}>
-              {items.map((item) => (
-                <Col key={item.id} xs={24} sm={12} md={8}>
-                  <Card
-                    onClick={() => navigate(`/admin/menu-items/${item.id}`)}
-                    style={{ cursor: "pointer" }}
-                    actions={[
-                      <EditOutlined
-                        key="edit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEdit(item);
-                        }}
-                      />,
-                      <DeleteOutlined
-                        key="delete"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item.id);
-                        }}
-                      />,
-                    ]}
-                  >
+              {items.map((item) => {
+                const imageUrl = item.primaryPhoto?.url
+                  ? item.primaryPhoto.url.startsWith('http')
+                    ? item.primaryPhoto.url
+                    : `http://localhost:3000${item.primaryPhoto.url}`
+                  : null;
+
+                return (
+                  <Col key={item.id} xs={24} sm={12} md={8}>
+                    <Card
+                      onClick={() => navigate(`/admin/menu-items/${item.id}`)}
+                      style={{ cursor: "pointer" }}
+                      cover={
+                        imageUrl ? (
+                          <div style={{ height: 200, overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
+                            <img
+                              alt={item.name}
+                              src={imageUrl}
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover' 
+                              }}
+                              onError={(e) => {
+                                e.target.src = 'https://via.placeholder.com/400x200?text=No+Image';
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ 
+                            height: 200, 
+                            backgroundColor: '#f5f5f5', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            color: '#bbb'
+                          }}>
+                            <span>Không có ảnh</span>
+                          </div>
+                        )
+                      }
+                      actions={[
+                        <EditOutlined
+                          key="edit"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEdit(item);
+                          }}
+                        />,
+                        <DeleteOutlined
+                          key="delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item.id);
+                          }}
+                        />,
+                      ]}
+                    >
                     <Card.Meta
                       title={
                         <Space
@@ -362,7 +398,8 @@ export default function MenuItems() {
                     />
                   </Card>
                 </Col>
-              ))}
+                );
+              })}
             </Row>
 
             {/* Pagination */}

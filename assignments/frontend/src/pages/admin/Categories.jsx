@@ -33,7 +33,8 @@ export default function Categories() {
       setCategories(response.data || []);
     } catch (error) {
       message.error("Tải danh sách danh mục thất bại");
-      console.error(error);
+      console.error('Fetch Categories Error:', error);
+      console.error('Error Response:', error.response);
     } finally {
       setLoading(false);
     }
@@ -129,10 +130,10 @@ export default function Categories() {
     },
     {
       title: "Thứ tự hiển thị",
-      dataIndex: "display_order",
-      key: "display_order",
+      dataIndex: "displayOrder",
+      key: "displayOrder",
       width: 120,
-      sorter: (a, b) => (a.display_order || 0) - (b.display_order || 0),
+      sorter: (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0),
     },
     {
       title: "Trạng thái",
@@ -230,15 +231,21 @@ export default function Categories() {
             <Input.TextArea rows={3} placeholder="Mô tả (không bắt buộc)" />
           </Form.Item>
 
-          <Form.Item name="display_order" label="Thứ tự hiển thị">
+          <Form.Item name="displayOrder" label="Thứ tự hiển thị">
             <Input type="number" min={0} placeholder="0" />
           </Form.Item>
 
-          <Form.Item name="status" label="Trạng thái" initialValue="active">
+          <Form.Item 
+            name="status" 
+            label="Trạng thái" 
+            initialValue="active"
+            valuePropName="checked"
+            getValueFromEvent={(checked) => checked ? "active" : "inactive"}
+            getValueProps={(value) => ({ checked: value === "active" })}
+          >
             <Switch
               checkedChildren="Hoạt động"
               unCheckedChildren="Tắt"
-              defaultChecked
             />
           </Form.Item>
         </Form>
