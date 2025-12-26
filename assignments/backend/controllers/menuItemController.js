@@ -1,5 +1,6 @@
 const MenuItem = require("../models/MenuItem");
 const MenuCategory = require("../models/MenuCategory");
+const MenuItemPhoto = require("../models/MenuItemPhoto");
 const APIFeatures = require("../utils/apiFeatures");
 
 // GET /api/admin/menu/items
@@ -28,11 +29,29 @@ exports.getAllItems = async (req, res) => {
     // Execute query
     const items = await features.execute();
 
+    // Fetch primary photo for each item
+    const itemsWithPhotos = await Promise.all(
+      items.map(async (item) => {
+        const primaryPhoto = await MenuItemPhoto.findOne({
+          where: {
+            menu_item_id: item.id,
+            is_primary: true,
+          },
+          attributes: ["id", "url", "is_primary"],
+        });
+
+        return {
+          ...item.toJSON(),
+          primaryPhoto: primaryPhoto || null,
+        };
+      })
+    );
+
     res.status(200).json({
       status: "success",
-      results: items.length,
+      results: itemsWithPhotos.length,
       pagination: features.getPaginationData(totalCount),
-      data: items,
+      data: itemsWithPhotos,
     });
   } catch (error) {
     console.error("Error fetching menu items:", error);
@@ -64,9 +83,19 @@ exports.getItemById = async (req, res) => {
       });
     }
 
+    // Fetch all photos for this item
+    const photos = await MenuItemPhoto.findAll({
+      where: { menu_item_id: id },
+      attributes: ["id", "url", "is_primary", "created_at"],
+      order: [["is_primary", "DESC"], ["created_at", "ASC"]],
+    });
+
     res.status(200).json({
       status: "success",
-      data: item,
+      data: {
+        ...item.toJSON(),
+        photos: photos,
+      },
     });
   } catch (error) {
     console.error("Error fetching menu item:", error);

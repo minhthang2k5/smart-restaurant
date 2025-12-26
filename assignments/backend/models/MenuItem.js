@@ -11,12 +11,12 @@ const MenuItem = sequelize.define(
     },
     restaurant_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      validate: {
-        notNull: {
-          msg: "Restaurant ID is required",
-        },
-      },
+    //   allowNull: false,
+    //   validate: {
+    //     notNull: {
+    //       msg: "Restaurant ID is required",
+    //     },
+    //   },
     },
     category_id: {
       type: DataTypes.UUID,
