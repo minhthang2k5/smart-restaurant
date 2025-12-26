@@ -64,7 +64,7 @@ const DownloadButtons = ({ tableCount }) => {
               disabled={loading}
               className="w-full flex items-center gap-5 p-6 bg-linear-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 rounded-3xl transition-all text-left group border-2 border-rose-100 hover:border-rose-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="p-4 bg-white rounded-2xl text-rose-600 shadow-lg shadow-rose-200/50 group-hover:scale-110 transition-transform">
+              <div className="p-4 bg-white rounded-2xl text-rose-600 shadow-lg shadow-rose-200/50 transition-transform">
                 <FileArchive size={28} strokeWidth={2.5} />
               </div>
               <div className="flex-1">
@@ -87,7 +87,7 @@ const DownloadButtons = ({ tableCount }) => {
               disabled={loading}
               className="w-full flex items-center gap-5 p-6 bg-linear-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-3xl transition-all text-left group border-2 border-blue-100 hover:border-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="p-4 bg-white rounded-2xl text-blue-600 shadow-lg shadow-blue-200/50 group-hover:scale-110 transition-transform">
+              <div className="p-4 bg-white rounded-2xl text-blue-600 shadow-lg shadow-blue-200/50 transition-transform">
                 <FileText size={28} strokeWidth={2.5} />
               </div>
               <div className="flex-1">

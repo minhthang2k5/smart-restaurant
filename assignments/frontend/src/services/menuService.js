@@ -120,3 +120,36 @@ export const getPublicMenuItem = async (itemId) => {
   const response = await api.get(`/menu/items/${itemId}`);
   return response.data;
 };
+
+// ========== MENU ITEM PHOTOS ==========
+export const uploadPhotos = async (itemId, files) => {
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("photos", file);
+  });
+
+  const response = await api.post(
+    `/admin/menu/items/${itemId}/photos`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+};
+
+export const deletePhoto = async (itemId, photoId) => {
+  const response = await api.delete(
+    `/admin/menu/items/${itemId}/photos/${photoId}`
+  );
+  return response.data;
+};
+
+export const setPrimaryPhoto = async (itemId, photoId) => {
+  const response = await api.patch(
+    `/admin/menu/items/${itemId}/photos/${photoId}/primary`
+  );
+  return response.data;
+};

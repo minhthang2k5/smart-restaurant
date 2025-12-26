@@ -94,19 +94,19 @@ const TableList = ({
                 <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                   <button
                     onClick={() => onGenerateQR(table)}
-                    className="p-3 text-pink-600 hover:bg-pink-50 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
+                    className="p-3 text-pink-600 hover:bg-pink-50 rounded-2xl transition-all duration-300 shadow-sm"
                   >
                     <QrCode size={18} />
                   </button>
                   <button
                     onClick={() => onEdit(table)}
-                    className="p-3 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
+                    className="p-3 text-slate-600 hover:bg-slate-100 rounded-2xl transition-all duration-300 shadow-sm"
                   >
                     <Edit2 size={18} />
                   </button>
                   <button
                     onClick={() => onToggleStatus(table.id, table.status)}
-                    className={`p-3 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm ${
+                    className={`p-3 rounded-2xl transition-all duration-300 shadow-sm ${
                       table.status === "active"
                         ? "text-amber-600 hover:bg-amber-50"
                         : "text-emerald-600 hover:bg-emerald-50"
@@ -120,7 +120,7 @@ const TableList = ({
                   </button>
                   <button
                     onClick={() => onDelete(table.id)}
-                    className="p-3 text-rose-600 hover:bg-rose-50 rounded-2xl transition-all duration-300 hover:scale-110 shadow-sm"
+                    className="p-3 text-rose-600 hover:bg-rose-50 rounded-2xl transition-all duration-300 shadow-sm"
                   >
                     <Trash2 size={18} />
                   </button>
@@ -146,7 +146,7 @@ const TableList = ({
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-xl border border-pink-200 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105"
+              className="p-2 rounded-xl border border-pink-200 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               <ChevronLeft size={18} className="text-pink-600" />
             </button>
@@ -159,8 +159,8 @@ const TableList = ({
                   onClick={() => goToPage(page)}
                   className={`w-10 h-10 rounded-xl font-semibold transition-all duration-300 ${
                     currentPage === page
-                      ? "bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg scale-110"
-                      : "border border-pink-200 text-slate-600 hover:bg-pink-50 hover:scale-105"
+                      ? "bg-linear-to-r from-pink-500 to-rose-500 text-white shadow-lg"
+                      : "border border-pink-200 text-slate-600 hover:bg-pink-50"
                   }`}
                 >
                   {page}
@@ -172,7 +172,7 @@ const TableList = ({
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-xl border border-pink-200 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105"
+              className="p-2 rounded-xl border border-pink-200 hover:bg-pink-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               <ChevronRight size={18} className="text-pink-600" />
             </button>
