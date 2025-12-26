@@ -19,7 +19,6 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
   };
 
   useEffect(() => {
-    console.log('PhotoManager initialPhotos:', initialPhotos);
     setPhotos(initialPhotos);
   }, [initialPhotos]);
   
@@ -35,7 +34,6 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
 
     try {
       const response = await menuService.uploadPhotos(itemId, Array.from(files));
-      console.log('Upload response:', response);
       // Backend returns { status: "success", data: [...] }
       const uploadedPhotos = response.data || [];
       setPhotos([...photos, ...uploadedPhotos]);

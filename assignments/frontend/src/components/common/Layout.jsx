@@ -61,8 +61,7 @@ const Layout = () => {
               padding: 0,
               background: "transparent",
               flex: 1,
-              overflow: "visible",
-              display: "flex",
+              overflowY: "auto",
               flexDirection: "column",
             }}
           >

@@ -122,25 +122,20 @@ export default function MenuItemDetail() {
 
   const handleModifiersChange = async (selectedGroupIds) => {
     try {
-      console.log('handleModifiersChange called with:', selectedGroupIds);
-      console.log('Is empty?', selectedGroupIds.length === 0);
-      
+    
       if (selectedGroupIds.length === 0) {
         // If no groups selected, detach all
-        console.log('Detaching all modifiers...');
         await api.delete(`/admin/menu/items/${itemId}/modifier-groups`);
         setAttachedModifiers([]);
         message.success("Đã xóa tất cả tùy chọn");
       } else {
         // Otherwise attach selected groups
-        console.log('Attaching modifiers:', selectedGroupIds);
         await menuService.attachModifiersToItem(itemId, selectedGroupIds);
         setAttachedModifiers(selectedGroupIds);
         message.success("Cập nhật tùy chọn thành công");
       }
     } catch (error) {
       message.error("Cập nhật tùy chọn thất bại");
-      console.error('handleModifiersChange error:', error);
     }
   };
 

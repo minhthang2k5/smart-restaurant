@@ -61,10 +61,7 @@ export const getModifierOptions = async (groupId) => {
 };
 
 export const createModifierOption = async (groupId, data) => {
-  return api.post(
-    `/admin/menu/modifier-groups/${groupId}/options`,
-    data
-  );
+  return api.post(`/admin/menu/modifier-groups/${groupId}/options`, data);
 };
 
 export const updateModifierOption = async (id, data) => {
@@ -88,7 +85,7 @@ export const getItemModifiers = async (itemId) => {
 
 // ========== PUBLIC MENU (Guest) ==========
 export const getPublicMenu = async (params) => {
-  return api.get("/menu", { params });
+  return api.get("/menu/items", { params });
 };
 
 export const getPublicMenuItem = async (itemId) => {
@@ -102,15 +99,11 @@ export const uploadPhotos = async (itemId, files) => {
     formData.append("photos", file);
   });
 
-  return api.post(
-    `/admin/menu/items/${itemId}/photos`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  return api.post(`/admin/menu/items/${itemId}/photos`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
 
 export const deletePhoto = async (itemId, photoId) => {
@@ -118,7 +111,5 @@ export const deletePhoto = async (itemId, photoId) => {
 };
 
 export const setPrimaryPhoto = async (itemId, photoId) => {
-  return api.patch(
-    `/admin/menu/items/${itemId}/photos/${photoId}/primary`
-  );
+  return api.patch(`/admin/menu/items/${itemId}/photos/${photoId}/primary`);
 };

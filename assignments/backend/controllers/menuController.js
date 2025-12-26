@@ -4,7 +4,7 @@ const MenuCategory = require('../models/MenuCategory');
 const MenuItemPhoto = require('../models/MenuItemPhoto');
 const ModifierGroup = require('../models/ModifierGroup');
 const ModifierOption = require('../models/ModifierOption');
-
+const { Op } = require('sequelize');
 
 exports.verifyAndGetMenu = async (req, res) => {
     try {
@@ -60,7 +60,7 @@ exports.getPublicMenu = async (req, res) => {
 
     // Build where conditions
     const itemWhere = {
-      status: 'available', // Chỉ hiển thị món còn hàng
+      status: 'available',
       is_deleted: false,
     };
 
@@ -73,7 +73,7 @@ exports.getPublicMenu = async (req, res) => {
     }
 
     const categoryWhere = {
-      status: 'active', // Chỉ hiển thị category đang hoạt động
+      status: 'active', 
       is_deleted: false,
     };
 
