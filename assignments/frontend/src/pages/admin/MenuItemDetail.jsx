@@ -14,7 +14,7 @@ import {
   Spin,
 } from "antd";
 import { ArrowLeftOutlined, SaveOutlined } from "@ant-design/icons";
-import PhotoManagerMock from "../../components/menu/itemDetail/PhotoManagerMock";
+import PhotoManager from "../../components/menu/itemDetail/PhotoManager";
 import ModifierAttach from "../../components/menu/itemDetail/ModifierAttach";
 import * as menuService from "../../services/menuService";
 
@@ -61,7 +61,7 @@ export default function MenuItemDetail() {
       // Fetch attached modifiers
       fetchAttachedModifiers();
     } catch (error) {
-      message.error("Failed to load item details");
+      message.error("Tải thông tin món ăn thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -102,15 +102,15 @@ export default function MenuItemDetail() {
       setSaving(true);
 
       await menuService.updateMenuItem(itemId, values);
-      message.success("Item updated successfully");
+      message.success("Cập nhật món ăn thành công");
 
       // Refresh item data
       fetchItem();
     } catch (error) {
       if (error.errorFields) {
-        message.error("Please check the form fields");
+        message.error("Vui lòng kiểm tra các trường nhập liệu");
       } else {
-        message.error("Failed to update item");
+        message.error("Cập nhật món ăn thất bại");
         console.error(error);
       }
     } finally {
@@ -122,9 +122,9 @@ export default function MenuItemDetail() {
     try {
       await menuService.attachModifiersToItem(itemId, selectedGroupIds);
       setAttachedModifiers(selectedGroupIds);
-      message.success("Modifiers updated successfully");
+      message.success("Cập nhật tùy chọn thành công");
     } catch (error) {
-      message.error("Failed to update modifiers");
+      message.error("Cập nhật tùy chọn thất bại");
       console.error(error);
     }
   };
@@ -132,7 +132,7 @@ export default function MenuItemDetail() {
   if (loading) {
     return (
       <div style={{ padding: 24, textAlign: "center" }}>
-        <Spin size="large" tip="Loading item details..." />
+        <Spin size="large" tip="Đang tải thông tin món ăn..." />
       </div>
     );
   }
@@ -140,9 +140,9 @@ export default function MenuItemDetail() {
   if (!item) {
     return (
       <div style={{ padding: 24, textAlign: "center" }}>
-        <p>Item not found</p>
+        <p>Không tìm thấy món ăn</p>
         <Button onClick={() => navigate("/admin/menu-items")}>
-          Back to Menu Items
+          Quay lại danh sách
         </Button>
       </div>
     );
@@ -151,27 +151,27 @@ export default function MenuItemDetail() {
   const tabItems = [
     {
       key: "1",
-      label: "Basic Information",
+      label: "Thông tin cơ bản",
       children: (
         <Card>
           <Form form={form} layout="vertical">
             <Form.Item
               name="name"
-              label="Item Name"
+              label="Tên món ăn"
               rules={[
-                { required: true, message: "Please enter item name" },
-                { min: 2, max: 80, message: "Name must be 2-80 characters" },
+                { required: true, message: "Vui lòng nhập tên món" },
+                { min: 2, max: 80, message: "Tên phải từ 2-80 ký tự" },
               ]}
             >
-              <Input placeholder="e.g., Grilled Salmon" />
+              <Input placeholder="VD: Cá hồi nướng" />
             </Form.Item>
 
             <Form.Item
               name="category_id"
-              label="Category"
-              rules={[{ required: true, message: "Please select category" }]}
+              label="Danh mục"
+              rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
             >
-              <Select placeholder="Select category">
+              <Select placeholder="Chọn danh mục">
                 {categories.map((cat) => (
                   <Select.Option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -182,13 +182,13 @@ export default function MenuItemDetail() {
 
             <Form.Item
               name="price"
-              label="Price"
+              label="Giá"
               rules={[
-                { required: true, message: "Please enter price" },
+                { required: true, message: "Vui lòng nhập giá" },
                 {
                   type: "number",
                   min: 0.01,
-                  message: "Price must be positive",
+                  message: "Giá phải lớn hơn 0",
                 },
               ]}
             >
@@ -201,13 +201,13 @@ export default function MenuItemDetail() {
               />
             </Form.Item>
 
-            <Form.Item name="description" label="Description">
-              <TextArea rows={4} placeholder="Describe the item..." />
+            <Form.Item name="description" label="Mô tả">
+              <TextArea rows={4} placeholder="Mô tả món ăn..." />
             </Form.Item>
 
             <Form.Item
               name="prep_time_minutes"
-              label="Preparation Time (minutes)"
+              label="Thời gian chuẩn bị (phút)"
             >
               <InputNumber
                 style={{ width: "100%" }}
@@ -219,23 +219,23 @@ export default function MenuItemDetail() {
 
             <Form.Item
               name="status"
-              label="Status"
-              rules={[{ required: true, message: "Please select status" }]}
+              label="Trạng thái"
+              rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
             >
               <Select>
-                <Select.Option value="available">Available</Select.Option>
-                <Select.Option value="unavailable">Unavailable</Select.Option>
-                <Select.Option value="sold_out">Sold Out</Select.Option>
-                <Select.Option value="hidden">Hidden</Select.Option>
+                <Select.Option value="available">Còn hàng</Select.Option>
+                <Select.Option value="unavailable">Tạm hết</Select.Option>
+                <Select.Option value="sold_out">Hết hàng</Select.Option>
+                <Select.Option value="hidden">Ẩn</Select.Option>
               </Select>
             </Form.Item>
 
             <Form.Item
               name="is_chef_recommended"
-              label="Chef's Recommendation"
+              label="Đề xuất của đầu bếp"
               valuePropName="checked"
             >
-              <Switch checkedChildren="Yes" unCheckedChildren="No" />
+              <Switch checkedChildren="Có" unCheckedChildren="Không" />
             </Form.Item>
 
             <Form.Item>
@@ -246,7 +246,7 @@ export default function MenuItemDetail() {
                 loading={saving}
                 size="large"
               >
-                Save Changes
+                Lưu thay đổi
               </Button>
             </Form.Item>
           </Form>
@@ -255,10 +255,10 @@ export default function MenuItemDetail() {
     },
     {
       key: "2",
-      label: "Photos",
+      label: "Hình ảnh",
       children: (
         <Card>
-          <PhotoManagerMock itemId={itemId} />
+          <PhotoManager itemId={item.id} initialPhotos={item.photos || []} />
           <div
             style={{
               marginTop: 16,
@@ -268,8 +268,7 @@ export default function MenuItemDetail() {
             }}
           >
             <p style={{ margin: 0, color: "#fa8c16" }}>
-              ⚠️ <strong>Note:</strong> Photo upload is currently UI-only
-              (mock). Backend implementation pending.
+              ⚠️ <strong>Lưu ý:</strong> Tính năng tải ảnh hiện đang trong quá trình phát triển.
             </p>
           </div>
         </Card>
@@ -277,7 +276,7 @@ export default function MenuItemDetail() {
     },
     {
       key: "3",
-      label: "Modifiers",
+      label: "Tùy chọn",
       children: (
         <Card>
           <ModifierAttach
@@ -297,9 +296,9 @@ export default function MenuItemDetail() {
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate("/admin/menu-items")}
         >
-          Back to List
+          Quay lại
         </Button>
-        <h2 style={{ margin: 0 }}>Edit Menu Item: {item.name}</h2>
+        <h2 style={{ margin: 0 }}>Chỉnh sửa món ăn: {item.name}</h2>
       </Space>
 
       <Tabs defaultActiveKey="1" items={tabItems} />

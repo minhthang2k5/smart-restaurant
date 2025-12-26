@@ -1,4 +1,10 @@
 const qrService = require("./../services/qrService");
+const MenuItem = require('../models/MenuItem');
+const MenuCategory = require('../models/MenuCategory');
+const MenuItemPhoto = require('../models/MenuItemPhoto');
+const ModifierGroup = require('../models/ModifierGroup');
+const ModifierOption = require('../models/ModifierOption');
+
 
 exports.verifyAndGetMenu = async (req, res) => {
     try {
@@ -46,4 +52,162 @@ exports.verifyAndGetMenu = async (req, res) => {
             message: err.message,
         });
     }
+};
+
+exports.getPublicMenu = async (req, res) => {
+  try {
+    const { categoryId, search, chefRecommended } = req.query;
+
+    // Build where conditions
+    const itemWhere = {
+      status: 'available', // Chỉ hiển thị món còn hàng
+      is_deleted: false,
+    };
+
+    if (search) {
+      itemWhere.name = { [Op.like]: `%${search}%` };
+    }
+
+    if (chefRecommended === 'true') {
+      itemWhere.chef_recommended = true;
+    }
+
+    const categoryWhere = {
+      status: 'active', // Chỉ hiển thị category đang hoạt động
+      is_deleted: false,
+    };
+
+    if (categoryId) {
+      itemWhere.category_id = categoryId;
+    }
+
+    // Get categories with active items
+    const categories = await MenuCategory.findAll({
+      where: categoryWhere,
+      attributes: ['id', 'name', 'description', 'display_order'],
+      order: [['display_order', 'ASC']],
+    });
+
+    // Get available items with photos
+    const items = await MenuItem.findAll({
+      where: itemWhere,
+      attributes: [
+        'id',
+        'name',
+        'description',
+        'price',
+        'prep_time',
+        'chef_recommended',
+        'category_id',
+      ],
+      include: [
+        {
+          model: MenuCategory,
+          as: 'category',
+          attributes: ['id', 'name'],
+          where: { status: 'active', is_deleted: false },
+        },
+        {
+          model: MenuItemPhoto,
+          as: 'photos',
+          attributes: ['id', 'url', 'is_primary'],
+          separate: true,
+          order: [['is_primary', 'DESC']],
+        },
+      ],
+      order: [['name', 'ASC']],
+    });
+
+    res.json({
+      success: true,
+      data: {
+        categories,
+        items,
+      },
+    });
+  } catch (error) {
+    console.error('Get public menu error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Không thể tải menu',
+    });
+  }
+};
+
+exports.getPublicMenuItem = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+
+    const item = await MenuItem.findOne({
+      where: {
+        id: itemId,
+        status: 'available',
+        is_deleted: false,
+      },
+      attributes: [
+        'id',
+        'name',
+        'description',
+        'price',
+        'prep_time',
+        'chef_recommended',
+      ],
+      include: [
+        {
+          model: MenuCategory,
+          as: 'category',
+          attributes: ['id', 'name'],
+          where: { status: 'active' },
+        },
+        {
+          model: MenuItemPhoto,
+          as: 'photos',
+          attributes: ['id', 'url', 'is_primary'],
+          order: [['is_primary', 'DESC']],
+        },
+        {
+          model: ModifierGroup,
+          as: 'modifierGroups',
+          through: { attributes: [] },
+          attributes: [
+            'id',
+            'name',
+            'selection_type',
+            'is_required',
+            'min_selections',
+            'max_selections',
+          ],
+          where: { status: 'active' },
+          required: false,
+          include: [
+            {
+              model: ModifierOption,
+              as: 'options',
+              attributes: ['id', 'name', 'price_adjustment'],
+              where: { status: 'active' },
+              required: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Món ăn không tồn tại hoặc không khả dụng',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: item,
+    });
+  } catch (error) {
+    console.error('Get public menu item error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Không thể tải thông tin món ăn',
+    });
+  }
 };

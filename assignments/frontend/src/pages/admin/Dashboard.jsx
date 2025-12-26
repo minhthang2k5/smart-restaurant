@@ -4,7 +4,7 @@ import tableService from "../../services/tableService";
 
 const StatCard = ({ title, value, icon: Icon, gradient, delay }) => (
   <div
-    className="glass-card p-8 rounded-3xl shadow-lg transition-all duration-500 hover:scale-105 cursor-pointer stagger-item"
+    className="glass-card p-8 rounded-3xl shadow-lg transition-all duration-500 stagger-item"
     style={{ animationDelay: `${delay}s` }}
   >
     <div className="flex items-center justify-between">
@@ -12,12 +12,12 @@ const StatCard = ({ title, value, icon: Icon, gradient, delay }) => (
         <p className="text-xs font-semibold text-pink-400 uppercase tracking-wider mb-3">
           {title}
         </p>
-        <h3 className="text-5xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+        <h3 className="text-5xl font-bold bg-linear-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
           {value}
         </h3>
       </div>
       <div
-        className="p-6 rounded-3xl shadow-xl transition-all duration-300 hover:scale-110"
+        className="p-6 rounded-3xl shadow-xl transition-all duration-300"
         style={{
           background: gradient,
           boxShadow: "0 10px 40px rgba(255, 107, 157, 0.25)",
@@ -65,7 +65,7 @@ const Dashboard = () => {
       {/* Header với Gradient Text */}
       <div className="flex items-center gap-5 mb-12 stagger-item">
         <div
-          className="p-5 rounded-3xl shadow-2xl transition-transform duration-300 hover:scale-110"
+          className="p-5 rounded-3xl shadow-2xl transition-transform duration-300"
           style={{
             background: "linear-gradient(135deg, #FF6B9D, #EC4899)",
             boxShadow: "0 10px 40px rgba(255, 107, 157, 0.3)",

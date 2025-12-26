@@ -101,7 +101,7 @@ export default function MenuItems() {
       setItems(response.data || []);
       setTotal(response.pagination?.totalItems || 0);
     } catch (error) {
-      message.error("Failed to load menu items");
+      message.error("Tải danh sách món ăn thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -128,10 +128,10 @@ export default function MenuItems() {
 
       if (editing) {
         await menuService.updateMenuItem(editing.id, values);
-        message.success("Item updated successfully");
+        message.success("Cập nhật món ăn thành công");
       } else {
         await menuService.createMenuItem(values);
-        message.success("Item created successfully");
+        message.success("Tạo món ăn thành công");
       }
 
       setOpen(false);
@@ -139,10 +139,10 @@ export default function MenuItems() {
       fetchItems();
     } catch (error) {
       if (error.errorFields) {
-        message.error("Please check the form fields");
+        message.error("Vui lòng kiểm tra các trường nhập liệu");
       } else {
         message.error(
-          editing ? "Failed to update item" : "Failed to create item"
+          editing ? "Cập nhật món ăn thất bại" : "Tạo món ăn thất bại"
         );
         console.error(error);
       }
@@ -153,18 +153,19 @@ export default function MenuItems() {
 
   const handleDelete = async (id) => {
     Modal.confirm({
-      title: "Delete menu item?",
-      content: "This action cannot be undone.",
-      okText: "Delete",
+      title: "Xóa món ăn?",
+      content: "Hành động này không thể hoàn tác.",
+      okText: "Xóa",
+      cancelText: "Hủy",
       okType: "danger",
       onOk: async () => {
         try {
           setLoading(true);
           await menuService.deleteMenuItem(id);
-          message.success("Item deleted successfully");
+          message.success("Xóa món ăn thành công");
           fetchItems();
         } catch (error) {
-          message.error("Failed to delete item");
+          message.error("Xóa món ăn thất bại");
           console.error(error);
         } finally {
           setLoading(false);
@@ -191,9 +192,9 @@ export default function MenuItems() {
           justifyContent: "space-between",
         }}
       >
-        <h2>Menu Items</h2>
+        <h2>Món Ăn</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Add Item
+          Thêm Món
         </Button>
       </div>
 
@@ -201,7 +202,7 @@ export default function MenuItems() {
       <Card style={{ marginBottom: 24 }}>
         <Space direction="vertical" style={{ width: "100%" }}>
           <Input
-            placeholder="Search by name..."
+            placeholder="Tìm kiếm theo tên..."
             prefix={<SearchOutlined />}
             value={q}
             onChange={(e) => {
@@ -213,14 +214,14 @@ export default function MenuItems() {
           <Space wrap>
             <Select
               style={{ width: 200 }}
-              placeholder="Filter by category"
+              placeholder="Lọc theo danh mục"
               value={categoryId}
               onChange={(val) => {
                 setCategoryId(val);
                 setPage(1);
               }}
             >
-              <Select.Option value="all">All Categories</Select.Option>
+              <Select.Option value="all">Tất cả danh mục</Select.Option>
               {categories.map((cat) => (
                 <Select.Option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -230,23 +231,23 @@ export default function MenuItems() {
 
             <Select
               style={{ width: 150 }}
-              placeholder="Filter by status"
+              placeholder="Lọc theo trạng thái"
               value={status}
               onChange={(val) => {
                 setStatus(val);
                 setPage(1);
               }}
             >
-              <Select.Option value="all">All Status</Select.Option>
-              <Select.Option value="available">Available</Select.Option>
-              <Select.Option value="unavailable">Unavailable</Select.Option>
-              <Select.Option value="sold_out">Sold Out</Select.Option>
-              <Select.Option value="hidden">Hidden</Select.Option>
+              <Select.Option value="all">Tất cả</Select.Option>
+              <Select.Option value="available">Còn hàng</Select.Option>
+              <Select.Option value="unavailable">Tạm hết</Select.Option>
+              <Select.Option value="sold_out">Hết hàng</Select.Option>
+              <Select.Option value="hidden">Ẩn</Select.Option>
             </Select>
 
             <Select
               style={{ width: 180 }}
-              placeholder="Sort by"
+              placeholder="Sắp xếp"
               value={sort}
               onChange={(val) => {
                 setSort(val);
@@ -254,17 +255,17 @@ export default function MenuItems() {
               }}
             >
               <Select.Option value="created_at_desc">
-                Newest First
+                Mới nhất
               </Select.Option>
-              <Select.Option value="created_at_asc">Oldest First</Select.Option>
+              <Select.Option value="created_at_asc">Cũ nhất</Select.Option>
               <Select.Option value="price_asc">
-                Price: Low to High
+                Giá: Thấp đến Cao
               </Select.Option>
               <Select.Option value="price_desc">
-                Price: High to Low
+                Giá: Cao đến Thấp
               </Select.Option>
-              <Select.Option value="name_asc">Name: A-Z</Select.Option>
-              <Select.Option value="name_desc">Name: Z-A</Select.Option>
+              <Select.Option value="name_asc">Tên: A-Z</Select.Option>
+              <Select.Option value="name_desc">Tên: Z-A</Select.Option>
             </Select>
           </Space>
         </Space>
@@ -276,8 +277,8 @@ export default function MenuItems() {
           <Empty
             description={
               q || categoryId !== "all" || status !== "all"
-                ? "No items match your filters"
-                : "No menu items yet. Create one to get started!"
+                ? "Không tìm thấy món ăn phù hợp"
+                : "Chưa có món ăn nào. Tạo món mới để bắt đầu!"
             }
           />
         ) : (
@@ -286,8 +287,8 @@ export default function MenuItems() {
               {items.map((item) => (
                 <Col key={item.id} xs={24} sm={12} md={8}>
                   <Card
-                    hoverable
                     onClick={() => navigate(`/admin/menu-items/${item.id}`)}
+                    style={{ cursor: "pointer" }}
                     actions={[
                       <EditOutlined
                         key="edit"
@@ -318,7 +319,7 @@ export default function MenuItems() {
                               {item.status}
                             </Tag>
                             {item.is_chef_recommended && (
-                              <Tag color="gold">Chef's Pick</Tag>
+                              <Tag color="gold">Đầu bếp đề xuất</Tag>
                             )}
                           </Space>
                         </Space>
@@ -330,7 +331,7 @@ export default function MenuItems() {
                           style={{ width: "100%" }}
                         >
                           <div style={{ color: "#666", fontSize: 12 }}>
-                            {categoryMap[item.category_id] || "Unknown"}
+                            {categoryMap[item.category_id] || "Không xác định"}
                           </div>
                           <div
                             style={{
@@ -377,7 +378,7 @@ export default function MenuItems() {
                   setPageSize(ps);
                 }}
                 showTotal={(t, range) =>
-                  `${range[0]}-${range[1]} of ${t} items`
+                  `${range[0]}-${range[1]} trong ${t} món`
                 }
               />
             </div>
@@ -387,7 +388,7 @@ export default function MenuItems() {
 
       {/* Create/Edit Modal */}
       <Modal
-        title={editing ? "Edit Menu Item" : "Create Menu Item"}
+        title={editing ? "Chỉnh sửa món ăn" : "Tạo món ăn mới"}
         open={open}
         onOk={onSave}
         onCancel={() => {
@@ -395,26 +396,28 @@ export default function MenuItems() {
           form.resetFields();
         }}
         confirmLoading={loading}
+        okText={editing ? "Cập nhật" : "Tạo mới"}
+        cancelText="Hủy"
         width={600}
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="Item Name"
+            label="Tên món ăn"
             rules={[
-              { required: true, message: "Please enter item name" },
-              { min: 2, max: 80, message: "Name must be 2-80 characters" },
+              { required: true, message: "Vui lòng nhập tên món" },
+              { min: 2, max: 80, message: "Tên phải từ 2-80 ký tự" },
             ]}
           >
-            <Input placeholder="e.g., Grilled Salmon" />
+            <Input placeholder="VD: Cá hồi nướng" />
           </Form.Item>
 
           <Form.Item
             name="category_id"
-            label="Category"
-            rules={[{ required: true, message: "Please select category" }]}
+            label="Danh mục"
+            rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
           >
-            <Select placeholder="Select category">
+            <Select placeholder="Chọn danh mục">
               {categories.map((cat) => (
                 <Select.Option key={cat.id} value={cat.id}>
                   {cat.name}
@@ -425,10 +428,10 @@ export default function MenuItems() {
 
           <Form.Item
             name="price"
-            label="Price"
+            label="Giá"
             rules={[
-              { required: true, message: "Please enter price" },
-              { type: "number", min: 0.01, message: "Price must be positive" },
+              { required: true, message: "Vui lòng nhập giá" },
+              { type: "number", min: 0.01, message: "Giá phải lớn hơn 0" },
             ]}
           >
             <InputNumber
@@ -440,11 +443,11 @@ export default function MenuItems() {
             />
           </Form.Item>
 
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Optional description" />
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} placeholder="Mô tả món ăn (không bắt buộc)" />
           </Form.Item>
 
-          <Form.Item name="prep_time_minutes" label="Prep Time (minutes)">
+          <Form.Item name="prep_time_minutes" label="Thời gian chuẩn bị (phút)">
             <InputNumber
               style={{ width: "100%" }}
               min={0}
@@ -455,23 +458,23 @@ export default function MenuItems() {
 
           <Form.Item
             name="status"
-            label="Status"
-            rules={[{ required: true, message: "Please select status" }]}
+            label="Trạng thái"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
           >
             <Select>
-              <Select.Option value="available">Available</Select.Option>
-              <Select.Option value="unavailable">Unavailable</Select.Option>
-              <Select.Option value="sold_out">Sold Out</Select.Option>
-              <Select.Option value="hidden">Hidden</Select.Option>
+              <Select.Option value="available">Còn hàng</Select.Option>
+              <Select.Option value="unavailable">Tạm hết</Select.Option>
+              <Select.Option value="sold_out">Hết hàng</Select.Option>
+              <Select.Option value="hidden">Ẩn</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="is_chef_recommended"
-            label="Chef's Recommendation"
+            label="Đề xuất của đầu bếp"
             valuePropName="checked"
           >
-            <Switch checkedChildren="Yes" unCheckedChildren="No" />
+            <Switch checkedChildren="Có" unCheckedChildren="Không" />
           </Form.Item>
         </Form>
       </Modal>

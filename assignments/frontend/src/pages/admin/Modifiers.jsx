@@ -50,7 +50,7 @@ export default function Modifiers() {
       const response = await menuService.getModifierGroups();
       setGroups(response.data || []);
     } catch (error) {
-      message.error("Failed to load modifier groups");
+      message.error("Tải danh sách nhóm thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ export default function Modifiers() {
       const response = await menuService.getModifierOptions(groupId);
       setOptions(response.data || []);
     } catch (error) {
-      message.error("Failed to load options");
+      message.error("Tải danh sách lựa chọn thất bại");
       console.error(error);
     }
   };
@@ -88,10 +88,10 @@ export default function Modifiers() {
 
       if (editingGroup) {
         await menuService.updateModifierGroup(editingGroup.id, values);
-        message.success("Group updated");
+        message.success("Cập nhật nhóm thành công");
       } else {
         await menuService.createModifierGroup(values);
-        message.success("Group created");
+        message.success("Tạo nhóm thành công");
       }
 
       setGroupModalOpen(false);
@@ -99,7 +99,7 @@ export default function Modifiers() {
       fetchGroups();
     } catch (error) {
       if (!error.errorFields) {
-        message.error("Failed to save group");
+        message.error("Lưu nhóm thất bại");
         console.error(error);
       }
     } finally {
@@ -111,14 +111,14 @@ export default function Modifiers() {
     try {
       setLoading(true);
       await menuService.deleteModifierGroup(id);
-      message.success("Group deleted");
+      message.success("Xóa nhóm thành công");
       if (selectedGroup?.id === id) {
         setSelectedGroup(null);
         setOptions([]);
       }
       fetchGroups();
     } catch (error) {
-      message.error("Failed to delete group");
+      message.error("Xóa nhóm thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -128,7 +128,7 @@ export default function Modifiers() {
   // Option CRUD
   const openCreateOption = () => {
     if (!selectedGroup) {
-      message.warning("Please select a group first");
+      message.warning("Vui lòng chọn nhóm trước");
       return;
     }
     setEditingOption(null);
@@ -150,10 +150,10 @@ export default function Modifiers() {
 
       if (editingOption) {
         await menuService.updateModifierOption(editingOption.id, values);
-        message.success("Option updated");
+        message.success("Cập nhật lựa chọn thành công");
       } else {
         await menuService.createModifierOption(selectedGroup.id, values);
-        message.success("Option created");
+        message.success("Tạo lựa chọn thành công");
       }
 
       setOptionModalOpen(false);
@@ -161,7 +161,7 @@ export default function Modifiers() {
       fetchOptions(selectedGroup.id);
     } catch (error) {
       if (!error.errorFields) {
-        message.error("Failed to save option");
+        message.error("Lưu lựa chọn thất bại");
         console.error(error);
       }
     } finally {
@@ -173,10 +173,10 @@ export default function Modifiers() {
     try {
       setLoading(true);
       await menuService.deleteModifierOption(id);
-      message.success("Option deleted");
+      message.success("Xóa lựa chọn thành công");
       fetchOptions(selectedGroup.id);
     } catch (error) {
-      message.error("Failed to delete option");
+      message.error("Xóa lựa chọn thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -185,25 +185,25 @@ export default function Modifiers() {
 
   const groupColumns = [
     {
-      title: "Group Name",
+      title: "Tên nhóm",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Type",
+      title: "Kiểu",
       dataIndex: "selection_type",
       key: "selection_type",
       render: (type) =>
-        type === "single" ? "Single Select" : "Multiple Select",
+        type === "single" ? "Chọn duy nhất" : "Chọn nhiều",
     },
     {
-      title: "Required",
+      title: "Bắt buộc",
       dataIndex: "is_required",
       key: "is_required",
-      render: (required) => (required ? "Yes" : "No"),
+      render: (required) => (required ? "Có" : "Không"),
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       render: (_, record) => (
         <Space size="small">
@@ -213,14 +213,16 @@ export default function Modifiers() {
             icon={<EditOutlined />}
             onClick={() => openEditGroup(record)}
           >
-            Edit
+            Sửa
           </Button>
           <Popconfirm
-            title="Delete group?"
+            title="Xóa nhóm?"
             onConfirm={() => deleteGroup(record.id)}
+            okText="Có"
+            cancelText="Không"
           >
             <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              Delete
+              Xóa
             </Button>
           </Popconfirm>
         </Space>
@@ -230,18 +232,18 @@ export default function Modifiers() {
 
   const optionColumns = [
     {
-      title: "Option Name",
+      title: "Tên lựa chọn",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Price Adjustment",
+      title: "Phụ phí",
       dataIndex: "price_adjustment",
       key: "price_adjustment",
       render: (price) => `$${Number(price).toFixed(2)}`,
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
     },
@@ -256,14 +258,16 @@ export default function Modifiers() {
             icon={<EditOutlined />}
             onClick={() => openEditOption(record)}
           >
-            Edit
+            Sửa
           </Button>
           <Popconfirm
-            title="Delete option?"
+            title="Xóa lựa chọn?"
             onConfirm={() => deleteOption(record.id)}
+            okText="Có"
+            cancelText="Không"
           >
             <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              Delete
+              Xóa
             </Button>
           </Popconfirm>
         </Space>
@@ -273,14 +277,14 @@ export default function Modifiers() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h2 style={{ marginBottom: 24 }}>Modifier Groups & Options</h2>
+      <h2 style={{ marginBottom: 24 }}>Nhóm Tùy Chọn & Lựa Chọn</h2>
 
       <Spin spinning={loading}>
         <Row gutter={16}>
           {/* Left: Groups */}
           <Col span={12}>
             <Card
-              title="Modifier Groups"
+              title="Nhóm Tùy Chọn"
               extra={
                 <Button
                   type="primary"
@@ -288,7 +292,7 @@ export default function Modifiers() {
                   icon={<PlusOutlined />}
                   onClick={openCreateGroup}
                 >
-                  Add Group
+                  Thêm nhóm
                 </Button>
               }
             >
@@ -314,8 +318,8 @@ export default function Modifiers() {
             <Card
               title={
                 selectedGroup
-                  ? `Options for "${selectedGroup.name}"`
-                  : "Select a group"
+                  ? `Lựa chọn cho "${selectedGroup.name}"`
+                  : "Chọn một nhóm"
               }
               extra={
                 selectedGroup && (
@@ -325,7 +329,7 @@ export default function Modifiers() {
                     icon={<PlusOutlined />}
                     onClick={openCreateOption}
                   >
-                    Add Option
+                    Thêm lựa chọn
                   </Button>
                 )
               }
@@ -341,7 +345,7 @@ export default function Modifiers() {
                 <div
                   style={{ textAlign: "center", padding: 40, color: "#999" }}
                 >
-                  Select a modifier group to view options
+                  Chọn một nhóm tùy chọn để xem các lựa chọn
                 </div>
               )}
             </Card>
@@ -351,7 +355,7 @@ export default function Modifiers() {
 
       {/* Group Modal */}
       <Modal
-        title={editingGroup ? "Edit Group" : "Create Group"}
+        title={editingGroup ? "Chỉnh sửa nhóm" : "Tạo nhóm mới"}
         open={groupModalOpen}
         onOk={saveGroup}
         onCancel={() => {
@@ -359,30 +363,32 @@ export default function Modifiers() {
           groupForm.resetFields();
         }}
         confirmLoading={loading}
+        okText={editingGroup ? "Cập nhật" : "Tạo mới"}
+        cancelText="Hủy"
       >
         <Form form={groupForm} layout="vertical">
           <Form.Item
             name="name"
-            label="Group Name"
-            rules={[{ required: true, message: "Please enter group name" }]}
+            label="Tên nhóm"
+            rules={[{ required: true, message: "Vui lòng nhập tên nhóm" }]}
           >
-            <Input placeholder="e.g., Size" />
+            <Input placeholder="VD: Kích cỡ" />
           </Form.Item>
 
           <Form.Item
             name="selection_type"
-            label="Selection Type"
+            label="Kiểu lựa chọn"
             rules={[{ required: true }]}
           >
             <Select>
-              <Select.Option value="single">Single Select</Select.Option>
-              <Select.Option value="multiple">Multiple Select</Select.Option>
+              <Select.Option value="single">Chọn duy nhất</Select.Option>
+              <Select.Option value="multiple">Chọn nhiều</Select.Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name="is_required"
-            label="Required"
+            label="Bắt buộc"
             valuePropName="checked"
           >
             <Switch />
@@ -397,10 +403,10 @@ export default function Modifiers() {
             {({ getFieldValue }) =>
               getFieldValue("selection_type") === "multiple" && (
                 <>
-                  <Form.Item name="min_selections" label="Min Selections">
+                  <Form.Item name="min_selections" label="Số lượng tối thiểu">
                     <InputNumber min={0} style={{ width: "100%" }} />
                   </Form.Item>
-                  <Form.Item name="max_selections" label="Max Selections">
+                  <Form.Item name="max_selections" label="Số lượng tối đa">
                     <InputNumber min={0} style={{ width: "100%" }} />
                   </Form.Item>
                 </>
@@ -408,7 +414,7 @@ export default function Modifiers() {
             }
           </Form.Item>
 
-          <Form.Item name="display_order" label="Display Order">
+          <Form.Item name="display_order" label="Thứ tự hiển thị">
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
         </Form>
@@ -416,7 +422,7 @@ export default function Modifiers() {
 
       {/* Option Modal */}
       <Modal
-        title={editingOption ? "Edit Option" : "Create Option"}
+        title={editingOption ? "Chỉnh sửa lựa chọn" : "Tạo lựa chọn mới"}
         open={optionModalOpen}
         onOk={saveOption}
         onCancel={() => {
@@ -424,19 +430,21 @@ export default function Modifiers() {
           optionForm.resetFields();
         }}
         confirmLoading={loading}
+        okText={editingOption ? "Cập nhật" : "Tạo mới"}
+        cancelText="Hủy"
       >
         <Form form={optionForm} layout="vertical">
           <Form.Item
             name="name"
-            label="Option Name"
-            rules={[{ required: true, message: "Please enter option name" }]}
+            label="Tên lựa chọn"
+            rules={[{ required: true, message: "Vui lòng nhập tên lựa chọn" }]}
           >
-            <Input placeholder="e.g., Large" />
+            <Input placeholder="VD: Lớn" />
           </Form.Item>
 
           <Form.Item
             name="price_adjustment"
-            label="Price Adjustment"
+            label="Phụ phí"
             rules={[{ required: true }, { type: "number", min: 0 }]}
           >
             <InputNumber
@@ -448,10 +456,10 @@ export default function Modifiers() {
             />
           </Form.Item>
 
-          <Form.Item name="status" label="Status" initialValue="active">
+          <Form.Item name="status" label="Trạng thái" initialValue="active">
             <Select>
-              <Select.Option value="active">Active</Select.Option>
-              <Select.Option value="inactive">Inactive</Select.Option>
+              <Select.Option value="active">Hoạt động</Select.Option>
+              <Select.Option value="inactive">Tắt</Select.Option>
             </Select>
           </Form.Item>
         </Form>

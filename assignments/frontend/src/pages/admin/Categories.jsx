@@ -32,7 +32,7 @@ export default function Categories() {
       const response = await menuService.getCategories();
       setCategories(response.data || []);
     } catch (error) {
-      message.error("Failed to load categories");
+      message.error("Tải danh sách danh mục thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -59,11 +59,11 @@ export default function Categories() {
       if (editing) {
         // Update existing
         await menuService.updateCategory(editing.id, values);
-        message.success("Category updated successfully");
+        message.success("Cập nhật danh mục thành công");
       } else {
         // Create new
         await menuService.createCategory(values);
-        message.success("Category created successfully");
+        message.success("Tạo danh mục thành công");
       }
 
       setOpen(false);
@@ -71,10 +71,10 @@ export default function Categories() {
       fetchCategories(); // Refresh list
     } catch (error) {
       if (error.errorFields) {
-        message.error("Please check the form fields");
+        message.error("Vui lòng kiểm tra các trường nhập liệu");
       } else {
         message.error(
-          editing ? "Failed to update category" : "Failed to create category"
+          editing ? "Cập nhật danh mục thất bại" : "Tạo danh mục thất bại"
         );
         console.error(error);
       }
@@ -87,10 +87,10 @@ export default function Categories() {
     try {
       setLoading(true);
       await menuService.deleteCategory(id);
-      message.success("Category deleted successfully");
+      message.success("Xóa danh mục thành công");
       fetchCategories();
     } catch (error) {
-      message.error("Failed to delete category");
+      message.error("Xóa danh mục thất bại");
       console.error(error);
     } finally {
       setLoading(false);
@@ -105,37 +105,37 @@ export default function Categories() {
         status: newStatus,
       });
       message.success(
-        `Category ${newStatus === "active" ? "activated" : "deactivated"}`
+        `Danh mục đã ${newStatus === "active" ? "kích hoạt" : "tắt"}`
       );
       fetchCategories();
     } catch (error) {
-      message.error("Failed to update status");
+      message.error("Cập nhật trạng thái thất bại");
       console.error(error);
     }
   };
 
   const columns = [
     {
-      title: "Name",
+      title: "Tên danh mục",
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "Description",
+      title: "Mô tả",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
     },
     {
-      title: "Display Order",
+      title: "Thứ tự hiển thị",
       dataIndex: "display_order",
       key: "display_order",
       width: 120,
       sorter: (a, b) => (a.display_order || 0) - (b.display_order || 0),
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: 100,
@@ -143,13 +143,13 @@ export default function Categories() {
         <Switch
           checked={status === "active"}
           onChange={() => handleToggleStatus(record)}
-          checkedChildren="Active"
-          unCheckedChildren="Inactive"
+          checkedChildren="Hoạt động"
+          unCheckedChildren="Tắt"
         />
       ),
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       width: 150,
       render: (_, record) => (
@@ -160,17 +160,17 @@ export default function Categories() {
             icon={<EditOutlined />}
             onClick={() => openEdit(record)}
           >
-            Edit
+            Sửa
           </Button>
           <Popconfirm
-            title="Delete category?"
-            description="This action cannot be undone."
+            title="Xóa danh mục?"
+            description="Hành động này không thể hoàn tác."
             onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
+            okText="Có"
+            cancelText="Không"
           >
             <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              Delete
+              Xóa
             </Button>
           </Popconfirm>
         </Space>
@@ -187,9 +187,9 @@ export default function Categories() {
           justifyContent: "space-between",
         }}
       >
-        <h2>Menu Categories</h2>
+        <h2>Danh Mục Món Ăn</h2>
         <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
-          Add Category
+          Thêm danh mục
         </Button>
       </div>
 
@@ -203,7 +203,7 @@ export default function Categories() {
       </Spin>
 
       <Modal
-        title={editing ? "Edit Category" : "Create Category"}
+        title={editing ? "Chỉnh sửa danh mục" : "Tạo danh mục mới"}
         open={open}
         onOk={onSave}
         onCancel={() => {
@@ -211,31 +211,33 @@ export default function Categories() {
           form.resetFields();
         }}
         confirmLoading={loading}
+        okText={editing ? "Cập nhật" : "Tạo mới"}
+        cancelText="Hủy"
       >
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="Category Name"
+            label="Tên danh mục"
             rules={[
-              { required: true, message: "Please enter category name" },
-              { min: 2, max: 50, message: "Name must be 2-50 characters" },
+              { required: true, message: "Vui lòng nhập tên danh mục" },
+              { min: 2, max: 50, message: "Tên phải từ 2-50 ký tự" },
             ]}
           >
-            <Input placeholder="e.g., Appetizers" />
+            <Input placeholder="VD: Món khai vị" />
           </Form.Item>
 
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Optional description" />
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} placeholder="Mô tả (không bắt buộc)" />
           </Form.Item>
 
-          <Form.Item name="display_order" label="Display Order">
+          <Form.Item name="display_order" label="Thứ tự hiển thị">
             <Input type="number" min={0} placeholder="0" />
           </Form.Item>
 
-          <Form.Item name="status" label="Status" initialValue="active">
+          <Form.Item name="status" label="Trạng thái" initialValue="active">
             <Switch
-              checkedChildren="Active"
-              unCheckedChildren="Inactive"
+              checkedChildren="Hoạt động"
+              unCheckedChildren="Tắt"
               defaultChecked
             />
           </Form.Item>
