@@ -15,6 +15,7 @@ import {
   message,
   Popconfirm,
   Spin,
+  Tag,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
@@ -71,7 +72,11 @@ export default function Modifiers() {
   const openCreateGroup = () => {
     setEditingGroup(null);
     groupForm.resetFields();
-    groupForm.setFieldsValue({ selection_type: "single", is_required: false });
+    groupForm.setFieldsValue({ 
+      selection_type: "single", 
+      is_required: false,
+      status: "active"
+    });
     setGroupModalOpen(true);
   };
 
@@ -203,6 +208,16 @@ export default function Modifiers() {
       render: (required) => (required ? "Có" : "Không"),
     },
     {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status === "active" ? "green" : "red"}>
+          {status === "active" ? "Hoạt động" : "Tạm tắt"}
+        </Tag>
+      ),
+    },
+    {
       title: "Thao tác",
       key: "actions",
       render: (_, record) => (
@@ -246,9 +261,14 @@ export default function Modifiers() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      render: (status) => (
+        <Tag color={status === "active" ? "green" : "red"}>
+          {status === "active" ? "Hoạt động" : "Tạm tắt"}
+        </Tag>
+      ),
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       render: (_, record) => (
         <Space size="small">
@@ -416,6 +436,16 @@ export default function Modifiers() {
 
           <Form.Item name="display_order" label="Thứ tự hiển thị">
             <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item
+            name="status"
+            label="Trạng thái"
+            valuePropName="checked"
+            getValueFromEvent={(checked) => (checked ? "active" : "inactive")}
+            getValueProps={(value) => ({ checked: value === "active" })}
+          >
+            <Switch checkedChildren="Hoạt động" unCheckedChildren="Tạm tắt" />
           </Form.Item>
         </Form>
       </Modal>

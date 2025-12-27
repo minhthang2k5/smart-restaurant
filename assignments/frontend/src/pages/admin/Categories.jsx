@@ -10,6 +10,7 @@ import {
   message,
   Popconfirm,
   Spin,
+  Tag,
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
@@ -139,14 +140,18 @@ export default function Categories() {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 100,
+      width: 150,
       render: (status, record) => (
-        <Switch
-          checked={status === "active"}
-          onChange={() => handleToggleStatus(record)}
-          checkedChildren="Hoạt động"
-          unCheckedChildren="Tắt"
-        />
+        <Space>
+          <Tag color={status === "active" ? "green" : "red"}>
+            {status === "active" ? "Hoạt động" : "Tạm tắt"}
+          </Tag>
+          <Switch
+            checked={status === "active"}
+            onChange={() => handleToggleStatus(record)}
+            size="small"
+          />
+        </Space>
       ),
     },
     {
