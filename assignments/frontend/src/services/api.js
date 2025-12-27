@@ -6,14 +6,21 @@ const api = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
+    // Temporary: Use Basic Auth for development (until JWT is implemented)
+    auth: {
+        username: "admin",
+        password: "admin123",
+    },
 });
 
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
-        if (token) config.headers.Authorization = `Bearer ${token}`;
+        // TODO: Replace with JWT token when authentication is fully implemented
+        // const token = localStorage.getItem("token");
+        // if (token) config.headers.Authorization = `Bearer ${token}`;
 
+        // For now, Basic Auth is handled by axios 'auth' config above
         return config;
     },
     (error) => Promise.reject(error)

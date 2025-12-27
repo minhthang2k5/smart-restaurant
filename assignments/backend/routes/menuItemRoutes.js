@@ -4,6 +4,11 @@ const menuItemController = require("../controllers/menuItemController");
 const photoController = require("../controllers/photoController");
 const menuItemModifierController = require("../controllers/menuItemModifierController");
 const { photosUpload } = require("../services/uploadService");
+const { authenticate, authorizeAdmin } = require('../middleware/auth');
+
+// Apply authentication middleware to all admin routes
+router.use(authenticate);
+router.use(authorizeAdmin);
 
 // Menu Item CRUD routes
 router
