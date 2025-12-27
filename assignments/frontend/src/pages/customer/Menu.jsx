@@ -44,8 +44,8 @@ export default function Menu() {
 
   // Fetch data on mount
   useEffect(() => {
-    fetchCategories();
-    fetchItems();
+    setLoading(true);
+    fetchCategories().finally(() => setLoading(false));
   }, []);
 
   // Update URL when filters change
@@ -58,30 +58,21 @@ export default function Menu() {
 
   const fetchCategories = async () => {
     try {
-      const response = await menuService.getCategories();
-      // Only show active categories for guests
-      const activeCategories = (response.data || []).filter(
-        (cat) => cat.status === "active"
-      );
-      setCategories(activeCategories);
+      const response = await menuService.getPublicMenu({
+        status: "available", // Only show available items
+      });
+      // Backend returns { data: { categories, items } }
+      setCategories(response.data?.categories || []);
+      setItems(response.data?.items || []);
     } catch (error) {
       console.error("Failed to load categories:", error);
+      message.error("Failed to load menu");
     }
   };
 
   const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const response = await menuService.getPublicMenu({
-        status: "available", // Only show available items
-      });
-      setItems(response.data || []);
-    } catch (error) {
-      message.error("Failed to load menu");
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    // Items are already fetched in fetchCategories
+    // This function is now a no-op or can be removed
   };
 
   // Filter items by category and search

@@ -1,3 +1,6 @@
+// Load associations first
+require('../models/associations');
+
 const qrService = require("./../services/qrService");
 const MenuItem = require('../models/MenuItem');
 const MenuCategory = require('../models/MenuCategory');
@@ -69,12 +72,11 @@ exports.getPublicMenu = async (req, res) => {
     }
 
     if (chefRecommended === 'true') {
-      itemWhere.chef_recommended = true;
+      itemWhere.is_chef_recommended = true;
     }
 
     const categoryWhere = {
-      status: 'active', 
-      is_deleted: false,
+      status: 'active',
     };
 
     if (categoryId) {
@@ -96,8 +98,9 @@ exports.getPublicMenu = async (req, res) => {
         'name',
         'description',
         'price',
-        'prep_time',
-        'chef_recommended',
+        'status',
+        'prep_time_minutes',
+        'is_chef_recommended',
         'category_id',
       ],
       include: [
@@ -105,7 +108,7 @@ exports.getPublicMenu = async (req, res) => {
           model: MenuCategory,
           as: 'category',
           attributes: ['id', 'name'],
-          where: { status: 'active', is_deleted: false },
+          where: { status: 'active' },
         },
         {
           model: MenuItemPhoto,
@@ -149,8 +152,9 @@ exports.getPublicMenuItem = async (req, res) => {
         'name',
         'description',
         'price',
-        'prep_time',
-        'chef_recommended',
+        'status',
+        'prep_time_minutes',
+        'is_chef_recommended',
       ],
       include: [
         {
