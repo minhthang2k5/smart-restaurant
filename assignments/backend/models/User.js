@@ -188,6 +188,13 @@ User.prototype.generateVerificationToken = function () {
     return token;
 };
 
-
+// Instance method to generate password reset token
+User.prototype.generatePasswordResetToken = function () {
+    const crypto = require("crypto");
+    const token = crypto.randomBytes(32).toString("hex");
+    this.passwordResetToken = token;
+    this.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    return token;
+};
 
 module.exports = User;

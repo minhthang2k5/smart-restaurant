@@ -263,3 +263,100 @@ exports.checkEmailAvailability = async (req, res) => {
 };
 
 
+/**
+ * Request password reset
+ * Sends password reset email
+ *
+ * @route POST /api/auth/forgot-password
+ * @access Public
+ */
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ where: { email } });
+
+        // Always return success even if user not found (security)
+        if (!user) {
+            return res.status(200).json({
+                status: "success",
+                message:
+                    "If an account with that email exists, a password reset link has been sent.",
+            });
+        }
+
+        // Generate reset token
+        const resetToken = user.generatePasswordResetToken();
+        await user.save();
+
+        // Send password reset email
+        try {
+            await emailService.sendPasswordResetEmail(user, resetToken);
+        } catch (emailError) {
+            console.error("Failed to send password reset email:", emailError);
+            return res.status(500).json({
+                status: "error",
+                message: "Failed to send password reset email",
+            });
+        }
+
+        res.status(200).json({
+            status: "success",
+            message:
+                "If an account with that email exists, a password reset link has been sent.",
+        });
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to process password reset request",
+        });
+    }
+};
+
+/**
+ * Reset password with token
+ *
+ * @route POST /api/auth/reset-password
+ * @access Public
+ */
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        const user = await User.findOne({
+            where: {
+                passwordResetToken: token,
+                passwordResetExpires: {
+                    [Op.gt]: new Date(),
+                },
+            },
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Invalid or expired reset token",
+            });
+        }
+
+        // Update password (will be hashed by beforeUpdate hook)
+        user.password = password;
+        user.passwordResetToken = null;
+        user.passwordResetExpires = null;
+        await user.save();
+
+        res.status(200).json({
+            status: "success",
+            message:
+                "Password reset successful! You can now log in with your new password.",
+        });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to reset password. Please try again.",
+        });
+    }
+};
+

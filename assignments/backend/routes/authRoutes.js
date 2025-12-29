@@ -5,6 +5,8 @@ const {
     registerValidation,
     loginValidation,
     verifyEmailValidation,
+    forgotPasswordValidation,
+    resetPasswordValidation,
     validate,
 } = require("../middleware/validators/authValidator");
 
@@ -40,5 +42,29 @@ router.post(
  * @access  Public
  */
 router.get("/check-email", authController.checkEmailAvailability);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Request password reset (sends email with reset token)
+ * @access  Public
+ */
+router.post(
+    "/forgot-password",
+    forgotPasswordValidation,
+    validate,
+    authController.forgotPassword
+);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Reset password with token from email
+ * @access  Public
+ */
+router.post(
+    "/reset-password",
+    resetPasswordValidation,
+    validate,
+    authController.resetPassword
+);
 
 module.exports = router;

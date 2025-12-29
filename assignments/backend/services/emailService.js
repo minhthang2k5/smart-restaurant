@@ -73,6 +73,67 @@ exports.sendVerificationEmail = async (user, token) => {
 };
 
 /**
+ * Send password reset email to user
+ * @param {Object} user - User object with email, firstName
+ * @param {string} token - Reset token
+ */
+exports.sendPasswordResetEmail = async (user, token) => {
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+    const mailOptions = {
+        from:
+            process.env.EMAIL_FROM ||
+            "Smart Restaurant <noreply@smartrestaurant.com>",
+        to: user.email,
+        subject: "Password Reset Request - Smart Restaurant",
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background-color: #FF5722; color: white; padding: 20px; text-align: center; }
+                    .content { padding: 20px; background-color: #f9f9f9; }
+                    .button { display: inline-block; padding: 12px 24px; background-color: #FF5722; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+                    .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Password Reset Request</h1>
+                    </div>
+                    <div class="content">
+                        <h2>Hello ${user.firstName},</h2>
+                        <p>We received a request to reset your password for your Smart Restaurant account. Click the button below to reset it:</p>
+                        <center>
+                            <a href="${resetUrl}" class="button">Reset Password</a>
+                        </center>
+                        <p>Or copy and paste this link in your browser:</p>
+                        <p style="word-break: break-all; color: #FF5722;">${resetUrl}</p>
+                        <p><strong>This link will expire in 15 minutes.</strong></p>
+                        <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+                    </div>
+                    <div class="footer">
+                        <p>&copy; ${new Date().getFullYear()} Smart Restaurant. All rights reserved.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Password reset email sent to ${user.email}`);
+    } catch (error) {
+        console.error("Error sending password reset email:", error);
+        throw new Error("Failed to send password reset email");
+    }
+};
+
+/**
  * Send welcome email to user after successful verification
  * @param {Object} user - User object with email, firstName
  */
