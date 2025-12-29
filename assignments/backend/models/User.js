@@ -123,6 +123,11 @@ const User = sequelize.define(
             allowNull: true,
             field: "password_reset_expires",
         },
+        passwordChangedAt: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            field: "password_changed_at",
+        },
         avatar: {
             type: DataTypes.STRING(500),
             allowNull: true,
@@ -169,6 +174,8 @@ const User = sequelize.define(
                 ) {
                     const salt = await bcrypt.genSalt(12);
                     user.password = await bcrypt.hash(user.password, salt);
+                    // Set passwordChangedAt when password is changed
+                    user.passwordChangedAt = new Date(Date.now() - 1000); // 1 second ago to ensure token is invalid
                 }
             },
         },
@@ -195,6 +202,21 @@ User.prototype.generatePasswordResetToken = function () {
     this.passwordResetToken = token;
     this.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     return token;
+
+};
+
+// Instance method to check if password was changed after JWT was issued
+User.prototype.changedPasswordAfter = function (JWTTimestamp) {
+    if (this.passwordChangedAt) {
+        const changedTimestamp = parseInt(
+            this.passwordChangedAt.getTime() / 1000,
+            10
+        );
+        // Return true if password was changed after token was issued
+        return JWTTimestamp < changedTimestamp;
+    }
+    // Password never changed
+    return false;
 };
 
 module.exports = User;
