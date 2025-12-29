@@ -405,3 +405,40 @@ exports.updatePassword = async (req, res) => {
         });
     }
 };
+
+/**
+ * Logout user by invalidating current token
+ * Sets passwordChangedAt to current time, making all existing tokens invalid
+ *
+ * @route POST /api/auth/logout
+ * @access Private (requires authentication)
+ */
+exports.logout = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                status: "fail",
+                message: "User not found",
+            });
+        }
+
+        // Invalidate all tokens by updating passwordChangedAt
+        user.passwordChangedAt = new Date();
+        await user.save({ hooks: false }); // Skip password hashing hook
+
+        res.status(200).json({
+            status: "success",
+            message: "Logged out successfully",
+        });
+    } catch (error) {
+        console.error("Logout error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to logout",
+        });
+    }
+};

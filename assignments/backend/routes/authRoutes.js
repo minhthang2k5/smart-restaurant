@@ -82,4 +82,11 @@ router.put(
     authController.updatePassword
 );
 
+/**
+ * @route   POST /api/auth/logout
+ * @desc    Logout user (invalidates all tokens)
+ * @access  Private (requires authentication)
+ */
+router.post("/logout", authenticate, authController.logout);
+
 module.exports = router;
