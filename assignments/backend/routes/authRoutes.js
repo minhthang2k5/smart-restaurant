@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const { authenticate } = require("../middleware/auth");
 const {
     registerValidation,
     loginValidation,
     verifyEmailValidation,
     forgotPasswordValidation,
     resetPasswordValidation,
+    updatePasswordValidation,
     validate,
 } = require("../middleware/validators/authValidator");
 
@@ -65,6 +67,19 @@ router.post(
     resetPasswordValidation,
     validate,
     authController.resetPassword
+);
+
+/**
+ * @route   PUT /api/auth/update-password
+ * @desc    Update password (requires old password verification)
+ * @access  Private (requires authentication)
+ */
+router.put(
+    "/update-password",
+    authenticate,
+    updatePasswordValidation,
+    validate,
+    authController.updatePassword
 );
 
 module.exports = router;

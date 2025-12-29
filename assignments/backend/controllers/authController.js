@@ -360,3 +360,48 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
+/**
+ * Update password (requires old password verification)
+ *
+ * @route PUT /api/auth/update-password
+ * @access Private (requires authentication)
+ */
+exports.updatePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({
+                status: "fail",
+                message: "User not found",
+            });
+        }
+
+        // Verify old password
+        const isMatch = await user.comparePassword(oldPassword);
+        if (!isMatch) {
+            return res.status(401).json({
+                status: "fail",
+                message: "Current password is incorrect",
+            });
+        }
+
+        // Update password (will be hashed by beforeUpdate hook)
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({
+            status: "success",
+            message: "Password updated successfully",
+        });
+    } catch (error) {
+        console.error("Update password error:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to update password",
+        });
+    }
+};
