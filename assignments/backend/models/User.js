@@ -180,5 +180,14 @@ User.prototype.comparePassword = async function (candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Instance method to generate email verification token
+User.prototype.generateVerificationToken = function () {
+    const crypto = require("crypto");
+    const token = crypto.randomBytes(32).toString("hex");
+    this.emailVerificationToken = token;
+    return token;
+};
+
+
 
 module.exports = User;
