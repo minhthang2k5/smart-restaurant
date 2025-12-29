@@ -19,10 +19,16 @@ passport.use(
                 attributes: { exclude: ["password"] },
             });
 
-            if (user) {
-                return done(null, user);
+            if (!user) {
+                return done(null, false);
             }
-            return done(null, false);
+
+            // Check if user changed password after the token was issued
+            if (user.changedPasswordAfter(payload.iat)) {
+                return done(null, false);
+            }
+
+            return done(null, user);
         } catch (error) {
             console.error("JWT Strategy error:", error);
             return done(error, false);
