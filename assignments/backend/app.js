@@ -3,12 +3,14 @@ const path = require("path");
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
+const passport = require("./config/passport");
 const tableRouter = require("./routes/tableRoutes");
 const menuRouter = require("./routes/menuRoutes");
 const menuItemRouter = require("./routes/menuItemRoutes");
 const menuCategoryRouter = require("./routes/menuCategoryRoutes");
 const modifierGroupRouter = require("./routes/modifierGroupRoutes");
 const modifierOptionRouter = require("./routes/modifierOptionRoutes");
+const authRouter = require("./routes/authRoutes");
 
 const app = express();
 
@@ -36,6 +38,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Initialize Passport
+app.use(passport.initialize());
+
 if (process.env.NODE_ENV === "development") {
     app.use(morgan("dev"));
 }
@@ -48,6 +53,10 @@ app.use((req, res, next) => {
 // Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Public routes (no authentication required)
+app.use("/api/auth", authRouter); // Authentication routes
+
+// Admin routes (authentication will be added later)
 app.use("/api/admin/tables", tableRouter); // admin-facing routes
 app.use("/api/menu", menuRouter); // Public/customer-facing routes
 app.use("/api/admin/menu/items", menuItemRouter); // admin-facing menu item routes

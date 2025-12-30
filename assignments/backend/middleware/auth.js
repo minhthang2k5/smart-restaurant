@@ -1,107 +1,57 @@
-/**
- * Simple authentication middleware (temporary - for development only)
- * TODO: Replace with proper JWT authentication system
- */
-
-// Hardcoded admin credentials (for development only)
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "admin123";
+const passport = require("passport");
 
 /**
- * Basic authentication middleware
- * Checks for Authorization header with Basic auth
- * Format: Authorization: Basic base64(username:password)
+ * Authenticate user using JWT token
+ * Extracts token from Authorization header: "Bearer <token>"
  */
 exports.authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Basic ")) {
-        return res.status(401).json({
-            status: "fail",
-            message: "Authentication required. Please provide credentials.",
-        });
-    }
-
-    try {
-        // Extract and decode credentials
-        const base64Credentials = authHeader.split(" ")[1];
-        const credentials = Buffer.from(base64Credentials, "base64").toString(
-            "utf-8"
-        );
-        const [username, password] = credentials.split(":");
-
-        // Verify credentials
-        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-            // Attach user info to request
-            req.user = {
-                username: username,
-                role: "admin",
-                restaurantId: "00000000-0000-0000-0000-000000000001", // Hardcoded restaurant ID
-            };
-            return next();
+    passport.authenticate("jwt", { session: false }, (err, user, info) => {
+        if (err) {
+            return res.status(500).json({
+                status: "error",
+                message: "Authentication error",
+            });
         }
 
-        return res.status(401).json({
-            status: "fail",
-            message: "Invalid credentials",
-        });
-    } catch (error) {
-        return res.status(401).json({
-            status: "fail",
-            message: "Invalid authorization header format",
-        });
-    }
+        if (!user) {
+            return res.status(401).json({
+                status: "fail",
+                message: "Unauthorized. Please log in to access this resource.",
+            });
+        }
+
+        req.user = user;
+        next();
+    })(req, res, next);
 };
 
 /**
- * Authorization middleware - Check if user has admin role
+ * Role-based access control middleware
+ * @param {Array<string>} allowedRoles - Array of allowed roles (e.g., ['admin', 'waiter'])
+ * @returns {Function} Express middleware function
+ *
+ * @example
+ * router.post('/tables', authenticate, authorize(['admin', 'waiter']), createTable);
  */
-exports.authorizeAdmin = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({
-            status: "fail",
-            message: "Authentication required",
-        });
-    }
-
-    if (req.user.role !== "admin") {
-        return res.status(403).json({
-            status: "fail",
-            message: "Access denied. Admin privileges required.",
-        });
-    }
-
-    next();
-};
-
-/**
- * Optional authentication - doesn't fail if no credentials provided
- * Useful for endpoints that work differently for authenticated users
- */
-exports.optionalAuth = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Basic ")) {
-        return next();
-    }
-
-    try {
-        const base64Credentials = authHeader.split(" ")[1];
-        const credentials = Buffer.from(base64Credentials, "base64").toString(
-            "utf-8"
-        );
-        const [username, password] = credentials.split(":");
-
-        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-            req.user = {
-                username: username,
-                role: "admin",
-                restaurantId: "00000000-0000-0000-0000-000000000001",
-            };
+exports.authorize = (allowedRoles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                status: "fail",
+                message: "Unauthorized. Please log in first.",
+            });
         }
-    } catch (error) {
-        // Ignore errors in optional auth
-    }
 
-    next();
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({
+                status: "fail",
+                message: `Forbidden. This action requires one of the following roles: ${allowedRoles.join(
+                    ", "
+                )}`,
+            });
+        }
+
+        next();
+    };
 };
+

@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const modifierOptionController = require("../controllers/modifierOptionController");
-const { authenticate, authorizeAdmin } = require('../middleware/auth');
+const { authenticate, authorize } = require("../middleware/auth");
 
-// Apply authentication middleware to all admin routes
+// Apply authentication and authorization to all routes (Admin only)
 router.use(authenticate);
-router.use(authorizeAdmin);
+router.use(authorize(["admin"]));
 
 /**
  * @route   GET /api/admin/menu/modifier-options/:id
