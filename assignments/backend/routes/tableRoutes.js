@@ -1,6 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const tableController = require("../controllers/tableController");
+const { authenticate, authorize } = require("../middleware/auth");
+
+// Apply authentication to all routes
+router.use(authenticate);
+router.use(authorize(["admin", "waiter"]));
 
 // CRUD Operations
 // Get all tables with filters

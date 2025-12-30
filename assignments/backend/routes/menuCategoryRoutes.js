@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const menuCategoryController = require("../controllers/menuCategoryController");
+const { authenticate, authorize } = require("../middleware/auth");
 
-// TODO: Add authentication middleware
-// const { authenticate, authorizeAdmin } = require('../middleware/auth');
-// router.use(authenticate);
-// router.use(authorizeAdmin);
+// Apply authentication and authorization to all routes (Admin only)
+router.use(authenticate);
+router.use(authorize(["admin"]));
 
 /**
  * @route   GET /api/admin/menu/categories
