@@ -7,7 +7,7 @@ const User = require("../models/User");
 // JWT Strategy for protected routes
 const jwtOptions = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: process.env.JWT_AUTH_SECRET,
+    secretOrKey: process.env.JWT_SECRET,
 };
 
 passport.use(
