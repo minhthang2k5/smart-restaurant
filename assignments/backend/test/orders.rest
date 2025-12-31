@@ -1,0 +1,55 @@
+### ============================================
+### ORDER API TESTS - Query & Filter Only
+### ============================================
+### NOTE: For full order workflow (create, accept, status updates, payment)
+###       use sessions.rest - it covers everything!
+### 
+### This file only tests ORDER QUERIES/FILTERS that sessions.rest doesn't have
+### ============================================
+
+@baseUrl = http://localhost:3000/api/orders
+@tableId = e184f588-458d-4aa2-95ca-4c26aa1e5d65
+@orderId = YOUR_ORDER_ID_HERE
+
+### ==================== ADMIN: QUERY ALL ORDERS ====================
+
+### 1. Get all orders (no filter)
+GET {{baseUrl}}
+
+### 2. Get orders by status - pending
+GET {{baseUrl}}?status=pending
+
+### 3. Get orders by status - accepted
+GET {{baseUrl}}?status=accepted
+
+### 4. Get orders by status - preparing
+GET {{baseUrl}}?status=preparing
+
+### 5. Get orders by table
+GET {{baseUrl}}?tableId={{tableId}}
+
+### 6. Get orders by date
+GET {{baseUrl}}?date=2025-12-31
+
+### 7. Get orders with limit
+GET {{baseUrl}}?limit=10
+
+### 8. Get orders with multiple filters
+GET {{baseUrl}}?status=pending&limit=5
+
+### ==================== GET SPECIFIC ORDER ====================
+
+### 9. Get active order for a table
+GET {{baseUrl}}/table/{{tableId}}
+
+### 10. Get order by ID
+GET {{baseUrl}}/{{orderId}}
+
+### ==================== SUMMARY ====================
+### This file only tests query/filter endpoints.
+### For complete order workflow, use sessions.rest which includes:
+### ✓ Create orders
+### ✓ Accept/Reject orders
+### ✓ Update order & item status
+### ✓ Complete orders
+### ✓ Full payment workflow

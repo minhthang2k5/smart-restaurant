@@ -1,0 +1,281 @@
+### ============================================
+### SESSION-BASED ORDERING API TESTS
+### Complete workflow with multiple orders per session
+### ============================================
+
+@baseUrl = http://localhost:3000/api
+@tableId = e184f588-458d-4aa2-95ca-4c26aa1e5d65
+@sessionId = 33a91087-23fe-4305-b4a1-8f178427f916
+@orderId1 = c35265d2-42b3-4d17-a45b-8afae8501171
+@orderId2 = 1d9cb2ca-7464-4fcc-95ec-767b3716c736
+@orderId3 = d3ad2ea1-039e-40c1-a683-fad59108999
+@menuItemId1 = aa80c2ea-10bd-4c91-a954-f2b6d545c43a
+@menuItemId2 = ca078bca-2dd6-4679-a110-da6302df6006
+@modifierOptionId = 7494fcf4-ed49-475f-a035-8fba289862ad
+@waiterId = YOUR_WAITER_ID_HERE
+
+### ============================================
+### STEP 1: CREATE TABLE SESSION
+### ============================================
+
+### 1.1 Create new session for table
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+  "tableId": "{{tableId}}"
+}
+
+### 1.2 Get active session by table ID
+GET {{baseUrl}}/sessions/table/{{tableId}}
+
+### ============================================
+### STEP 2: CREATE FIRST ORDER IN SESSION
+### ============================================
+
+### 2.1 Create first order (e.g., main dishes)
+POST {{baseUrl}}/sessions/{{sessionId}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "menuItemId": "{{menuItemId1}}",
+      "quantity": 2,
+      "specialInstructions": "Extra spicy please",
+      "modifiers": [
+        {
+          "optionId": "{{modifierOptionId}}"
+        }
+      ]
+    }
+  ]
+}
+
+### 2.2 Waiter accepts first order
+POST {{baseUrl}}/orders/{{orderId1}}/accept
+Content-Type: application/json
+
+### ============================================
+### STEP 3: CREATE SECOND ORDER IN SESSION (15 minutes later)
+### ============================================
+
+### 3.1 Create second order (e.g., drinks)
+POST {{baseUrl}}/sessions/{{sessionId}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "menuItemId": "{{menuItemId2}}",
+      "quantity": 3,
+      "specialInstructions": "No ice"
+    }
+  ]
+}
+
+### 3.2 Waiter accepts second order
+POST {{baseUrl}}/orders/{{orderId2}}/accept
+Content-Type: application/json
+
+### ============================================
+### STEP 4: CREATE THIRD ORDER IN SESSION (30 minutes later)
+### ============================================
+
+### 4.1 Create third order (e.g., dessert)
+POST {{baseUrl}}/sessions/{{sessionId}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "menuItemId": "DESSERT_ITEM_ID",
+      "quantity": 1
+    }
+  ]
+}
+
+### ============================================
+### STEP 5: VIEW SESSION WITH ALL ORDERS
+### ============================================
+
+### 5.1 Get session details (shows all orders)
+GET {{baseUrl}}/sessions/{{sessionId}}
+
+### 5.2 Get active session by table (alternative)
+GET {{baseUrl}}/sessions/table/{{tableId}}
+
+### ============================================
+### STEP 6: UPDATE ORDER STATUS (Kitchen/Waiter)
+### ============================================
+
+### 6.1 Update order status to preparing
+PATCH {{baseUrl}}/orders/{{orderId1}}/status
+Content-Type: application/json
+
+{
+  "status": "preparing"
+}
+
+### 6.2 Update order status to ready
+PATCH {{baseUrl}}/orders/{{orderId1}}/status
+Content-Type: application/json
+
+{
+  "status": "ready"
+}
+
+### 6.3 Update order status to served
+PATCH {{baseUrl}}/orders/{{orderId1}}/status
+Content-Type: application/json
+
+{
+  "status": "served"
+}
+
+### ============================================
+### STEP 7: UPDATE ITEM STATUS (Kitchen Display)
+### ============================================
+
+### 7.1 Update item status to preparing
+PATCH {{baseUrl}}/orders/items/98d7cda6-6718-4e71-935f-ab320e44c32e/status
+Content-Type: application/json
+
+{
+  "status": "preparing"
+}
+
+### 7.2 Update item status to ready
+PATCH {{baseUrl}}/orders/items/98d7cda6-6718-4e71-935f-ab320e44c32e/status
+Content-Type: application/json
+
+{
+  "status": "ready"
+}
+
+### ============================================
+### STEP 8: COMPLETE SESSION WITH PAYMENT
+### ============================================
+
+### 8.1 Complete session - Pay with cash
+POST {{baseUrl}}/sessions/{{sessionId}}/complete
+Content-Type: application/json
+
+{
+  "paymentMethod": "cash"
+}
+
+### 8.2 Complete session - Pay with card
+POST {{baseUrl}}/sessions/{{sessionId}}/complete
+Content-Type: application/json
+
+{
+  "paymentMethod": "card",
+  "transactionId": "TXN-12345"
+}
+
+### 8.3 Complete session - Pay with ZaloPay
+POST {{baseUrl}}/sessions/{{sessionId}}/complete
+Content-Type: application/json
+
+{
+  "paymentMethod": "zalopay",
+  "transactionId": "ZALO-67890"
+}
+
+### ============================================
+### ADDITIONAL SCENARIOS
+### ============================================
+
+### 9.1 Reject an order (before accepting)
+POST {{baseUrl}}/orders/{{orderId1}}/reject
+Content-Type: application/json
+
+{
+  "reason": "Dish not available"
+}
+
+### 9.2 Cancel entire session
+POST {{baseUrl}}/sessions/{{sessionId}}/cancel
+Content-Type: application/json
+
+{
+  "reason": "Customer left without ordering"
+}
+
+### 9.3 Get order details by ID
+GET {{baseUrl}}/orders/{{orderId1}}
+
+### 9.4 Get order by table (DEPRECATED - use sessions instead)
+GET {{baseUrl}}/orders/table/{{tableId}}
+
+### ============================================
+### ERROR CASES
+### ============================================
+
+### 10.1 Try to create session for table with active session
+POST {{baseUrl}}/sessions
+Content-Type: application/json
+
+{
+  "tableId": "{{tableId}}"
+}
+
+### 10.2 Try to create order in completed session
+POST {{baseUrl}}/sessions/{{sessionId}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "menuItemId": "{{menuItemId1}}",
+      "quantity": 1
+    }
+  ]
+}
+
+### 10.3 Try to complete already completed session
+POST {{baseUrl}}/sessions/{{sessionId}}/complete
+Content-Type: application/json
+
+{
+  "paymentMethod": "cash"
+}
+
+### ============================================
+### ADMIN/REPORTS QUERIES
+### ============================================
+
+### 11.1 Get all orders (admin)
+GET {{baseUrl}}/orders
+
+### 11.2 Get orders by status
+GET {{baseUrl}}/orders?status=pending
+
+### 11.3 Get orders by payment status
+GET {{baseUrl}}/orders?paymentStatus=unpaid
+
+### ============================================
+### USAGE NOTES
+### ============================================
+
+# WORKFLOW:
+# 1. Customer sits at table → Create session
+# 2. Customer orders → Create order in session (can happen multiple times)
+# 3. Waiter accepts each order independently
+# 4. Kitchen prepares items
+# 5. Items served to customer
+# 6. Customer pays → Complete session (combines all orders)
+# 7. Table becomes free for next customer
+
+# KEY DIFFERENCES FROM OLD APPROACH:
+# - Each "order" is a separate Order entity (not items added to one order)
+# - Multiple orders grouped in one TableSession
+# - Payment calculated from all orders in session
+# - Waiter can accept/reject each order independently
+
+# BENEFITS:
+# - Clear audit trail (know when each order was placed)
+# - Flexible acceptance (waiter can reject specific orders)
+# - Better for kitchen display (orders come in batches)
+# - Single payment for entire dining session
