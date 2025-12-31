@@ -11,6 +11,8 @@ const menuCategoryRouter = require("./routes/menuCategoryRoutes");
 const modifierGroupRouter = require("./routes/modifierGroupRoutes");
 const modifierOptionRouter = require("./routes/modifierOptionRoutes");
 const authRouter = require("./routes/authRoutes");
+const orderRouter = require("./routes/orderRoutes");
+const sessionRouter = require("./routes/sessionRoutes");
 
 const app = express();
 
@@ -63,5 +65,9 @@ app.use("/api/admin/menu/items", menuItemRouter); // admin-facing menu item rout
 app.use("/api/admin/menu/categories", menuCategoryRouter); // admin-facing menu category routes
 app.use("/api/admin/menu/modifier-groups", modifierGroupRouter); // admin-facing modifier group routes
 app.use("/api/admin/menu/modifier-options", modifierOptionRouter); // admin-facing modifier option routes
+
+// Order and Session routes
+app.use("/api/orders", orderRouter); // Order status management
+app.use("/api/sessions", sessionRouter); // Session-based ordering with payment
 
 module.exports = app;
