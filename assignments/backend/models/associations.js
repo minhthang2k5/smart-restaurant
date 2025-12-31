@@ -4,6 +4,14 @@ const MenuItemPhoto = require("./MenuItemPhoto");
 const ModifierGroup = require("./ModifierGroup");
 const ModifierOption = require("./ModifierOption");
 const MenuItemModifierGroup = require("./MenuItemModifierGroup");
+const Order = require("./Order");
+const OrderItem = require("./OrderItem");
+const OrderItemModifier = require("./OrderItemModifier");
+const TableSession = require("./TableSession");
+const Table = require("./Table");
+const User = require("./User");
+
+// ==================== MENU ASSOCIATIONS ====================
 
 // MenuItem belongs to MenuCategory
 MenuItem.belongsTo(MenuCategory, {
@@ -59,6 +67,130 @@ ModifierGroup.belongsToMany(MenuItem, {
     as: "menuItems",
 });
 
+// ==================== ORDER ASSOCIATIONS ====================
+
+// TableSession belongs to Table
+TableSession.belongsTo(Table, {
+    foreignKey: "table_id",
+    as: "table",
+});
+
+// Table has many TableSessions
+Table.hasMany(TableSession, {
+    foreignKey: "table_id",
+    as: "sessions",
+});
+
+// TableSession belongs to User (customer)
+TableSession.belongsTo(User, {
+    foreignKey: "customer_id",
+    as: "customer",
+});
+
+// User has many TableSessions as customer
+User.hasMany(TableSession, {
+    foreignKey: "customer_id",
+    as: "sessionsAsCustomer",
+});
+
+// TableSession has many Orders
+TableSession.hasMany(Order, {
+    foreignKey: "session_id",
+    as: "orders",
+});
+
+// Order belongs to TableSession
+Order.belongsTo(TableSession, {
+    foreignKey: "session_id",
+    as: "session",
+});
+
+// Order belongs to Table
+Order.belongsTo(Table, {
+    foreignKey: "table_id",
+    as: "table",
+});
+
+// Table has many Orders
+Table.hasMany(Order, {
+    foreignKey: "table_id",
+    as: "orders",
+});
+
+// Order belongs to User (customer)
+Order.belongsTo(User, {
+    foreignKey: "customer_id",
+    as: "customer",
+});
+
+// User has many Orders as customer
+User.hasMany(Order, {
+    foreignKey: "customer_id",
+    as: "ordersAsCustomer",
+});
+
+// Order belongs to User (waiter)
+Order.belongsTo(User, {
+    foreignKey: "waiter_id",
+    as: "waiter",
+});
+
+// User has many Orders as waiter
+User.hasMany(Order, {
+    foreignKey: "waiter_id",
+    as: "ordersAsWaiter",
+});
+
+// Order has many OrderItems
+Order.hasMany(OrderItem, {
+    foreignKey: "order_id",
+    as: "items",
+    onDelete: "CASCADE",
+});
+
+// OrderItem belongs to Order
+OrderItem.belongsTo(Order, {
+    foreignKey: "order_id",
+    as: "order",
+});
+
+// OrderItem belongs to MenuItem
+OrderItem.belongsTo(MenuItem, {
+    foreignKey: "menu_item_id",
+    as: "menuItem",
+});
+
+// MenuItem has many OrderItems
+MenuItem.hasMany(OrderItem, {
+    foreignKey: "menu_item_id",
+    as: "orderItems",
+});
+
+// OrderItem has many OrderItemModifiers
+OrderItem.hasMany(OrderItemModifier, {
+    foreignKey: "order_item_id",
+    as: "modifiers",
+    onDelete: "CASCADE",
+});
+
+// OrderItemModifier belongs to OrderItem
+OrderItemModifier.belongsTo(OrderItem, {
+    foreignKey: "order_item_id",
+    as: "orderItem",
+});
+
+// OrderItemModifier belongs to ModifierGroup
+OrderItemModifier.belongsTo(ModifierGroup, {
+    foreignKey: "modifier_group_id",
+    as: "modifierGroup",
+});
+
+// OrderItemModifier belongs to ModifierOption
+OrderItemModifier.belongsTo(ModifierOption, {
+    foreignKey: "modifier_option_id",
+    as: "modifierOption",
+});
+
 module.exports = {
     MenuItem,
     MenuCategory,
@@ -66,5 +198,11 @@ module.exports = {
     ModifierGroup,
     ModifierOption,
     MenuItemModifierGroup,
+    TableSession,
+    Order,
+    OrderItem,
+    OrderItemModifier,
+    Table,
+    User,
 };
 
