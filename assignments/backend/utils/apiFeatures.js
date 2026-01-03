@@ -30,6 +30,18 @@ class APIFeatures {
         return this;
     }
 
+    // Search across multiple fields (case-insensitive, partial match)
+    searchFields(fields, queryParam = "search") {
+        if (this.queryString[queryParam] && fields && fields.length > 0) {
+            this.queryOptions.where[Op.or] = fields.map((field) => ({
+                [field]: {
+                    [Op.iLike]: `%${this.queryString[queryParam]}%`,
+                },
+            }));
+        }
+        return this;
+    }
+
     // Filter by category_id
     filterByCategory() {
         if (this.queryString.category_id) {
@@ -42,6 +54,20 @@ class APIFeatures {
     filterByStatus() {
         if (this.queryString.status) {
             this.queryOptions.where.status = this.queryString.status;
+        }
+        return this;
+    }
+
+    // Generic filter by any field
+    filterBy(field, queryParam = field, operator = null) {
+        if (this.queryString[queryParam]) {
+            if (operator) {
+                this.queryOptions.where[field] = {
+                    [operator]: this.queryString[queryParam],
+                };
+            } else {
+                this.queryOptions.where[field] = this.queryString[queryParam];
+            }
         }
         return this;
     }

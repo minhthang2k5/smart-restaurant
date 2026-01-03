@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const emailService = require("./emailService");
 const { Op } = require("sequelize");
+const APIFeatures = require("../utils/apiFeatures");
 
 /**
  * Create a new staff member (Waiter, Kitchen Staff, or Admin)
@@ -54,68 +55,62 @@ const createStaff = async (staffData, creatorRestaurantId) => {
  * Admin only
  */
 const getAllStaff = async (filters = {}) => {
-    const { role, status, search, page = 1, limit = 10 } = filters;
+    const { role } = filters;
 
-    const where = {
+    // Base filter for staff roles only
+    const baseWhere = {
         role: {
             [Op.in]: ["admin", "waiter", "kitchen_staff"],
         },
     };
 
-    // Filter by specific role
+    // Filter by specific role if provided
     if (role && ["admin", "waiter", "kitchen_staff"].includes(role)) {
-        where.role = role;
+        baseWhere.role = role;
     }
 
-    // Filter by status
-    if (status && ["active", "inactive"].includes(status)) {
-        where.status = status;
-    }
+    // Build query using APIFeatures
+    const features = new APIFeatures(User, filters)
+        .filter(baseWhere)
+        .searchFields(["firstName", "lastName", "email"], "search")
+        .filterBy("status", "status")
+        .paginate();
 
-    // Search by name or email
-    if (search) {
-        where[Op.or] = [
-            { firstName: { [Op.iLike]: `%${search}%` } },
-            { lastName: { [Op.iLike]: `%${search}%` } },
-            { email: { [Op.iLike]: `%${search}%` } },
-        ];
-    }
+    // Set default ordering
+    features.queryOptions.order = [["createdAt", "DESC"]];
 
-    // Calculate pagination
-    const offset = (page - 1) * limit;
+    // Add attributes selection
+    features.queryOptions.attributes = [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "role",
+        "restaurantId",
+        "emailVerified",
+        "avatar",
+        "status",
+        "lastLogin",
+        "createdAt",
+        "updatedAt",
+    ];
 
-    // Get total count
-    const totalCount = await User.count({ where });
+    // Execute query
+    const [users, totalCount] = await Promise.all([
+        features.execute(),
+        features.getCount(),
+    ]);
 
-    // Get users
-    const users = await User.findAll({
-        where,
-        attributes: [
-            "id",
-            "email",
-            "firstName",
-            "lastName",
-            "role",
-            "restaurantId",
-            "emailVerified",
-            "avatar",
-            "status",
-            "lastLogin",
-            "createdAt",
-            "updatedAt",
-        ],
-        order: [["createdAt", "DESC"]],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-    });
+    // Get pagination data
+    const paginationData = features.getPaginationData(totalCount);
 
     return {
         staff: users,
         pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            totalPages: Math.ceil(totalCount / limit),
-            totalCount,
+            page: paginationData.currentPage,
+            limit: paginationData.itemsPerPage,
+            totalPages: paginationData.totalPages,
+            totalCount: paginationData.totalItems,
         },
     };
 };
