@@ -11,6 +11,7 @@ const menuCategoryRouter = require("./routes/menuCategoryRoutes");
 const modifierGroupRouter = require("./routes/modifierGroupRoutes");
 const modifierOptionRouter = require("./routes/modifierOptionRoutes");
 const authRouter = require("./routes/authRoutes");
+const userRouter = require("./routes/userRoutes");
 const orderRouter = require("./routes/orderRoutes");
 const sessionRouter = require("./routes/sessionRoutes");
 
@@ -58,7 +59,10 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Public routes (no authentication required)
 app.use("/api/auth", authRouter); // Authentication routes
 
-// Admin routes (authentication will be added later)
+// User routes (authentication required)
+app.use("/api/users", userRouter); // User profile and staff management
+
+// Admin routes (authentication required)
 app.use("/api/admin/tables", tableRouter); // admin-facing routes
 app.use("/api/menu", menuRouter); // Public/customer-facing routes
 app.use("/api/admin/menu/items", menuItemRouter); // admin-facing menu item routes
