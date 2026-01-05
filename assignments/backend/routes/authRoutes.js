@@ -89,4 +89,18 @@ router.put(
  */
 router.post("/logout", authenticate, authController.logout);
 
+/**
+ * @route   GET /api/auth/google
+ * @desc    Initiate Google OAuth login
+ * @access  Public
+ */
+router.get("/google", authController.googleAuth);
+
+/**
+ * @route   GET /api/auth/google/callback
+ * @desc    Google OAuth callback (redirects to frontend with token)
+ * @access  Public
+ */
+router.get("/google/callback", authController.googleCallback);
+
 module.exports = router;
