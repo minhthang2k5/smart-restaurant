@@ -442,3 +442,54 @@ exports.logout = async (req, res) => {
         });
     }
 };
+/**
+ * Initiate Google OAuth login
+ *
+ * @route GET /api/auth/google
+ * @access Public
+ */
+exports.googleAuth = passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    session: false,
+});
+
+/**
+ * Google OAuth callback handler
+ * Generates JWT token after successful authentication
+ *
+ * @route GET /api/auth/google/callback
+ * @access Public
+ */
+exports.googleCallback = (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
+        if (err) {
+            console.error('Google OAuth error:', err);
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('Authentication failed')}`
+            );
+        }
+
+        if (!user) {
+            return res.redirect(
+                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('No user found')}`
+            );
+        }
+
+        try {
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_AUTH_SECRET,
+                { expiresIn: process.env.JWT_AUTH_EXPIRES_IN || '7d' }
+            );
+
+            res.redirect(
+                `${process.env.FRONTEND_URL}/auth/google-success?token=${token}`
+            );
+        } catch (error) {
+            console.error('Token generation error:', error);
+            res.redirect(
+                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('Token generation failed')}`
+            );
+        }
+    })(req, res, next);
+};
