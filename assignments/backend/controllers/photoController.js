@@ -1,9 +1,7 @@
-const path = require("path");
-const fs = require("fs");
 const { Sequelize } = require("sequelize");
 const MenuItem = require("../models/MenuItem");
 const MenuItemPhoto = require("../models/MenuItemPhoto");
-const { buildPhotoUrl } = require("../services/uploadService");
+const { uploadPhotosToCloudinary, deletePhotoFromCloudinary } = require("../services/uploadService");
 
 /**
  * Create photo records for uploaded files.
@@ -34,18 +32,21 @@ exports.uploadPhotos = async (req, res) => {
                 .json({ status: "fail", message: "No files uploaded" });
         }
 
+        // Upload files to Cloudinary
+        const uploadResults = await uploadPhotosToCloudinary(files, itemId);
+
         // Check if item already has a primary photo
         const existingPrimary = await MenuItemPhoto.findOne({
             where: { menu_item_id: itemId, is_primary: true },
         });
 
         const created = [];
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
-            const url = buildPhotoUrl(itemId, file.filename);
+        for (let i = 0; i < uploadResults.length; i++) {
+            const result = uploadResults[i];
             const photo = await MenuItemPhoto.create({
                 menu_item_id: itemId,
-                url,
+                url: result.url,
+                cloudinary_public_id: result.publicId,
                 is_primary: !existingPrimary && i === 0, // set first as primary if none exists
             });
             created.push(photo);
@@ -91,20 +92,12 @@ exports.deletePhoto = async (req, res) => {
         // check for deleting primary photo
         const wasPrimary = photo.is_primary;
 
-        // Remove file from disk (path-safe)
-        const uploadsRoot = path.resolve(__dirname, "..", "uploads");
-        const filePath = path.resolve(
-            uploadsRoot,
-            photo.url.replace(/^\/+/, "")
-        ); // strip leading slash
-
-        if (!filePath.startsWith(uploadsRoot)) {
-            console.warn("Blocked deleting file outside uploads:", filePath);
-        } else if (fs.existsSync(filePath)) {
+        // Delete from Cloudinary if public_id exists
+        if (photo.cloudinary_public_id) {
             try {
-                fs.unlinkSync(filePath);
+                await deletePhotoFromCloudinary(photo.cloudinary_public_id);
             } catch (e) {
-                console.warn("Failed to remove photo file:", e.message);
+                console.warn("Failed to remove photo from Cloudinary:", e.message);
             }
         }
 

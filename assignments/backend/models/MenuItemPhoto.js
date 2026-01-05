@@ -28,6 +28,11 @@ const MenuItemPhoto = sequelize.define(
                 notEmpty: { msg: "Photo url cannot be empty" },
             },
         },
+        cloudinary_public_id: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            comment: "Cloudinary public ID for photo deletion",
+        },
         is_primary: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,

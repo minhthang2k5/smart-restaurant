@@ -1,6 +1,10 @@
 require("dotenv").config({ path: "./config.env" });
+const { configureCloudinary } = require("./config/cloudinary");
 const app = require("./app");
 const sequelize = require("./config/database");
+
+// Configure Cloudinary
+configureCloudinary();
 
 // Load models and set up associations
 require("./models/associations");

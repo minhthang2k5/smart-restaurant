@@ -1,30 +1,11 @@
-const fs = require("fs");
-const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
+const { cloudinary } = require("../config/cloudinary");
+const streamifier = require("streamifier");
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-
-/**
- * Ensure a directory exists, creating it recursively if missing.
- * @param {string} dirPath
- */
-function ensureDir(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
-    }
-}
-
-/**
- * Build safe destination directory for menu item photos.
- * @param {string} itemId
- * @returns {string} absolute path
- */
-function getItemUploadDir(itemId) {
-    return path.join(__dirname, "..", "uploads", "menu-items", String(itemId));
-}
 
 /**
  * Generate a safe, randomized filename keeping original extension.
@@ -32,41 +13,53 @@ function getItemUploadDir(itemId) {
  * @returns {string}
  */
 function getSafeFilename(originalName) {
-    const ext = path.extname(originalName).toLowerCase();
+    const ext = originalName.split(".").pop().toLowerCase();
     const name = uuidv4();
-    return `${name}${ext}`;
+    return `${name}.${ext}`;
 }
 
 /**
- * Convert an absolute path to a web URL under /uploads
- * Uses forward slashes for web regardless of OS.
+ * Build Cloudinary folder path for menu item photos.
  * @param {string} itemId
- * @param {string} filename
- * @returns {string} web URL
+ * @returns {string} folder path
  */
-function buildPhotoUrl(itemId, filename) {
-    const parts = ["/uploads", "menu-items", String(itemId), filename];
-    return parts.join("/");
+function getCloudinaryFolder(itemId) {
+    return `smart-restaurant/menu-items/${itemId}`;
 }
 
 /**
- * Multer storage engine for menu item photo uploads.
+ * Upload a file buffer to Cloudinary.
+ * @param {Buffer} fileBuffer
+ * @param {string} folder
+ * @param {string} publicId
+ * @returns {Promise<object>} Cloudinary upload result
  */
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const itemId = req.params.id;
-        const dir = getItemUploadDir(itemId);
-        try {
-            ensureDir(dir);
-            cb(null, dir);
-        } catch (err) {
-            cb(err);
-        }
-    },
-    filename: (req, file, cb) => {
-        cb(null, getSafeFilename(file.originalname));
-    },
-});
+function uploadToCloudinary(fileBuffer, folder, publicId) {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: folder,
+                public_id: publicId,
+                resource_type: "image",
+                transformation: [
+                    { width: 1200, height: 1200, crop: "limit" },
+                    { quality: "auto" },
+                    { fetch_format: "auto" },
+                ],
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+}
+
+/**
+ * Multer storage engine using memory storage for Cloudinary uploads.
+ */
+const storage = multer.memoryStorage();
 
 /**
  * Multer file filter to validate MIME type.
@@ -91,10 +84,42 @@ const photosUpload = multer({
     limits: { fileSize: MAX_FILE_SIZE_BYTES },
 });
 
+/**
+ * Process and upload files to Cloudinary.
+ * @param {Express.Multer.File[]} files
+ * @param {string} itemId
+ * @returns {Promise<Array<{url: string, publicId: string}>>}
+ */
+async function uploadPhotosToCloudinary(files, itemId) {
+    const folder = getCloudinaryFolder(itemId);
+    const uploadPromises = files.map((file) => {
+        const publicId = getSafeFilename(file.originalname).split(".")[0];
+        return uploadToCloudinary(file.buffer, folder, publicId);
+    });
+
+    const results = await Promise.all(uploadPromises);
+    return results.map((result) => ({
+        url: result.secure_url,
+        publicId: result.public_id,
+    }));
+}
+
+/**
+ * Delete a photo from Cloudinary.
+ * @param {string} publicId
+ * @returns {Promise<object>}
+ */
+async function deletePhotoFromCloudinary(publicId) {
+    return cloudinary.uploader.destroy(publicId);
+}
+
 module.exports = {
     photosUpload,
+    uploadPhotosToCloudinary,
+    deletePhotoFromCloudinary,
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE_MB,
-    getItemUploadDir,
-    buildPhotoUrl,
+    cloudinary,
+    getCloudinaryFolder,
+    getSafeFilename,
 };
