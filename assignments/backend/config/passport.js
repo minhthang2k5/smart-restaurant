@@ -2,12 +2,14 @@ const passport = require("passport");
 const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require("passport-jwt").ExtractJwt;
 const LocalStrategy = require("passport-local").Strategy;
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const { Op } = require("sequelize");
 const User = require("../models/User");
 
 // JWT Strategy for protected routes
 const jwtOptions = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: process.env.JWT_SECRET,
+    secretOrKey: process.env.JWT_AUTH_SECRET,
 };
 
 passport.use(
@@ -86,6 +88,68 @@ passport.use(
             } catch (error) {
                 console.error("Local Strategy error:", error);
                 return done(error);
+            }
+        }
+    )
+);
+
+// Google OAuth Strategy
+passport.use(
+    "google",
+    new GoogleStrategy(
+        {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "/api/auth/google/callback",
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                const email = profile.emails?.[0]?.value;
+
+                if (!email) {
+                    return done(new Error("No email found in Google profile"), false);
+                }
+
+                // Find existing user by Google ID or email
+                let user = await User.findOne({
+                    where: {
+                        [Op.or]: [
+                            { googleId: profile.id },
+                            { email: email }
+                        ]
+                    }
+                });
+
+                if (user) {
+                    // Update Google ID if not set
+                    if (!user.googleId) {
+                        user.googleId = profile.id;
+                        user.emailVerified = true;
+                        await user.save();
+                    }
+
+                    // Update last login
+                    user.lastLogin = new Date();
+                    await user.save();
+                } else {
+                    // Create new customer account
+                    user = await User.create({
+                        email: email,
+                        firstName: profile.name?.givenName || "User",
+                        lastName: profile.name?.familyName || "GoogleUser",
+                        googleId: profile.id,
+                        role: "customer",
+                        emailVerified: true,
+                        password: "GOOGLE_OAUTH_NO_PASSWORD", // Placeholder
+                        avatar: profile.photos?.[0]?.value || null,
+                        status: "active",
+                    });
+                }
+
+                return done(null, user);
+            } catch (error) {
+                console.error("Google OAuth Strategy error:", error);
+                return done(error, false);
             }
         }
     )
