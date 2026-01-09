@@ -14,6 +14,53 @@ const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 
 /**
+ * Order Status State Machine
+ * Defines valid transitions between order statuses
+ */
+const VALID_ORDER_TRANSITIONS = {
+    pending: ["accepted", "rejected"],
+    accepted: ["preparing"],
+    preparing: ["ready"],
+    ready: ["served"],
+    served: ["completed"],
+    rejected: [], // Terminal state - no transitions allowed
+    completed: [], // Terminal state - no transitions allowed
+};
+
+/**
+ * Order Item Status State Machine
+ * Defines valid transitions for individual order items
+ */
+const VALID_ORDER_ITEM_TRANSITIONS = {
+    pending: ["confirmed", "cancelled"],
+    confirmed: ["preparing"],
+    preparing: ["ready"],
+    ready: ["served"],
+    served: [], // Terminal state
+    cancelled: [], // Terminal state
+};
+
+/**
+ * Validate if a status transition is allowed
+ */
+const validateStatusTransition = (currentStatus, newStatus, transitionMap) => {
+    const allowedTransitions = transitionMap[currentStatus];
+    
+    if (!allowedTransitions) {
+        throw new Error(`Invalid current status: ${currentStatus}`);
+    }
+    
+    if (!allowedTransitions.includes(newStatus)) {
+        throw new Error(
+            `Invalid transition: Cannot change from "${currentStatus}" to "${newStatus}". ` +
+            `Allowed transitions: ${allowedTransitions.length > 0 ? allowedTransitions.join(", ") : "none (terminal state)"}`
+        );
+    }
+    
+    return true;
+};
+
+/**
  * Generate unique order number
  * Format: ORD-YYYYMMDD-XXXX
  */
@@ -336,7 +383,7 @@ exports.rejectOrder = async (orderId, waiterId, reason) => {
 };
 
 /**
- * Update order status
+ * Update order status with state machine validation
  */
 exports.updateOrderStatus = async (orderId, status) => {
     try {
@@ -345,6 +392,9 @@ exports.updateOrderStatus = async (orderId, status) => {
         if (!order) {
             throw new Error("Order not found");
         }
+        
+        // Validate state transition
+        validateStatusTransition(order.status, status, VALID_ORDER_TRANSITIONS);
         
         await order.update({ status });
         
@@ -355,7 +405,7 @@ exports.updateOrderStatus = async (orderId, status) => {
 };
 
 /**
- * Update order item status
+ * Update order item status with state machine validation
  */
 exports.updateOrderItemStatus = async (orderItemId, status) => {
     try {
@@ -364,6 +414,9 @@ exports.updateOrderItemStatus = async (orderItemId, status) => {
         if (!orderItem) {
             throw new Error("Order item not found");
         }
+        
+        // Validate state transition
+        validateStatusTransition(orderItem.status, status, VALID_ORDER_ITEM_TRANSITIONS);
         
         await orderItem.update({ status });
         
