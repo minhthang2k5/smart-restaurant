@@ -18,7 +18,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // ✅ FIX NHỎ: Trim email để loại bỏ dấu cách thừa do copy/paste
       const cleanEmail = email.trim();
 
       const response = await login(cleanEmail, password);
