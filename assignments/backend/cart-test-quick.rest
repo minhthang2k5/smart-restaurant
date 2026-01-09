@@ -1,0 +1,147 @@
+# Cart API Quick Test - With Real IDs
+# Server phải đang chạy: npm start
+
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### TEST 1: Validate Cart - Kiểm tra cart hợp lệ
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 2,
+      "special_instructions": "Không hành",
+      "modifiers": [
+        {
+          "modifier_option_id": "4452ab6c-dd90-41e6-846b-2ff47825d66f",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### TEST 2: Get Cart Summary - Lấy giá và tổng tiền
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 2,
+      "special_instructions": "Không hành",
+      "modifiers": [
+        {
+          "modifier_option_id": "4452ab6c-dd90-41e6-846b-2ff47825d66f",
+          "quantity": 1
+        },
+        {
+          "modifier_option_id": "b50c5140-2486-4f6d-ac65-a4f0cbffe76c",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "6372b897-f074-448f-ac27-7557ff87dc13",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### TEST 3: Can Order - Kiểm tra có thể đặt không
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 2,
+      "modifiers": []
+    }
+  ]
+}
+
+### TEST 4: Merge Duplicates - Gộp món trùng
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "4452ab6c-dd90-41e6-846b-2ff47825d66f",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 3,
+      "modifiers": [
+        {
+          "modifier_option_id": "4452ab6c-dd90-41e6-846b-2ff47825d66f",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### TEST 5: Calculate Item Price - Tính giá 1 món
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "852efcca-aab2-464a-b7a5-47503799061c",
+  "quantity": 2,
+  "modifiers": [
+  ]
+}
+
+### TEST 6: Get Statistics - Thống kê nhanh (không DB)
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "852efcca-aab2-464a-b7a5-47503799061c",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "4452ab6c-dd90-41e6-846b-2ff47825d66f",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "a478282e-2484-4286-b7cf-f429b08f6b9e",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+###############################################
+# Menu Items Available:
+# - Phở Bò Đặc Biệt: 852efcca-aab2-464a-b7a5-47503799061c (75,000đ)
+# - Cơm Tấm Sườn: a478282e-2484-4286-b7cf-f429b08f6b9e (55,000đ)
+# - Bún Bò Huế: edf3789f-6afc-4b89-a88d-a183226127f6 (65,000đ)
+# - Cà Phê Sữa Đá: 6372b897-f074-448f-ac27-7557ff87dc13 (30,000đ)
+# - Gỏi Cuốn: b74429c8-29e9-4e8f-9013-0a5b3935a7ed (35,000đ)
+#
+# Modifiers Available:
+# - Thịt bò thêm: 4452ab6c-dd90-41e6-846b-2ff47825d66f (+20,000đ)
+# - Trứng: 0470239a-849e-4dd2-bb13-9ae3a9b3eec2 (+10,000đ)
+# - Vừa cay: b50c5140-2486-4f6d-ac65-a4f0cbffe76c (0đ)
+# - Cay nồng: 5552e390-86a5-4bb8-a64a-42f4ceb0b629 (0đ)
+###############################################

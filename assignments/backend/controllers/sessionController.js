@@ -1,4 +1,5 @@
 const sessionService = require("../services/sessionService");
+const cartService = require("../services/cartService");
 
 /**
  * Create new table session
@@ -108,13 +109,25 @@ exports.createOrderInSession = async (req, res) => {
             });
         }
         
-        for (const item of items) {
-            if (!item.menuItemId || !item.quantity || item.quantity < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Each item must have menuItemId and quantity >= 1",
-                });
-            }
+        // Validate cart items before creating order
+        const validation = await cartService.validateCartItems(items);
+        
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                message: "Cart validation failed",
+                errors: validation.errors,
+            });
+        }
+        
+        // Check if cart can be converted to order
+        const canOrderCheck = await cartService.canConvertToOrder(items);
+        
+        if (!canOrderCheck.canOrder) {
+            return res.status(400).json({
+                success: false,
+                message: canOrderCheck.reason,
+            });
         }
         
         const customerId = req.user?.id || null;
