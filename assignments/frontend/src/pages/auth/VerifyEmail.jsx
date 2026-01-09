@@ -12,40 +12,32 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
   const { message } = App.useApp();
 
-  // Ref để chặn việc gọi API 2 lần trong Strict Mode
   const isCalledRef = useRef(false);
+  const [status, setStatus] = useState("loading");
 
-  const [status, setStatus] = useState("loading"); // loading | success | error
-
-  // Lấy token và trim cẩn thận
   const token = useMemo(
     () => (searchParams.get("token") ?? "").trim(),
     [searchParams]
   );
 
-  // ✅ Cải tiến 1: Nếu token đổi (hiếm nhưng có thể), cho phép gọi lại API
   useEffect(() => {
     isCalledRef.current = false;
   }, [token]);
 
   useEffect(() => {
-    let timeoutId;
-    let active = true; 
-    // 1. Nếu không có token -> Báo lỗi ngay
     if (!token) {
       setStatus("error");
       return;
     }
 
-    // 2. Chặn double request (Strict Mode)
     if (isCalledRef.current) return;
     isCalledRef.current = true;
+
+    let timeoutId;
 
     const run = async () => {
       try {
         const response = await verifyEmail(token);
-
-        if (!active) return;
 
         setStatus("success");
         message.success(response?.message || "Xác thực email thành công!");
@@ -54,12 +46,9 @@ export default function VerifyEmail() {
         const target = role === "admin" ? "/admin/tables" : "/menu";
 
         timeoutId = setTimeout(() => {
-          if (!active) return;
           navigate(target, { replace: true });
         }, 1500);
       } catch (err) {
-        if (!active) return;
-
         if (err?.response?.data?.errors) {
           const errors = err.response.data.errors;
           errors.forEach((error) => {
@@ -77,10 +66,9 @@ export default function VerifyEmail() {
     run();
 
     return () => {
-      active = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [token, verifyEmail, navigate]);
+  }, [token, verifyEmail, navigate, message]);
 
   return (
     <AuthShell
@@ -96,7 +84,6 @@ export default function VerifyEmail() {
             >
               Quay lại đăng nhập
             </Link>
-            {/* Tùy chọn: Có thể dẫn về trang gửi lại verify email nếu có */}
           </div>
         ) : null
       }

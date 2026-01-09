@@ -32,9 +32,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const response = await authService.login(email, password);
     const { token, user: userInfo } = response.data || response;
+
     if (!token || !userInfo) {
       throw new Error(response?.message || "Invalid login response format");
     }
+
     localStorage.setItem("token", token);
     setUser(userInfo);
     return {
@@ -50,7 +52,6 @@ export const AuthProvider = ({ children }) => {
       firstName,
       lastName
     );
-
     return {
       message: response.message,
     };
@@ -58,17 +59,23 @@ export const AuthProvider = ({ children }) => {
 
   const verifyEmail = async (token) => {
     const response = await authService.verifyEmail(token);
-    const { token: authToken, user: userInfo } = response.data || response;
+
+    const responseData = response?.data || response;
+    const authToken = responseData?.token;
+    const userInfo = responseData?.user;
+
     if (!authToken || !userInfo) {
       throw new Error(
         response?.message || "Invalid verification response format"
       );
     }
+
     localStorage.setItem("token", authToken);
     setUser(userInfo);
+
     return {
       user: userInfo,
-      message: response.message,
+      message: response.message || "Email verified successfully",
     };
   };
 
