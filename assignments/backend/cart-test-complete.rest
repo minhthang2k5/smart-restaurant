@@ -1,0 +1,833 @@
+# Cart API Complete Test Suite
+# Comprehensive test coverage for all endpoints and edge cases
+# Server phải chạy: npm start
+
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+# Test IDs - Cập nhật sau khi chạy linkModifiersToItems.js
+@phoBoId = 852efcca-aab2-464a-b7a5-47503799061c
+@comTamId = a478282e-2484-4286-b7cf-f429b08f6b9e
+@bunBoId = edf3789f-6afc-4b89-a88d-a183226127f6
+@caPheSuaId = 6372b897-f074-448f-ac27-7557ff87dc13
+@goiCuonId = b74429c8-29e9-4e8f-9013-0a5b3935a7ed
+
+# Size options
+@sizeNhoId = 62e9dbc4-56ba-43cd-83c0-b24bde3cbc8e
+@sizeVuaId = 6f133654-ebb5-453f-a069-78def3235c91
+@sizeLonId = 1d9bd0c3-cc90-43b5-9fc0-51f5bbcbb7e7
+
+# Spicy options
+@khongCayId = d02a2d43-39cf-4bb1-a805-0198f8770af5
+@itCayId = 65322276-80ea-44e8-8c0c-57913c9de5f7
+@vuaCayId = b50c5140-2486-4f6d-ac65-a4f0cbffe76c
+@cayNongId = 5552e390-86a5-4bb8-a64a-42f4ceb0b629
+
+# Topping options
+@thitBoId = 4452ab6c-dd90-41e6-846b-2ff47825d66f
+@trungId = 0470239a-849e-4dd2-bb13-9ae3a9b3eec2
+@rauThemId = d9ce6288-81fb-4167-9a7e-6783008e37e0
+@gioThemId = adeee6e7-6762-4d7c-8c63-c74ceac1f6f9
+
+# Ice options
+@nhieuDaId = cef40f1a-33a5-458c-a2ab-155d707e15ec
+@itDaId = e957b976-6093-4b78-a338-b499987de95f
+@khongDaId = 0b476b42-36bb-422e-b345-3174c1a57ec7
+
+###############################################
+# 1. VALIDATE CART (/api/cart/validate)
+###############################################
+
+### 1.1 ✅ Valid cart with modifiers
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "special_instructions": "Không hành",
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 1.2 ❌ Empty cart
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": []
+}
+
+### 1.3 ❌ Invalid menu_item_id
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.4 ❌ Negative quantity
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": -5,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.5 ❌ Zero quantity
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 0,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.6 ❌ Quantity exceeds limit (max 99)
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 100,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.7 ❌ Invalid modifier_option_id
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 1,
+      "modifiers": [
+        {
+          "modifier_option_id": "00000000-0000-0000-0000-000000000000",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 1.8 ❌ Modifier không thuộc menu item
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 1,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 1.9 ✅ Cart without modifiers
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 3,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.10 ✅ Multiple items
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{caPheSuaId}}",
+      "quantity": 2,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.11 ❌ Total quantity exceeds limit (max 100)
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 50,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 51,
+      "modifiers": []
+    }
+  ]
+}
+
+### 1.12 ⚠️ Too many unique items (max 50) - SKIP: Not enough menu items in DB
+# Cần 51 menu items khác nhau để test, nhưng DB chỉ có ~10 items
+# Test này sẽ PASS vì chỉ có 5 items (< 50)
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {"menu_item_id": "{{phoBoId}}", "quantity": 1, "modifiers": []},
+    {"menu_item_id": "{{comTamId}}", "quantity": 1, "modifiers": []},
+    {"menu_item_id": "{{bunBoId}}", "quantity": 1, "modifiers": []},
+    {"menu_item_id": "{{caPheSuaId}}", "quantity": 1, "modifiers": []},
+    {"menu_item_id": "{{goiCuonId}}", "quantity": 1, "modifiers": []}
+  ]
+}
+
+### 1.13 ✅ Long special instructions
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 1,
+      "special_instructions": "Không hành, không ngò, ít muối, nhiều ớt, thêm chanh, giao nhanh, đóng gói cẩn thận, gọi trước khi giao",
+      "modifiers": []
+    }
+  ]
+}
+
+###############################################
+# 2. GET CART SUMMARY (/api/cart/summary)
+###############################################
+
+### 2.1 ✅ Summary with single item
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{sizeVuaId}}",
+          "quantity": 1
+        },
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        },
+        {
+          "modifier_option_id": "{{vuaCayId}}",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 2.2 ✅ Summary with multiple items
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "special_instructions": "Không hành",
+      "modifiers": [
+        {"modifier_option_id": "{{sizeLonId}}", "quantity": 1},
+        {"modifier_option_id": "{{itCayId}}", "quantity": 1},
+        {"modifier_option_id": "{{thitBoId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeVuaId}}", "quantity": 1},
+        {"modifier_option_id": "{{trungId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{caPheSuaId}}",
+      "quantity": 3,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeNhoId}}", "quantity": 1},
+        {"modifier_option_id": "{{itDaId}}", "quantity": 1}
+      ]
+    }
+  ]
+}
+
+### 2.3 ❌ Summary for empty cart
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": []
+}
+
+### 2.4 ❌ Summary with invalid item
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### 2.5 ✅ Summary without modifiers
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 5,
+      "modifiers": []
+    }
+  ]
+}
+
+###############################################
+# 3. CAN CONVERT TO ORDER (/api/cart/can-order)
+###############################################
+
+### 3.1 ✅ Valid cart can order
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": []
+    }
+  ]
+}
+
+### 3.2 ❌ Empty cart cannot order
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": []
+}
+
+### 3.3 ❌ Invalid item cannot order
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### 3.4 ✅ Multiple items can order
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 1,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 2,
+      "modifiers": []
+    }
+  ]
+}
+
+###############################################
+# 4. MERGE DUPLICATES (/api/cart/merge)
+###############################################
+
+### 4.1 ✅ Merge same items with same modifiers
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 3,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 4.2 ✅ Don't merge items with different modifiers
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 1,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{vuaCayId}}",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 4.3 ✅ No duplicates to merge
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### 4.4 ✅ Merge items without modifiers
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 2,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 3,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 1,
+      "modifiers": []
+    }
+  ]
+}
+
+### 4.5 ✅ Empty cart merge
+POST {{baseUrl}}/api/cart/merge
+Content-Type: {{contentType}}
+
+{
+  "items": []
+}
+
+###############################################
+# 5. CALCULATE ITEM PRICE (/api/cart/calculate-item)
+###############################################
+
+### 5.1 ✅ Calculate without modifiers
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "quantity": 2,
+  "modifiers": []
+}
+
+### 5.2 ✅ Calculate with single modifier
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "quantity": 3,
+  "modifiers": [
+    {
+      "modifierOptionId": "{{sizeVuaId}}",
+      "quantity": 1
+    },
+    {
+      "modifierOptionId": "{{thitBoId}}",
+      "quantity": 1
+    },
+    {
+      "modifierOptionId": "{{khongCayId}}",
+      "quantity": 1
+    }
+  ]
+}
+
+### 5.3 ✅ Calculate with multiple modifiers
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "quantity": 1,
+  "modifiers": [
+    {
+      "modifierOptionId": "{{sizeVuaId}}",
+      "quantity": 1
+    },
+    {
+      "modifierOptionId": "{{thitBoId}}",
+      "quantity": 1
+    },
+    {
+      "modifierOptionId": "{{trungId}}",
+      "quantity": 2
+    },
+    {
+      "modifierOptionId": "{{vuaCayId}}",
+      "quantity": 1
+    }
+  ]
+}
+
+### 5.4 ❌ Missing menuItemId
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "quantity": 2,
+  "modifiers": []
+}
+
+### 5.5 ❌ Missing quantity
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "modifiers": []
+}
+
+### 5.6 ❌ Invalid menuItemId
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "00000000-0000-0000-0000-000000000000",
+  "quantity": 1,
+  "modifiers": []
+}
+
+### 5.7 ❌ Invalid modifier
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "quantity": 1,
+  "modifiers": [
+    {
+      "modifierOptionId": "00000000-0000-0000-0000-000000000000",
+      "quantity": 1
+    }
+  ]
+}
+
+### 5.8 ✅ Large quantity
+POST {{baseUrl}}/api/cart/calculate-item
+Content-Type: {{contentType}}
+
+{
+  "menuItemId": "{{phoBoId}}",
+  "quantity": 99,
+  "modifiers": []
+}
+
+###############################################
+# 6. GET STATISTICS (/api/cart/statistics)
+###############################################
+
+### 6.1 ✅ Statistics for normal cart
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {
+          "modifier_option_id": "{{thitBoId}}",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 3,
+      "modifiers": []
+    }
+  ]
+}
+
+### 6.2 ✅ Statistics for empty cart
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": []
+}
+
+### 6.3 ✅ Statistics for large cart
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {"menu_item_id": "{{phoBoId}}", "quantity": 10, "modifiers": []},
+    {"menu_item_id": "{{comTamId}}", "quantity": 15, "modifiers": []},
+    {"menu_item_id": "{{bunBoId}}", "quantity": 20, "modifiers": []},
+    {"menu_item_id": "{{caPheSuaId}}", "quantity": 5, "modifiers": []},
+    {"menu_item_id": "{{goiCuonId}}", "quantity": 8, "modifiers": []}
+  ]
+}
+
+### 6.4 ✅ Statistics - items with vs without modifiers
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {"modifier_option_id": "{{thitBoId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": []
+    },
+    {
+      "menu_item_id": "{{caPheSuaId}}",
+      "quantity": 3,
+      "modifiers": [
+        {"modifier_option_id": "{{vuaCayId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{goiCuonId}}",
+      "quantity": 2,
+      "modifiers": []
+    }
+  ]
+}
+
+### 6.5 ❌ Invalid items array
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+  "items": "not an array"
+}
+
+### 6.6 ❌ Missing items field
+POST {{baseUrl}}/api/cart/statistics
+Content-Type: {{contentType}}
+
+{
+}
+
+###############################################
+# 7. INTEGRATION TESTS - Workflow
+###############################################
+
+### 7.1 Complete workflow: Validate → Summary → Can Order
+# Step 1: Validate
+POST {{baseUrl}}/api/cart/validate
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeVuaId}}", "quantity": 1},
+        {"modifier_option_id": "{{khongCayId}}", "quantity": 1},
+        {"modifier_option_id": "{{thitBoId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeLonId}}", "quantity": 1}
+      ]
+    }
+  ]
+}
+
+### Step 2: Get Summary
+POST {{baseUrl}}/api/cart/summary
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeVuaId}}", "quantity": 1},
+        {"modifier_option_id": "{{khongCayId}}", "quantity": 1},
+        {"modifier_option_id": "{{thitBoId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeLonId}}", "quantity": 1}
+      ]
+    }
+  ]
+}
+
+### Step 3: Check Can Order
+POST {{baseUrl}}/api/cart/can-order
+Content-Type: {{contentType}}
+
+{
+  "items": [
+    {
+      "menu_item_id": "{{phoBoId}}",
+      "quantity": 2,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeVuaId}}", "quantity": 1},
+        {"modifier_option_id": "{{khongCayId}}", "quantity": 1},
+        {"modifier_option_id": "{{thitBoId}}", "quantity": 1}
+      ]
+    },
+    {
+      "menu_item_id": "{{comTamId}}",
+      "quantity": 1,
+      "modifiers": [
+        {"modifier_option_id": "{{sizeLonId}}", "quantity": 1}
+      ]
+    }
+  ]
+}
+
+###############################################
+# Test Summary
+###############################################
+# ✅ Validate Cart: 13 tests
+# ✅ Get Summary: 5 tests
+# ✅ Can Order: 4 tests
+# ✅ Merge Duplicates: 5 tests
+# ✅ Calculate Item: 8 tests
+# ✅ Get Statistics: 6 tests
+# ✅ Integration: 3 tests
+# 
+# Total: 44 test cases
+# Coverage: Happy paths, validation errors, edge cases, limits
+###############################################
