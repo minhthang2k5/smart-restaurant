@@ -10,6 +10,12 @@ import MenuItemDetail from "./pages/admin/MenuItemDetail";
 import Modifiers from "./pages/admin/Modifiers";
 import GuestItemDetail from "./pages/customer/GuestItemDetail";
 import "./styles/global.css";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import VerifyEmail from "./pages/auth/VerifyEmail";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 const theme = {
   token: {
@@ -24,8 +30,22 @@ function App() {
       <AntApp>
         <BrowserRouter>
           <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
             {/* Admin Routes */}
-            <Route path="/admin" element={<Layout />}>
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
               <Route index element={<Navigate to="/admin/tables" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="tables" element={<Tables />} />

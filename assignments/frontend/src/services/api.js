@@ -1,29 +1,19 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
-    timeout: 30000, //30 seconds timeout
-    headers: {
-        "Content-Type": "application/json",
-    },
-    // Temporary: Use Basic Auth for development (until JWT is implemented)
-    auth: {
-        username: "admin",
-        password: "admin123",
-    },
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  timeout: 30000,
+  headers: { "Content-Type": "application/json" },
 });
 
 // Request interceptor
 api.interceptors.request.use(
-    (config) => {
-        // TODO: Replace with JWT token when authentication is fully implemented
-        // const token = localStorage.getItem("token");
-        // if (token) config.headers.Authorization = `Bearer ${token}`;
-
-        // For now, Basic Auth is handled by axios 'auth' config above
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 api.interceptors.response.use(
