@@ -31,26 +31,52 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await authService.login(email, password);
-    const { token, user: userInfo } = response;
+    const { token, user: userInfo } = response.data || response;
     localStorage.setItem("token", token);
     setUser(userInfo);
-    return response;
+    return {
+      user: userInfo,
+      message: response.message,
+    };
   };
 
-  const register = (email, password, firstName, lastName) =>
-    authService.register(email, password, firstName, lastName);
+  const register = async (email, password, firstName, lastName) => {
+    const response = await authService.register(
+      email,
+      password,
+      firstName,
+      lastName
+    );
+
+    return {
+      message: response.message,
+    };
+  };
 
   const verifyEmail = async (token) => {
     const response = await authService.verifyEmail(token);
-    const { token: authToken, user: userInfo } = response;
+    const { token: authToken, user: userInfo } = response.data || response;
     localStorage.setItem("token", authToken);
     setUser(userInfo);
-    return response;
+    return {
+      user: userInfo,
+      message: response.message,
+    };
   };
 
-  const forgotPassword = (email) => authService.forgotPassword(email);
-  const resetPassword = (token, password) =>
-    authService.resetPassword(token, password);
+  const forgotPassword = async (email) => {
+    const response = await authService.forgotPassword(email);
+    return {
+      message: response.message,
+    };
+  };
+
+  const resetPassword = async (token, password) => {
+    const response = await authService.resetPassword(token, password);
+    return {
+      message: response.message,
+    };
+  };
 
   const logout = async () => {
     try {

@@ -110,7 +110,11 @@ export default function Register() {
           label="Mật khẩu"
           rules={[
             { required: true, message: "Vui lòng nhập mật khẩu" },
-            { min: 6, message: "Mật khẩu tối thiểu 6 ký tự" },
+            { min: 8, message: "Mật khẩu tối thiểu 8 ký tự" },
+            {
+              pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+              message: "Mật khẩu phải có chữ hoa, chữ thường và số",
+            },
           ]}
           hasFeedback
         >

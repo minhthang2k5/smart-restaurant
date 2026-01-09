@@ -11,3 +11,5 @@ const authService = {
     api.post("/auth/reset-password", { token, password }),
   getCurrentUser: () => api.get("/users/profile"),
 };
+
+export default authService;

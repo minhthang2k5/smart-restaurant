@@ -92,8 +92,12 @@ export default function ResetPassword() {
           name="password"
           label="Mật khẩu mới"
           rules={[
-            { required: true, message: "Vui lòng nhập mật khẩu mới" },
-            { min: 6, message: "Mật khẩu tối thiểu 6 ký tự" },
+            { required: true, message: "Vui lòng nhập mật khẩu" },
+            { min: 8, message: "Mật khẩu tối thiểu 8 ký tự" },
+            {
+              pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+              message: "Mật khẩu phải có chữ hoa, chữ thường và số",
+            },
           ]}
           hasFeedback
         >
