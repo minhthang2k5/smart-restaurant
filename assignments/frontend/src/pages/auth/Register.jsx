@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Form, Input, Button, message } from "antd";
+import { Form, Input, Button, App } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
-import AuthShell from "../components/auth/AuthShell";
+import { useAuth } from "../../contexts/AuthContext";
+import AuthShell from "../../components/auth/AuthShell";
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async ({ firstName, lastName, email, password }) => {
@@ -34,9 +35,16 @@ export default function Register() {
       );
       navigate("/login", { replace: true });
     } catch (error) {
-      const msg =
-        error?.response?.data?.message || error?.message || "Đăng ký thất bại";
-      message.error(msg);
+      if (error?.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        errors.forEach((err) => {
+          message.error(`${err.field}: ${err.message}`);
+        });
+      } else {
+        const msg =
+          error?.response?.data?.message || error?.message || "Đăng ký thất bại";
+        message.error(msg);
+      }
     } finally {
       setLoading(false);
     }

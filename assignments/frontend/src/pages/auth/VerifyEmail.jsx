@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { Result, Spin, message } from "antd";
+import { Result, Spin, App } from "antd";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 
-import { useAuth } from "../contexts/AuthContext";
-import AuthShell from "../components/auth/AuthShell";
+import { useAuth } from "../../contexts/AuthContext";
+import AuthShell from "../../components/auth/AuthShell";
 
 export default function VerifyEmail() {
   const { verifyEmail } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
   // Ref để chặn việc gọi API 2 lần trong Strict Mode
   const isCalledRef = useRef(false);
@@ -29,8 +30,7 @@ export default function VerifyEmail() {
 
   useEffect(() => {
     let timeoutId;
-    let active = true; // ✅ Cải tiến 2: tránh setState/navigate sau unmount
-
+    let active = true; 
     // 1. Nếu không có token -> Báo lỗi ngay
     if (!token) {
       setStatus("error");
@@ -60,9 +60,16 @@ export default function VerifyEmail() {
       } catch (err) {
         if (!active) return;
 
-        const msg =
-          err?.response?.data?.message || err?.message || "Xác thực thất bại";
-        message.error(msg);
+        if (err?.response?.data?.errors) {
+          const errors = err.response.data.errors;
+          errors.forEach((error) => {
+            message.error(`${error.field}: ${error.message}`);
+          });
+        } else {
+          const msg =
+            err?.response?.data?.message || err?.message || "Xác thực thất bại";
+          message.error(msg);
+        }
         setStatus("error");
       }
     };

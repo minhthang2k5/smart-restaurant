@@ -1,15 +1,16 @@
 import { useMemo, useState } from "react";
-import { Form, Input, Button, Result, message } from "antd";
+import { Form, Input, Button, Result, App } from "antd";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { KeyRound } from "lucide-react";
 
-import { useAuth } from "../contexts/AuthContext";
-import AuthShell from "../components/auth/AuthShell";
+import { useAuth } from "../../contexts/AuthContext";
+import AuthShell from "../../components/auth/AuthShell";
 
 export default function ResetPassword() {
   const { resetPassword } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
   const [loading, setLoading] = useState(false);
 
@@ -29,19 +30,24 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      // AuthContext: gửi token và mật khẩu mới (giữ nguyên khoảng trắng của password)
       const response = await resetPassword(token, password);
 
       message.success(response?.message || "Cập nhật mật khẩu thành công!");
 
-      // Chuyển hướng về login, replace=true để user không back lại được trang reset này
       navigate("/login", { replace: true });
     } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Đặt lại mật khẩu thất bại. Token có thể đã hết hạn.";
-      message.error(msg);
+      if (error?.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        errors.forEach((err) => {
+          message.error(`${err.field}: ${err.message}`);
+        });
+      } else {
+        const msg =
+          error?.response?.data?.message ||
+          error?.message ||
+          "Đặt lại mật khẩu thất bại. Token có thể đã hết hạn.";
+        message.error(msg);
+      }
     } finally {
       setLoading(false);
     }

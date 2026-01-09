@@ -26,10 +26,6 @@ export default function AuthShell({ title, subtitle, icon, children, footer }) {
             {footer}
           </div>
         )}
-
-        <div className="mt-8 text-center text-[10px] text-slate-400 uppercase tracking-wider">
-          Powered by pink glass ✨
-        </div>
       </div>
     </div>
   );

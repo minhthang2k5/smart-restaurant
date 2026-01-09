@@ -3,8 +3,8 @@ import { Form, Input, Button, message } from "antd";
 import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 
-import { useAuth } from "../contexts/AuthContext";
-import AuthShell from "../components/auth/AuthShell";
+import { useAuth } from "../../contexts/AuthContext";
+import AuthShell from "../../components/auth/AuthShell";
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAuth();
@@ -25,12 +25,18 @@ export default function ForgotPassword() {
           "Đã gửi email khôi phục. Vui lòng kiểm tra hộp thư."
       );
 
-      // 2. Clear form để báo hiệu đã hoàn tất, tránh user bấm gửi lại
       form.resetFields();
     } catch (error) {
-      const msg =
-        error?.response?.data?.message || error?.message || "Yêu cầu thất bại";
-      message.error(msg);
+      if (error?.response?.data?.errors) {
+        const errors = error.response.data.errors;
+        errors.forEach((err) => {
+          message.error(`${err.field}: ${err.message}`);
+        });
+      } else {
+        const msg =
+          error?.response?.data?.message || error?.message || "Yêu cầu thất bại";
+        message.error(msg);
+      }
     } finally {
       setLoading(false);
     }
