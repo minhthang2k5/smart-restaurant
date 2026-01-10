@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Order Tracking - Test Interface</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        .status-bar {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .status-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .status-dot.connected {
+            background: #28a745;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .controls {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .button {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .button.success {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        input[type="text"] {
+            padding: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 14px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        input[type="text"]::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .order-tracking {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .order-card {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .order-number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .order-status {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-pending { background: #ffc107; color: #000; }
+        .status-accepted { background: #17a2b8; }
+        .status-preparing { background: #fd7e14; }
+        .status-ready { background: #28a745; animation: blink 1s infinite; }
+        .status-served { background: #6c757d; }
+        .status-rejected { background: #dc3545; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            position: relative;
+        }
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.2);
+            z-index: 0;
+        }
+        .progress-step:first-child::before {
+            left: 50%;
+        }
+        .progress-step:last-child::before {
+            right: 50%;
+        }
+        .progress-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .progress-step.active .progress-icon {
+            background: #ffc107;
+            color: #000;
+            transform: scale(1.2);
+        }
+        .progress-step.completed .progress-icon {
+            background: #28a745;
+        }
+        .progress-label {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .order-items {
+            margin: 15px 0;
+        }
+        .order-item {
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .item-qty {
+            font-weight: bold;
+            color: #ffc107;
+            font-size: 18px;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+            min-width: 300px;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            border-left: 4px solid #28a745;
+        }
+        .notification.error {
+            border-left: 4px solid #dc3545;
+        }
+        .notification.warning {
+            border-left: 4px solid #ffc107;
+        }
+        .event-log {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .event-time {
+            color: #ffc107;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Your Order Status</h1>
+            <p>Real-time order tracking</p>
+        </div>
+
+        <div class="status-bar">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Not connected</span>
+        </div>
+
+        <div class="controls">
+            <input type="text" id="tableIdInput" placeholder="Enter Table ID" value="e184f588-458d-4aa2-95ca-4c26aa1e5d65">
+            <button class="button success" onclick="connectToTable()">Connect to Table</button>
+            <button class="button" onclick="disconnect()">Disconnect</button>
+        </div>
+
+        <!-- Add Order Form -->
+        <div class="controls" id="addOrderForm" style="display:none;">
+            <h3 style="margin-bottom: 15px;">🛒 Add New Order</h3>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Menu Item ID:</label>
+                    <input type="text" id="menuItemInput" placeholder="Menu Item ID" value="aa80c2ea-10bd-4c91-a954-f2b6d545c43a">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Quantity:</label>
+                    <input type="number" id="quantityInput" placeholder="Qty" value="1" min="1" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">Special Instructions (optional):</label>
+                    <input type="text" id="instructionsInput" placeholder="e.g., Extra spicy">
+                </div>
+                <button class="button success" onclick="addOrder()">➕ Add Order</button>
+            </div>
+            <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                💡 Tip: Check menu-items API for available IDs or use the default value above
+            </div>
+        </div>
+
+        <div class="order-tracking" id="orderTracking" style="display:none;">
+            <h2 style="margin-bottom: 20px;">📋 Your Orders</h2>
+            <div id="ordersContainer"></div>
+        </div>
+
+        <div class="event-log">
+            <h3>📝 Activity Log</h3>
+            <div id="eventLog"></div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let socket = null;
+        let currentTableId = null;
+        let currentSessionId = null;
+
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                dot.classList.add('connected');
+                text.textContent = `Connected to Table ${currentTableId?.slice(0, 8)}...`;
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Not connected';
+            }
+        }
+
+        function addEvent(message) {
+            const log = document.getElementById('eventLog');
+            const event = document.createElement('div');
+            event.className = 'event-item';
+            event.innerHTML = `
+                <div class="event-time">${new Date().toLocaleTimeString()}</div>
+                <div>${message}</div>
+            `;
+            log.insertBefore(event, log.firstChild);
+            
+            while (log.children.length > 50) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function connectToTable() {
+            const tableId = document.getElementById('tableIdInput').value.trim();
+            
+            if (!tableId) {
+                showNotification('Please enter a table ID', 'error');
+                return;
+            }
+
+            if (socket && socket.connected) {
+                socket.emit('leave-table', currentTableId);
+            }
+
+            currentTableId = tableId;
+            addEvent(`🔌 Connecting to table ${tableId.slice(0, 8)}...`);
+
+            if (!socket) {
+                socket = io('http://localhost:3000/customer', {
+                    transports: ['websocket', 'polling'],
+                    reconnection: true
+                });
+
+                setupSocketListeners();
+            }
+
+            socket.emit('join-table', tableId);
+        }
+
+        function setupSocketListeners() {
+            socket.on('connect', () => {
+                addEvent(`✅ Connected (ID: ${socket.id})`);
+                updateConnectionStatus(true);
+            });
+
+            socket.on('joined-table', (data) => {
+                addEvent(`✅ Joined table successfully`);
+                loadOrders();
+            });
+
+            socket.on('order-status-updated', (data) => {
+                addEvent(`📢 Order #${data.orderNumber} → ${data.status}`);
+                showNotification(`Order ${data.orderNumber} is now ${data.status}`, 'success');
+                loadOrders();
+            });
+
+            socket.on('order-ready', (data) => {
+                addEvent(`🎉 Order #${data.orderNumber} is READY!`);
+                showNotification(`🎉 ${data.message}`, 'success');
+                playSound();
+                loadOrders();
+            });
+
+            socket.on('order-rejected', (data) => {
+                addEvent(`❌ Order #${data.orderNumber} rejected: ${data.reason}`);
+                showNotification(`Order rejected: ${data.reason}`, 'error');
+                loadOrders();
+            });
+
+            socket.on('session-completed', (data) => {
+                addEvent(`✅ Session completed! Thank you!`);
+                showNotification('Thank you for dining with us! 🙏', 'success');
+                setTimeout(() => {
+                    document.getElementById('orderTracking').style.display = 'none';
+                }, 3000);
+            });
+
+            socket.on('disconnect', () => {
+                addEvent('❌ Disconnected');
+                updateConnectionStatus(false);
+            });
+
+            socket.on('error', (error) => {
+                addEvent(`❌ Error: ${error.message}`);
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.emit('leave-table', currentTableId);
+                socket.disconnect();
+                socket = null;
+                addEvent('🔌 Disconnected by user');
+                updateConnectionStatus(false);
+                document.getElementById('orderTracking').style.display = 'none';
+            }
+        }
+
+        async function loadOrders() {
+            if (!currentTableId) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/sessions/table/${currentTableId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    currentSessionId = data.data.id; // Store session ID for adding orders
+                    renderOrders(data.data.orders || []);
+                    document.getElementById('orderTracking').style.display = 'block';
+                    document.getElementById('addOrderForm').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<p style="text-align:center; opacity: 0.7;">No orders yet</p>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-number">#${order.order_number}</div>
+                        <div class="order-status status-${order.status}">${order.status.toUpperCase()}</div>
+                    </div>
+                    
+                    ${getProgressTracker(order.status)}
+                    
+                    <div class="order-items">
+                        ${order.items?.map(item => `
+                            <div class="order-item">
+                                <span class="item-qty">${item.quantity}x</span> ${item.item_name}
+                                ${item.special_instructions ? `<div style="font-size: 12px; color: #ffc107; margin-top: 5px;">📝 ${item.special_instructions}</div>` : ''}
+                            </div>
+                        `).join('') || ''}
+                    </div>
+                    
+                    <div style="margin-top: 20px; font-size: 24px; font-weight: bold; text-align: right;">
+                        Total: $${parseFloat(order.total_amount || 0).toFixed(2)}
+                    </div>
+                    
+                    <div style="margin-top: 10px; font-size: 12px; opacity: 0.7; text-align: right;">
+                        Ordered: ${new Date(order.created_at).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getProgressTracker(status) {
+            const steps = ['pending', 'accepted', 'preparing', 'ready', 'served'];
+            const currentIndex = steps.indexOf(status);
+            
+            return `
+                <div class="progress-tracker">
+                    <div class="progress-step ${currentIndex >= 0 ? 'completed' : ''} ${currentIndex === 0 ? 'active' : ''}">
+                        <div class="progress-icon">📝</div>
+                        <div class="progress-label">Ordered</div>
+                    </div>
+                    <div class="progress-step ${currentIndex >= 1 ? 'completed' : ''} ${currentIndex === 1 ? 'active' : ''}">
+                        <div class="progress-icon">✓</div>
+                        <div class="progress-label">Confirmed</div>
+                    </div>
+                    <div class="progress-step ${currentIndex >= 2 ? 'completed' : ''} ${currentIndex === 2 ? 'active' : ''}">
+                        <div class="progress-icon">🔥</div>
+                        <div class="progress-label">Preparing</div>
+                    </div>
+                    <div class="progress-step ${currentIndex >= 3 ? 'completed' : ''} ${currentIndex === 3 ? 'active' : ''}">
+                        <div class="progress-icon">🎉</div>
+                        <div class="progress-label">Ready</div>
+                    </div>
+                    <div class="progress-step ${currentIndex >= 4 ? 'completed' : ''} ${currentIndex === 4 ? 'active' : ''}">
+                        <div class="progress-icon">✓</div>
+                        <div class="progress-label">Served</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function playSound() {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuAy/PTgjMGHm7A7+OZURE...');
+            audio.play().catch(() => {});
+        }
+
+        async function addOrder() {
+            if (!currentSessionId) {
+                showNotification('Please connect to a table first', 'error');
+                return;
+            }
+
+            const menuItemId = document.getElementById('menuItemInput').value.trim();
+            const quantity = parseInt(document.getElementById('quantityInput').value);
+            const instructions = document.getElementById('instructionsInput').value.trim();
+
+            if (!menuItemId) {
+                showNotification('Please enter a menu item ID', 'error');
+                return;
+            }
+
+            if (!quantity || quantity < 1) {
+                showNotification('Quantity must be at least 1', 'error');
+                return;
+            }
+
+            try {
+                addEvent(`📤 Creating order: ${quantity}x Menu Item...`);
+                
+                const response = await fetch(`http://localhost:3000/api/sessions/${currentSessionId}/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        items: [
+                            {
+                                menuItemId: menuItemId,
+                                quantity: quantity,
+                                specialInstructions: instructions || undefined
+                            }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`Order created successfully! Order #${data.data.order.order_number}`, 'success');
+                    addEvent(`✅ Order created: #${data.data.order.order_number}`);
+                    
+                    // Clear form
+                    document.getElementById('quantityInput').value = '1';
+                    document.getElementById('instructionsInput').value = '';
+                    
+                    // Reload orders to show new one
+                    loadOrders();
+                } else {
+                    showNotification(`Failed to create order: ${data.message}`, 'error');
+                    addEvent(`❌ Failed: ${data.message}`);
+                }
+            } catch (error) {
+                showNotification(`Error: ${error.message}`, 'error');
+                addEvent(`❌ Error creating order: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

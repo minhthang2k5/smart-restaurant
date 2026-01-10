@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Restaurant - WebSocket Test Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .card-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .card-description {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+        }
+        .features {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+        .features h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .feature-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        .feature-item h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .feature-item p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Smart Restaurant</h1>
+            <p>WebSocket Real-time Testing Suite</p>
+            <div style="margin-top: 20px;">
+                <span class="status-indicator"></span>
+                <span>Server: http://localhost:3000</span>
+            </div>
+        </div>
+
+        <div class="cards-grid">
+            <a href="test-kitchen-display.html" class="card">
+                <div class="card-icon">🍳</div>
+                <div class="card-title">Kitchen Display</div>
+                <div class="card-description">
+                    Real-time order preparation management. 
+                    Start preparing orders and mark them as ready.
+                </div>
+            </a>
+
+            <a href="test-waiter.html" class="card">
+                <div class="card-icon">👨‍🍳</div>
+                <div class="card-title">Waiter Dashboard</div>
+                <div class="card-description">
+                    Accept/reject new orders and mark served orders. 
+                    Get notified when orders are ready.
+                </div>
+            </a>
+
+            <a href="test-customer-order.html" class="card">
+                <div class="card-icon">👥</div>
+                <div class="card-title">Customer Tracking</div>
+                <div class="card-description">
+                    Track your order in real-time from kitchen to table. 
+                    Visual progress tracker and notifications.
+                </div>
+            </a>
+        </div>
+
+        <div class="features">
+            <h2>✨ Features Tested</h2>
+            <div class="features-list">
+                <div class="feature-item">
+                    <h3>🔔 Real-time Notifications</h3>
+                    <p>Instant updates via WebSocket for all order status changes</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🎯 Room-based Broadcasting</h3>
+                    <p>Table-specific notifications ensure customer privacy</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🔄 Auto Reconnection</h3>
+                    <p>Automatic reconnection on connection loss</p>
+                </div>
+                <div class="feature-item">
+                    <h3>📱 Browser Notifications</h3>
+                    <p>Desktop notifications for important events</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🎨 Visual Status Tracking</h3>
+                    <p>Color-coded order status with progress indicators</p>
+                </div>
+                <div class="feature-item">
+                    <h3>🔊 Sound Alerts</h3>
+                    <p>Audio notifications for critical updates</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="features" style="margin-top: 30px;">
+            <h2>📋 Test Workflow</h2>
+            <div style="background: rgba(0,0,0,0.2); padding: 30px; border-radius: 15px; line-height: 2;">
+                <ol style="padding-left: 20px;">
+                    <li><strong>Step 1:</strong> Open Kitchen Display and connect</li>
+                    <li><strong>Step 2:</strong> Open Waiter Dashboard in another tab</li>
+                    <li><strong>Step 3:</strong> Open Customer Tracking in third tab</li>
+                    <li><strong>Step 4:</strong> Use REST Client to create a new order (POST /api/sessions/:id/orders)</li>
+                    <li><strong>Step 5:</strong> Watch Kitchen Display receive the order</li>
+                    <li><strong>Step 6:</strong> Use Waiter Dashboard to accept the order</li>
+                    <li><strong>Step 7:</strong> Watch Customer Tracking update in real-time</li>
+                    <li><strong>Step 8:</strong> Progress order through statuses (preparing → ready → served)</li>
+                    <li><strong>Step 9:</strong> Verify all interfaces receive updates simultaneously</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Technology Stack:</strong> Socket.IO 4.5.4 | WebSocket | Node.js | Express</p>
+            <p style="margin-top: 10px; opacity: 0.7; font-size: 14px;">
+                Smart Restaurant Management System - HCMUS WAD Final Project 2026
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Check server status
+        fetch('http://localhost:3000/api/menu-items?limit=1')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Server is running');
+                } else {
+                    console.warn('⚠️ Server may not be running properly');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Cannot connect to server:', error);
+                alert('⚠️ Warning: Cannot connect to server at http://localhost:3000\n\nPlease ensure the backend server is running.');
+            });
+    </script>
+</body>
+</html>
