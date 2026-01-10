@@ -88,9 +88,9 @@ const calculateOrderTotals = (orderItems) => {
     
     return {
         subtotal: subtotal.toFixed(2),
-        taxAmount: taxAmount.toFixed(2),
-        discountAmount: "0.00",
-        totalAmount: totalAmount.toFixed(2),
+        tax_amount: taxAmount.toFixed(2),
+        discount_amount: "0.00",
+        total_amount: totalAmount.toFixed(2),
     };
 };
 
@@ -244,6 +244,8 @@ exports.getSessionDetails = async (sessionId) => {
  */
 exports.createOrderInSession = async (sessionId, items, customerId = null) => {
     const transaction = await sequelize.transaction();
+    let order;  // ✅ Khai báo bên ngoài try block
+    let createdOrderItems = [];  // ✅ Khai báo bên ngoài
     
     try {
         // Check if session exists and is active
@@ -259,7 +261,7 @@ exports.createOrderInSession = async (sessionId, items, customerId = null) => {
         
         // Create new order
         const orderNumber = await generateOrderNumber();
-        const order = await Order.create({
+        order = await Order.create({
             session_id: sessionId,
             table_id: session.table_id,
             customer_id: customerId || session.customer_id,
@@ -268,7 +270,7 @@ exports.createOrderInSession = async (sessionId, items, customerId = null) => {
         }, { transaction });
         
         // Add items to order
-        const createdOrderItems = [];
+        // createdOrderItems already declared above
         
         for (const item of items) {
             const menuItem = await MenuItem.findByPk(item.menuItemId, { transaction });
@@ -335,11 +337,42 @@ exports.createOrderInSession = async (sessionId, items, customerId = null) => {
         await order.update(totals, { transaction });
         
         await transaction.commit();
-        
-        return { order, items: createdOrderItems };
     } catch (error) {
         await transaction.rollback();
         throw error;
+    }
+    
+    // Fetch complete data with Table for WebSocket emit (AFTER transaction)
+    try {
+        const sessionWithTable = await TableSession.findByPk(sessionId, {
+            include: [{ model: Table, as: "table" }]
+        });
+        
+        const orderWithItems = await Order.findByPk(order.id, {
+            include: [{ model: OrderItem, as: "items" }],
+            // Force reload from database to get updated totals
+            reloadOnFindOne: true
+        });
+        
+        return { 
+            order: orderWithItems, 
+            items: createdOrderItems,
+            session: sessionWithTable 
+        };
+    } catch (fetchError) {
+        // If fetch fails, still return basic data (order already saved)
+        console.error("Error fetching complete order data:", fetchError.message);
+        return { 
+            order: { 
+                id: order.id, 
+                order_number: order.order_number,
+                subtotal: order.subtotal,
+                tax_amount: order.tax_amount,
+                total_amount: order.total_amount
+            }, 
+            items: createdOrderItems,
+            session: null 
+        };
     }
 };
 
@@ -351,11 +384,17 @@ exports.completeSession = async (sessionId, paymentMethod, transactionId = null)
     
     try {
         const session = await TableSession.findByPk(sessionId, {
-            include: [{
-                model: Order,
-                as: "orders",
-                include: [{ model: OrderItem, as: "items" }],
-            }],
+            include: [
+                {
+                    model: Order,
+                    as: "orders",
+                    include: [{ model: OrderItem, as: "items" }],
+                },
+                {
+                    model: Table,
+                    as: "table"
+                }
+            ],
             transaction,
         });
         

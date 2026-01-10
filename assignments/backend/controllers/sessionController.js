@@ -1,5 +1,6 @@
 const sessionService = require("../services/sessionService");
 const cartService = require("../services/cartService");
+const { emitNewOrder, emitSessionCompleted } = require("../socket");
 
 /**
  * Create new table session
@@ -133,6 +134,30 @@ exports.createOrderInSession = async (req, res) => {
         const customerId = req.user?.id || null;
         const result = await sessionService.createOrderInSession(sessionId, items, customerId);
         
+        // 🔥 Emit new order to kitchen display
+        try {
+            emitNewOrder({
+                id: result.order.id,
+                orderNumber: result.order.order_number,
+                tableNumber: result.session.table.table_number,
+                tableId: result.session.table_id,
+                items: result.order.items.map(item => ({
+                    id: item.id,
+                    name: item.item_name,
+                    quantity: item.quantity,
+                    specialInstructions: item.special_instructions
+                })),
+                totalAmount: result.order.total_amount,
+                status: result.order.status,
+                createdAt: result.order.created_at,
+                priority: 'normal'
+            });
+            
+            console.log(`✅ WebSocket: New order #${result.order.order_number} sent to kitchen`);
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
+        
         res.status(201).json({
             success: true,
             message: "Order created successfully",
@@ -172,6 +197,20 @@ exports.completeSession = async (req, res) => {
         }
         
         const session = await sessionService.completeSession(sessionId, paymentMethod, transactionId);
+        
+        // 🔥 Emit session completed to customer
+        try {
+            emitSessionCompleted(session.table_id, {
+                id: session.id,
+                tableNumber: session.table.table_number,
+                totalAmount: session.total_amount,
+                paymentStatus: session.payment_status
+            });
+            
+            console.log(`✅ WebSocket: Session completed notification sent to table ${session.table.table_number}`);
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
         
         res.status(200).json({
             success: true,

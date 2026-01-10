@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
-const { authenticate, authorize } = require("../middleware/auth");
+// COMMENTED FOR TESTING - REMEMBER TO UNCOMMENT IN PRODUCTION!
+// const { authenticate, authorize } = require("../middleware/auth");
 
 /**
  * Customer routes (require authentication)
@@ -31,14 +32,16 @@ router.get("/:id", orderController.getOrderById);
  * @access  Private (Admin/Waiter only)
  * @query   status, tableId, date, limit
  */
-router.get("/", authenticate, authorize(["admin", "waiter"]), orderController.getAllOrders);
+// TESTING: Auth disabled
+router.get("/", /* authenticate, authorize(["admin", "waiter"]), */ orderController.getAllOrders);
 
 /**
  * @route   POST /api/orders/:id/accept
  * @desc    Accept order (Waiter)
  * @access  Private (Waiter/Admin only)
  */
-router.post("/:id/accept", authenticate, authorize(["admin", "waiter"]), orderController.acceptOrder);
+// TESTING: Auth disabled
+router.post("/:id/accept", /* authenticate, authorize(["admin", "waiter"]), */ orderController.acceptOrder);
 
 /**
  * @route   POST /api/orders/:id/reject
@@ -46,7 +49,8 @@ router.post("/:id/accept", authenticate, authorize(["admin", "waiter"]), orderCo
  * @access  Private (Waiter/Admin only)
  * @body    reason (required)
  */
-router.post("/:id/reject", authenticate, authorize(["admin", "waiter"]), orderController.rejectOrder);
+// TESTING: Auth disabled
+router.post("/:id/reject", /* authenticate, authorize(["admin", "waiter"]), */ orderController.rejectOrder);
 
 /**
  * @route   PATCH /api/orders/:id/status
@@ -54,7 +58,8 @@ router.post("/:id/reject", authenticate, authorize(["admin", "waiter"]), orderCo
  * @access  Private (Waiter/Admin only)
  * @body    status (required)
  */
-router.patch("/:id/status", authenticate, authorize(["admin", "waiter"]), orderController.updateOrderStatus);
+// TESTING: Auth disabled
+router.patch("/:id/status", /* authenticate, authorize(["admin", "waiter"]), */ orderController.updateOrderStatus);
 
 /**
  * @route   PATCH /api/orders/items/:itemId/status
@@ -62,7 +67,8 @@ router.patch("/:id/status", authenticate, authorize(["admin", "waiter"]), orderC
  * @access  Private (Waiter/Admin only)
  * @body    status (required)
  */
-router.patch("/items/:itemId/status", authenticate, authorize(["admin", "waiter"]), orderController.updateOrderItemStatus);
+// TESTING: Auth disabled
+router.patch("/items/:itemId/status", /* authenticate, authorize(["admin", "waiter"]), */ orderController.updateOrderItemStatus);
 
 /**
  * @route   POST /api/orders/:id/complete
@@ -70,6 +76,7 @@ router.patch("/items/:itemId/status", authenticate, authorize(["admin", "waiter"
  * @access  Private (Waiter/Admin only)
  * @note    Payment is handled at Session level
  */
-router.post("/:id/complete", authenticate, authorize(["admin", "waiter"]), orderController.completeOrder);
+// TESTING: Auth disabled
+router.post("/:id/complete", /* authenticate, authorize(["admin", "waiter"]), */ orderController.completeOrder);
 
 module.exports = router;

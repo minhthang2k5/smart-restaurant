@@ -13,6 +13,15 @@ const User = require("../models/User");
 const sequelize = require("../config/database");
 const { Op } = require("sequelize");
 
+// WebSocket imports
+const { 
+    emitNewOrder, 
+    emitOrderStatusUpdate, 
+    emitOrderReady, 
+    emitItemStatusUpdate,
+    emitOrderRejected 
+} = require("../socket");
+
 /**
  * Order Status State Machine
  * Defines valid transitions between order statuses
@@ -112,9 +121,9 @@ const calculateOrderTotals = (orderItems) => {
     
     return {
         subtotal: subtotal.toFixed(2),
-        taxAmount: taxAmount.toFixed(2),
-        discountAmount: "0.00",
-        totalAmount: totalAmount.toFixed(2),
+        tax_amount: taxAmount.toFixed(2),
+        discount_amount: "0.00",
+        total_amount: totalAmount.toFixed(2),
     };
 };
 
@@ -212,6 +221,26 @@ exports.addItemsToOrder = async (orderId, items, transaction = null) => {
         
         if (shouldCommit) {
             await txn.commit();
+            
+            // WebSocket: Notify customer about new items added
+            try {
+                const orderWithSession = await Order.findByPk(orderId, {
+                    include: [{ model: TableSession, as: "tableSession" }],
+                });
+                
+                if (orderWithSession?.tableSession) {
+                    emitOrderStatusUpdate(orderWithSession.tableSession.table_id, {
+                        orderId: orderWithSession.id,
+                        orderNumber: orderWithSession.order_number,
+                        status: orderWithSession.status,
+                        newItemsAdded: createdOrderItems.length,
+                        subtotal: orderWithSession.subtotal,
+                        total: orderWithSession.total_amount,
+                    });
+                }
+            } catch (socketError) {
+                console.error("WebSocket emit failed in addItemsToOrder:", socketError.message);
+            }
         }
         
         return { order, newItems: createdOrderItems };
@@ -348,6 +377,32 @@ exports.acceptOrder = async (orderId, waiterId) => {
         );
         
         await transaction.commit();
+        
+        // 🔥 Emit order status update to customer and kitchen
+        try {
+            const orderWithDetails = await Order.findByPk(orderId, {
+                include: [
+                    { model: TableSession, as: 'tableSession', include: [{ model: Table, as: 'table' }] },
+                    { model: OrderItem, as: 'items' }
+                ]
+            });
+            
+            if (orderWithDetails && orderWithDetails.tableSession) {
+                emitOrderStatusUpdate(orderWithDetails.tableSession.table_id, {
+                    id: order.id,
+                    orderNumber: order.order_number,
+                    status: 'accepted',
+                    previousStatus: 'pending'
+                });
+                
+                console.log(`✅ WebSocket: Order #${order.order_number} accepted → Customer table-${orderWithDetails.tableSession.table_id}`);
+            } else {
+                console.warn(`⚠️ Cannot emit accepted status - missing tableSession for order ${orderId}`);
+            }
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
+        
         return order;
     } catch (error) {
         await transaction.rollback();
@@ -376,6 +431,25 @@ exports.rejectOrder = async (orderId, waiterId, reason) => {
             rejection_reason: reason,
         });
         
+        // 🔥 Emit order rejected notification to customer
+        try {
+            const orderWithSession = await Order.findByPk(orderId, {
+                include: [{ model: TableSession, as: 'tableSession', include: [{ model: Table, as: 'table' }] }]
+            });
+            
+            if (orderWithSession && orderWithSession.tableSession) {
+                emitOrderRejected(orderWithSession.tableSession.table_id, {
+                    id: order.id,
+                    orderNumber: order.order_number,
+                    rejectionReason: reason
+                });
+                
+                console.log(`✅ WebSocket: Order #${order.order_number} rejection notification sent`);
+            }
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
+        
         return order;
     } catch (error) {
         throw error;
@@ -394,9 +468,44 @@ exports.updateOrderStatus = async (orderId, status) => {
         }
         
         // Validate state transition
+        const previousStatus = order.status;
         validateStatusTransition(order.status, status, VALID_ORDER_TRANSITIONS);
         
         await order.update({ status });
+        
+        // 🔥 Emit order status update to customer
+        try {
+            const orderWithSession = await Order.findByPk(orderId, {
+                include: [
+                    { model: TableSession, as: 'tableSession', include: [{ model: Table, as: 'table' }] },
+                    { model: OrderItem, as: 'items' }
+                ]
+            });
+            
+            if (orderWithSession && orderWithSession.tableSession) {
+                emitOrderStatusUpdate(orderWithSession.tableSession.table_id, {
+                    id: order.id,
+                    orderNumber: order.order_number,
+                    status: status,
+                    previousStatus: previousStatus
+                });
+                
+                // If order is ready, notify waiter
+                if (status === 'ready') {
+                    emitOrderReady({
+                        id: order.id,
+                        orderNumber: order.order_number,
+                        tableNumber: orderWithSession.tableSession.table.table_number,
+                        tableId: orderWithSession.tableSession.table_id,
+                        itemCount: orderWithSession.items.length
+                    });
+                }
+                
+                console.log(`✅ WebSocket: Order #${order.order_number} status → ${status}`);
+            }
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
         
         return order;
     } catch (error) {
@@ -416,9 +525,40 @@ exports.updateOrderItemStatus = async (orderItemId, status) => {
         }
         
         // Validate state transition
+        const previousStatus = orderItem.status;
         validateStatusTransition(orderItem.status, status, VALID_ORDER_ITEM_TRANSITIONS);
         
         await orderItem.update({ status });
+        
+        // 🔥 Emit item status update to customer
+        try {
+            const itemWithDetails = await OrderItem.findByPk(orderItemId, {
+                include: [
+                    { model: MenuItem, as: 'menuItem' },
+                    { 
+                        model: Order, 
+                        as: 'order',
+                        include: [{ model: TableSession, as: 'tableSession', include: [{ model: Table, as: 'table' }] }]
+                    }
+                ]
+            });
+            
+            if (itemWithDetails && itemWithDetails.order && itemWithDetails.order.tableSession) {
+                emitItemStatusUpdate(itemWithDetails.order.tableSession.table_id, {
+                    id: orderItem.id,
+                    orderId: orderItem.order_id,
+                    orderNumber: itemWithDetails.order.order_number,
+                    menuItemName: itemWithDetails.menuItem.name,
+                    quantity: orderItem.quantity,
+                    status: status,
+                    previousStatus: previousStatus
+                });
+                
+                console.log(`✅ WebSocket: Item ${itemWithDetails.menuItem.name} status → ${status}`);
+            }
+        } catch (socketError) {
+            console.error('WebSocket emit error (non-critical):', socketError.message);
+        }
         
         return orderItem;
     } catch (error) {
@@ -461,6 +601,25 @@ exports.completeOrder = async (orderId) => {
         );
         
         await transaction.commit();
+        
+        // WebSocket: Notify customer about order completion
+        try {
+            const orderWithSession = await Order.findByPk(orderId, {
+                include: [{ model: TableSession, as: "tableSession" }],
+            });
+            
+            if (orderWithSession?.tableSession) {
+                emitOrderStatusUpdate(orderWithSession.tableSession.table_id, {
+                    orderId: orderWithSession.id,
+                    orderNumber: orderWithSession.order_number,
+                    status: "completed",
+                    completedAt: orderWithSession.completed_at,
+                });
+            }
+        } catch (socketError) {
+            console.error("WebSocket emit failed in completeOrder:", socketError.message);
+        }
+        
         return order;
     } catch (error) {
         await transaction.rollback();

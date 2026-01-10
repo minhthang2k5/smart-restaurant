@@ -102,7 +102,7 @@ TableSession.hasMany(Order, {
 // Order belongs to TableSession
 Order.belongsTo(TableSession, {
     foreignKey: "session_id",
-    as: "session",
+    as: "tableSession",
 });
 
 // Order belongs to Table

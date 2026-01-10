@@ -75,7 +75,13 @@ exports.getAllOrders = async (req, res) => {
         const where = {};
         
         if (status) {
-            where.status = status;
+            // Support comma-separated status values (e.g., "pending,accepted,preparing")
+            const statusArray = status.split(',').map(s => s.trim());
+            if (statusArray.length > 1) {
+                where.status = { [Op.in]: statusArray };
+            } else {
+                where.status = status;
+            }
         }
         
         if (tableId) {
