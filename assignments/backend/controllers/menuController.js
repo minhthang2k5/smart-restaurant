@@ -160,7 +160,7 @@ exports.getPublicMenuItem = async (req, res) => {
         {
           model: MenuCategory,
           as: 'category',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'status'],
           where: { status: 'active' },
         },
         {
