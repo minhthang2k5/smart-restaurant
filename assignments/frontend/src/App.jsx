@@ -9,6 +9,8 @@ import MenuItems from "./pages/admin/MenuItems";
 import MenuItemDetail from "./pages/admin/MenuItemDetail";
 import Modifiers from "./pages/admin/Modifiers";
 import GuestItemDetail from "./pages/customer/GuestItemDetail";
+import Cart from "./pages/customer/Cart";
+import Orders from "./pages/customer/Orders";
 import "./styles/global.css";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Login from "./pages/auth/Login";
@@ -58,6 +60,8 @@ function App() {
             {/* Customer Routes */}
             <Route path="/menu" element={<Menu />} />
             <Route path="/menu/:itemId" element={<GuestItemDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/orders" element={<Orders />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/admin/tables" replace />} />
