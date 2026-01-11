@@ -62,7 +62,7 @@ export default function GuestItemDetail() {
       // Fetch category
       const categoriesResponse = await menuService.getCategories();
       const cat = categoriesResponse.data?.find(
-        (c) => c.id === itemData.category_id
+        (c) => c.id === itemData.category?.id
       );
       setCategory(cat);
 
