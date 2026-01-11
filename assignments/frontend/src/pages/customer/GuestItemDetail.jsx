@@ -49,7 +49,6 @@ export default function GuestItemDetail() {
         const itemData = itemResponse.data;
 
         setItem(itemData);
-        console.log("Item Data:", itemData);
         setCategory(itemData.category || null);
         setModifierGroups(itemData.modifierGroups || []);
       } catch (error) {
