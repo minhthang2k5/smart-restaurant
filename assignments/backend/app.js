@@ -15,6 +15,7 @@ const userRouter = require("./routes/userRoutes");
 const orderRouter = require("./routes/orderRoutes");
 const sessionRouter = require("./routes/sessionRoutes");
 const cartRouter = require("./routes/cartRoutes");
+const paymentRouter = require("./routes/paymentRoutes");
 
 const app = express();
 
@@ -75,5 +76,8 @@ app.use("/api/admin/menu/modifier-options", modifierOptionRouter); // admin-faci
 app.use("/api/orders", orderRouter); // Order status management
 app.use("/api/sessions", sessionRouter); // Session-based ordering with payment
 app.use("/api/cart", cartRouter); // Cart validation and summary
+
+// Payment routes
+app.use("/api", paymentRouter); // Payment processing (MoMo)
 
 module.exports = app;
