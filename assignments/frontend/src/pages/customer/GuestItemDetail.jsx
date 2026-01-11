@@ -19,6 +19,7 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
+import * as cartService from "../../services/cartService";
 
 const statusColor = {
   available: "green",
@@ -39,49 +40,29 @@ export default function GuestItemDetail() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchItemDetail();
-  }, [itemId]);
+    const fetchItemDetail = async () => {
+      try {
+        setLoading(true);
 
-  const fetchItemDetail = async () => {
-    try {
-      setLoading(true);
+        // Fetch public item detail (includes category + modifierGroups)
+        const itemResponse = await menuService.getPublicMenuItem(itemId);
+        const itemData = itemResponse.data;
 
-      // Fetch item
-      const itemResponse = await menuService.getPublicMenuItem(itemId);
-      const itemData = itemResponse.data;
-
-      // Check if item is hidden
-      if (itemData.status === "hidden") {
-        message.warning("This item is not available");
+        setItem(itemData);
+        console.log("Item Data:", itemData);
+        setCategory(itemData.category || null);
+        setModifierGroups(itemData.modifierGroups || []);
+      } catch (error) {
+        message.error("Failed to load item details");
+        console.error(error);
         navigate("/menu");
-        return;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setItem(itemData);
-
-      // Fetch category
-      const categoriesResponse = await menuService.getCategories();
-      const cat = categoriesResponse.data?.find(
-        (c) => c.id === itemData.category?.id
-      );
-      setCategory(cat);
-
-      // Check if category is active
-      if (cat && cat.status !== "active") {
-        message.warning("This item's category is currently inactive");
-      }
-
-      // Fetch modifiers for this item
-      const modifiersResponse = await menuService.getItemModifiers(itemId);
-      setModifierGroups(modifiersResponse.data || []);
-    } catch (error) {
-      message.error("Failed to load item details");
-      console.error(error);
-      navigate("/menu");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchItemDetail();
+  }, [itemId, navigate]);
 
   const handleModifierChange = (groupId, optionId, isMultiple) => {
     setSelectedModifiers((prev) => {
@@ -186,13 +167,24 @@ export default function GuestItemDetail() {
       return;
     }
 
-    // TODO: Add to cart logic (context/state management)
-    message.success(`Added "${item.name}" to cart - $${totalPrice.toFixed(2)}`);
-    console.log("Add to cart:", {
-      item,
-      selectedModifiers,
-      totalPrice,
+    const optionIds = [];
+    Object.values(selectedModifiers).forEach((value) => {
+      if (!value) return;
+      if (Array.isArray(value)) {
+        value.forEach((id) => id && optionIds.push(id));
+        return;
+      }
+      optionIds.push(value);
     });
+
+    cartService.addToLocalCart({
+      menuItemId: item.id,
+      quantity: 1,
+      modifiers: optionIds.map((optionId) => ({ optionId })),
+      specialInstructions: null,
+    });
+
+    message.success(`Added "${item.name}" to cart - $${totalPrice.toFixed(2)}`);
 
     // Navigate back to menu
     navigate("/menu");
@@ -329,9 +321,7 @@ export default function GuestItemDetail() {
                 style={{ width: "100%" }}
               >
                 {modifierGroups.map((group) => {
-                  const activeOptions =
-                    group.options?.filter((opt) => opt.status === "active") ||
-                    [];
+                  const activeOptions = group.options || [];
 
                   if (activeOptions.length === 0) return null;
 
