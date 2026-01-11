@@ -77,13 +77,70 @@ const TableSession = sequelize.define(
             allowNull: true,
         },
         payment_status: {
-            type: DataTypes.ENUM("unpaid", "paid", "refunded"),
+            type: DataTypes.ENUM("unpaid", "pending", "paid", "failed", "refunded"),
             defaultValue: "unpaid",
         },
         payment_transaction_id: {
             type: DataTypes.STRING(100),
             allowNull: true,
             comment: "External payment gateway transaction ID",
+        },
+        // MoMo Payment Fields
+        momo_request_id: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            comment: "MoMo request ID for tracking",
+        },
+        momo_order_id: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            comment: "MoMo order ID for tracking",
+        },
+        momo_transaction_id: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            unique: true,
+            comment: "MoMo transaction ID (unique, for idempotency)",
+        },
+        momo_payment_status: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            comment: "MoMo payment status message",
+        },
+        momo_payment_amount: {
+            type: DataTypes.DECIMAL(15, 2),
+            allowNull: true,
+            comment: "Amount sent to MoMo for payment",
+        },
+        momo_payment_time: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            comment: "When MoMo payment was completed",
+        },
+        momo_response_code: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+            comment: "MoMo result code",
+        },
+        momo_signature: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            comment: "MoMo callback signature for verification",
+        },
+        momo_extra_data: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: "Extra data sent with MoMo request",
+        },
+        momo_error_message: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            comment: "Error message from MoMo if payment failed",
+        },
+        momo_raw_response: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+            comment: "Full raw response from MoMo API",
         },
         notes: {
             type: DataTypes.TEXT,

@@ -10,6 +10,7 @@ const OrderItemModifier = require("./OrderItemModifier");
 const TableSession = require("./TableSession");
 const Table = require("./Table");
 const User = require("./User");
+const PaymentTransaction = require("./PaymentTransaction");
 
 // ==================== MENU ASSOCIATIONS ====================
 
@@ -191,6 +192,36 @@ OrderItemModifier.belongsTo(ModifierOption, {
     as: "modifierOption",
 });
 
+// Order <-> MenuItem (through OrderItem)
+Order.belongsToMany(MenuItem, {
+    through: OrderItem,
+    foreignKey: "order_id",
+    otherKey: "menu_item_id",
+    as: "menuItems"
+});
+MenuItem.belongsToMany(Order, {
+    through: OrderItem,
+    foreignKey: "menu_item_id",
+    otherKey: "order_id",
+    as: "orders"
+});
+
+
+// ==================== PAYMENT ASSOCIATIONS ====================
+
+// TableSession has many PaymentTransactions
+TableSession.hasMany(PaymentTransaction, {
+    foreignKey: "table_session_id",
+    as: "payment_transactions",
+    onDelete: "CASCADE",
+});
+
+// PaymentTransaction belongs to TableSession
+PaymentTransaction.belongsTo(TableSession, {
+    foreignKey: "table_session_id",
+    as: "tableSession",
+});
+
 module.exports = {
     MenuItem,
     MenuCategory,
@@ -204,5 +235,6 @@ module.exports = {
     OrderItemModifier,
     Table,
     User,
+    PaymentTransaction,
 };
 
