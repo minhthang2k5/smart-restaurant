@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  Badge,
+  Button,
   Row,
   Col,
   Card,
@@ -16,8 +18,13 @@ import {
   SearchOutlined,
   StarFilled,
   ClockCircleOutlined,
+  ShoppingCartOutlined,
+  ProfileOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
+import * as cartService from "../../services/cartService";
+import * as sessionService from "../../services/sessionService";
+import tableService from "../../services/tableService";
 
 const { Meta } = Card;
 
@@ -30,34 +37,19 @@ const statusColor = {
 export default function Menu() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const urlTableId = searchParams.get("tableId") || searchParams.get("table");
+  const urlToken = searchParams.get("token");
+  const sessionInitKeyRef = useRef(null);
 
   // State
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Filters from URL
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || "all"
-  );
-
-  // Fetch data on mount
-  useEffect(() => {
-    setLoading(true);
-    fetchCategories().finally(() => setLoading(false));
-  }, []);
-
-  // Update URL when filters change
-  useEffect(() => {
-    const params = {};
-    if (search) params.q = search;
-    if (selectedCategory !== "all") params.category = selectedCategory;
-    setSearchParams(params, { replace: true });
-  }, [search, selectedCategory, setSearchParams]);
+  const [cartCount, setCartCount] = useState(() => cartService.getLocalCartCount());
 
   const fetchCategories = async () => {
     try {
+      setLoading(true);
       const response = await menuService.getPublicMenu({
         status: "available", // Only show available items
       });
@@ -67,13 +59,123 @@ export default function Menu() {
     } catch (error) {
       console.error("Failed to load categories:", error);
       message.error("Failed to load menu");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchItems = async () => {
-    // Items are already fetched in fetchCategories
-    // This function is now a no-op or can be removed
-  };
+  // Filters from URL
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = {};
+    if (search) params.q = search;
+    if (selectedCategory !== "all") params.category = selectedCategory;
+
+    // Preserve table context (QR uses ?table=...) and token
+    const tableId = urlTableId || localStorage.getItem("tableId");
+    if (tableId) params.table = tableId;
+    if (urlToken) params.token = urlToken;
+
+    setSearchParams(params, { replace: true });
+  }, [search, selectedCategory, setSearchParams, urlTableId, urlToken]);
+
+  // Keep cart badge fresh
+  useEffect(() => {
+    const update = () => setCartCount(cartService.getLocalCartCount());
+    update();
+
+    window.addEventListener("cart:updated", update);
+    window.addEventListener("focus", update);
+
+    return () => {
+      window.removeEventListener("cart:updated", update);
+      window.removeEventListener("focus", update);
+    };
+  }, []);
+
+  // If tableId is present, create/get session and store sessionId
+  useEffect(() => {
+    let cancelled = false;
+
+    // Prevent duplicate initialization in React 18 StrictMode (dev)
+    const key = `${urlTableId || ""}:${urlToken || ""}`;
+    if (sessionInitKeyRef.current === key) return;
+    sessionInitKeyRef.current = key;
+
+    const ensureSession = async () => {
+      const tableIdFromUrl = urlTableId;
+      const tokenFromUrl = urlToken;
+
+      if (tableIdFromUrl) localStorage.setItem("tableId", String(tableIdFromUrl));
+      if (tokenFromUrl) localStorage.setItem("qrToken", String(tokenFromUrl));
+
+      let tableId = tableIdFromUrl || localStorage.getItem("tableId");
+      if (!tableId && !tokenFromUrl) return;
+
+      // If QR token is present, verify it and trust table id from server
+      try {
+        if (tokenFromUrl) {
+          const verified = await tableService.verifyQRToken(tokenFromUrl);
+          const verifiedTableId = verified?.data?.table?.id;
+          if (verifiedTableId) {
+            tableId = String(verifiedTableId);
+            localStorage.setItem("tableId", tableId);
+          }
+        }
+      } catch (error) {
+        if (cancelled) return;
+        message.error(
+          error?.response?.data?.message ||
+            "This QR code is invalid or has expired. Please ask staff for assistance."
+        );
+        localStorage.removeItem("tableId");
+        localStorage.removeItem("sessionId");
+        return;
+      }
+
+      if (!tableId) return;
+
+      try {
+        const active = await sessionService.getActiveSessionByTable(tableId);
+        const session = active.data || active;
+        if (cancelled) return;
+        if (session?.id) {
+          localStorage.setItem("sessionId", session.id);
+          return;
+        }
+      } catch (error) {
+        if (error?.response?.status !== 404) {
+          console.error(error);
+        }
+      }
+
+      try {
+        const created = await sessionService.createSession({ tableId });
+        const session = created.data || created;
+        if (cancelled) return;
+        if (session?.id) {
+          localStorage.setItem("sessionId", session.id);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    ensureSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [urlTableId, urlToken]);
 
   // Filter items by category and search
   const filteredItems = useMemo(() => {
@@ -127,6 +229,30 @@ export default function Menu() {
           <p style={{ color: "#666", fontSize: 16 }}>
             Browse our delicious selection
           </p>
+        </div>
+
+        {/* Customer actions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            marginBottom: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <Button icon={<ProfileOutlined />} onClick={() => navigate("/orders")}>
+            My Orders
+          </Button>
+          <Badge count={cartCount} size="small">
+            <Button
+              type="primary"
+              icon={<ShoppingCartOutlined />}
+              onClick={() => navigate("/cart")}
+            >
+              Cart
+            </Button>
+          </Badge>
         </div>
 
         {/* Filters */}
