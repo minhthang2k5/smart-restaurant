@@ -12,51 +12,35 @@ const Table = require("../models/Table");
 const User = require("../models/User");
 const sequelize = require("../config/database");
 const { Op } = require("sequelize");
+const crypto = require("crypto");
 
 /**
  * Generate unique session number
- * Format: SESS-YYYYMMDD-XXXX
+ * Format: SESS-YYYYMMDD-HHMMSS-XXXXXX
+ * Notes:
+ * - Avoids COUNT()-based sequencing, which can collide under concurrent requests.
+ * - Random suffix makes collisions extremely unlikely without extra DB queries.
  */
 const generateSessionNumber = async () => {
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
-    
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-    
-    const count = await TableSession.count({
-        where: {
-            created_at: {
-                [Op.between]: [startOfDay, endOfDay],
-            },
-        },
-    });
-    
-    const sessionNum = String(count + 1).padStart(4, "0");
-    return `SESS-${dateStr}-${sessionNum}`;
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const timeStr = now.toISOString().slice(11, 19).replace(/:/g, "");
+    const rand = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6 chars
+
+    return `SESS-${dateStr}-${timeStr}-${rand}`;
 };
 
 /**
  * Generate unique order number
- * Format: ORD-YYYYMMDD-XXXX
+ * Format: ORD-YYYYMMDD-HHMMSS-XXXXXX
  */
 const generateOrderNumber = async () => {
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, "");
-    
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-    
-    const count = await Order.count({
-        where: {
-            created_at: {
-                [Op.between]: [startOfDay, endOfDay],
-            },
-        },
-    });
-    
-    const orderNum = String(count + 1).padStart(4, "0");
-    return `ORD-${dateStr}-${orderNum}`;
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const timeStr = now.toISOString().slice(11, 19).replace(/:/g, "");
+    const rand = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6 chars
+
+    return `ORD-${dateStr}-${timeStr}-${rand}`;
 };
 
 /**
