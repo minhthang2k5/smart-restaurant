@@ -4,6 +4,7 @@ import {
   DashboardOutlined,
   TableOutlined,
   QrcodeOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 
 const Sidebar = ({ collapsed }) => {
@@ -19,6 +20,11 @@ const Sidebar = ({ collapsed }) => {
       key: "/admin/tables",
       icon: <TableOutlined />,
       label: <Link to="/admin/tables">Tables</Link>,
+    },
+    {
+      key: "/admin/orders",
+      icon: <SolutionOutlined />,
+      label: <Link to="/admin/orders">Orders</Link>,
     },
     {
       key: "/admin/categories",
