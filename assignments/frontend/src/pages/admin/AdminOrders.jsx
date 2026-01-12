@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Card,
@@ -74,6 +75,7 @@ const statusLabel = (status) => {
 };
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [orders, setOrders] = useState([]);
@@ -401,9 +403,7 @@ export default function AdminOrders() {
           </div>
 
           <Space>
-            <Button onClick={() => message.info("Kitchen Display coming next")}
-              type="default"
-            >
+            <Button type="default" onClick={() => navigate("/admin/kds")}>
               Open KDS
             </Button>
             <Button disabled type="primary">
