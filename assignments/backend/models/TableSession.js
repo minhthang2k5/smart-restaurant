@@ -85,7 +85,6 @@ const TableSession = sequelize.define(
             allowNull: true,
             comment: "External payment gateway transaction ID",
         },
-        // MoMo Payment Fields
         momo_request_id: {
             type: DataTypes.STRING(255),
             allowNull: true,
