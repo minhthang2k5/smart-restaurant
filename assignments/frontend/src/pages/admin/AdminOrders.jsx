@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
 import {
   Button,
   Card,
@@ -107,6 +108,47 @@ export default function AdminOrders() {
       setLoading(false);
     }
   }, [limit]);
+
+  // Real-time updates (Waiter namespace): refresh orders when new orders or status changes happen.
+  // Docs: /waiter emits new-order, order-ready, order-status-updated.
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const socketBaseUrl = apiUrl.replace(/\/api\/?$/, "");
+
+    let refreshTimerId;
+    const scheduleRefresh = () => {
+      window.clearTimeout(refreshTimerId);
+      refreshTimerId = window.setTimeout(() => {
+        fetchOrders();
+      }, 200);
+    };
+
+    const socket = io(`${socketBaseUrl}/waiter`, {
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
+
+    socket.on("connected", scheduleRefresh);
+    socket.on("new-order", scheduleRefresh);
+    socket.on("order-ready", scheduleRefresh);
+    socket.on("order-status-updated", scheduleRefresh);
+
+    socket.on("connect_error", (err) => {
+      console.error("Waiter socket connect_error:", err?.message || err);
+    });
+
+    return () => {
+      window.clearTimeout(refreshTimerId);
+      socket.off("connected", scheduleRefresh);
+      socket.off("new-order", scheduleRefresh);
+      socket.off("order-ready", scheduleRefresh);
+      socket.off("order-status-updated", scheduleRefresh);
+      socket.disconnect();
+    };
+  }, [fetchOrders]);
 
   const runOrderAction = useCallback(
     async (orderId, action, fn) => {
