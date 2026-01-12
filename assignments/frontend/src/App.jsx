@@ -11,6 +11,7 @@ import Modifiers from "./pages/admin/Modifiers";
 import GuestItemDetail from "./pages/customer/GuestItemDetail";
 import Cart from "./pages/customer/Cart";
 import Orders from "./pages/customer/Orders";
+import AdminOrders from "./pages/admin/AdminOrders";
 import "./styles/global.css";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Login from "./pages/auth/Login";
@@ -55,6 +56,7 @@ function App() {
               <Route path="menu-items" element={<MenuItems />} />
               <Route path="menu-items/:id" element={<MenuItemDetail />} />
               <Route path="modifiers" element={<Modifiers />} />
+              <Route path="orders"  element={<AdminOrders/>} />
             </Route>
 
             {/* Customer Routes */}
