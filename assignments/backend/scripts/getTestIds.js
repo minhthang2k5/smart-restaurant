@@ -5,25 +5,29 @@ const getTestIds = async () => {
     try {
         const [results] = await sequelize.query(`
             SELECT 
-                (SELECT id FROM tables LIMIT 1) as table_id,
-                (SELECT id FROM menu_items LIMIT 1 OFFSET 0) as menu_item_1,
-                (SELECT id FROM menu_items LIMIT 1 OFFSET 1) as menu_item_2,
-                (SELECT id FROM modifier_options LIMIT 1) as modifier_option
+                (SELECT id FROM menu_items WHERE status = 'available' LIMIT 1) as menu_item_id,
+                (SELECT id FROM table_sessions WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 1) as session_id,
+                (SELECT id FROM users WHERE role = 'customer' LIMIT 1) as customer_id,
+                (SELECT id FROM reviews ORDER BY created_at DESC LIMIT 1) as review_id
         `);
 
         const data = results[0];
         
         console.log("\n" + "=".repeat(60));
-        console.log("📋 COPY THESE VALUES TO orders.rest:");
+        console.log("📋 COPY THESE VALUES TO review-test.rest (lines 10-12):");
         console.log("=".repeat(60));
-        console.log(`@tableId = ${data.table_id || 'NO_TABLES'}`);
-        console.log(`@menuItemId1 = ${data.menu_item_1 || 'NO_ITEMS'}`);
-        console.log(`@menuItemId2 = ${data.menu_item_2 || 'NO_ITEMS'}`);
-        console.log(`@modifierOptionId = ${data.modifier_option || 'NO_MODIFIERS'}`);
-        console.log("@token = (not_needed - authentication disabled)");
-        console.log("@orderId = (create via sessions.rest first)");
-        console.log("@orderItemId = (create via sessions.rest first)");
+        console.log(`@testMenuItemId = ${data.menu_item_id || 'NO_MENU_ITEMS_FOUND'}`);
+        console.log(`@testSessionId = ${data.session_id || 'NO_COMPLETED_SESSIONS_FOUND'}`);
+        console.log(`@testReviewId = ${data.review_id || 'NO_REVIEWS_YET'}`);
         console.log("=".repeat(60));
+        console.log("\n🔑 CUSTOMER ID (for reviewRoutes.js fake user):");
+        console.log(`   id: '${data.customer_id}',`);
+        console.log("=".repeat(60));
+        console.log("\n💡 Tips:");
+        console.log("   - Auth is DISABLED, no need for tokens");
+        console.log("   - If session not found, complete a session first");
+        console.log("   - reviewId will appear after you create first review");
+        console.log("=".repeat(60) + "\n");
         
         await sequelize.close();
         process.exit(0);

@@ -1,0 +1,294 @@
+### ============================================
+### REVIEW SYSTEM API TESTS
+### Smart Restaurant - Reviews Feature
+### ============================================
+
+### VARIABLES
+@baseUrl = http://localhost:3000/api
+@customerToken = your_customer_token_here
+@adminToken = your_admin_token_here
+@testMenuItemId = aa80c2ea-10bd-4c91-a954-f2b6d545c43a
+@testSessionId = 33a91087-23fe-4305-b4a1-8f178427f916
+@testReviewId = will_be_created_after_first_review
+
+### NOTE: Auth is temporarily DISABLED for testing
+### You can test all endpoints without tokens
+### After creating a review, run: node scripts/getTestIds.js to get reviewId
+
+### ============================================
+### 1. PUBLIC ENDPOINTS (No Auth Required)
+### ============================================
+
+### 1.1 Get Reviews for Menu Item (Default: Recent, Page 1)
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews
+Content-Type: application/json
+
+### 1.2 Get Reviews with Pagination
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews?page=1&limit=5
+Content-Type: application/json
+
+### 1.3 Get Reviews Sorted by Highest Rating
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews?sort=highest
+Content-Type: application/json
+
+### 1.4 Get Reviews Sorted by Lowest Rating
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews?sort=lowest
+Content-Type: application/json
+
+### 1.5 Get Reviews Sorted by Most Helpful
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews?sort=helpful
+Content-Type: application/json
+
+### 1.6 Get Reviews - Pagination Page 2
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews?page=2&limit=10&sort=recent
+Content-Type: application/json
+
+### ============================================
+### 2. CUSTOMER ENDPOINTS (Auth Required)
+### ============================================
+
+### 2.1 Get Reviewable Sessions (My Completed Sessions)
+GET {{baseUrl}}/reviews/reviewable-sessions
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+### 2.2 Get My Reviews
+GET {{baseUrl}}/reviews/my-reviews
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+### 2.3 Create Review for Item in Session (5 stars with comment)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Absolutely delicious! The burger was perfectly cooked and the fries were crispy. Will definitely order again!"
+}
+
+### 2.4 Create Review (4 stars with short comment)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Pretty good, could use more seasoning."
+}
+
+### 2.5 Create Review (Rating only, no comment)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5
+}
+
+### 2.6 Create Review (1 star - negative)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 1,
+  "comment": "Very disappointed. Cold and tasteless."
+}
+
+### 2.7 Update Review
+PUT {{baseUrl}}/reviews/31d8cd5b-6963-435c-b799-e9c650699d69
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Updated: Changed my mind, this is actually amazing after reheating!"
+}
+
+### 2.8 Update Review (Rating only)
+PUT {{baseUrl}}/reviews/31d8cd5b-6963-435c-b799-e9c650699d69
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 4
+}
+
+### 2.9 Update Review (Comment only)
+PUT {{baseUrl}}/reviews/31d8cd5b-6963-435c-b799-e9c650699d69
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "comment": "Updated comment: Still delicious!"
+}
+
+### 2.10 Delete Own Review
+DELETE {{baseUrl}}/reviews/f08414b2-e25e-4004-9640-f3ebf86f67d8
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+### ============================================
+### 3. ADMIN ENDPOINTS
+### ============================================
+
+### 3.1 Delete Any Review (Admin)
+DELETE {{baseUrl}}/reviews/1bdb6f0b-8552-4d40-9a53-fcbf8c01cb6d
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+### ============================================
+### 4. ERROR CASES (For Testing Validation)
+### ============================================
+
+### 4.1 Create Review - Invalid Rating (Too High)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 6,
+  "comment": "This should fail"
+}
+
+### 4.2 Create Review - Invalid Rating (Too Low)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 0,
+  "comment": "This should fail"
+}
+
+### 4.3 Create Review - Missing Rating
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "comment": "This should fail - no rating"
+}
+
+### 4.4 Create Review - Invalid Menu Item ID
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/invalid-uuid/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "This should fail"
+}
+
+### 4.5 Create Review - Non-Existent Session
+POST {{baseUrl}}/sessions/00000000-0000-0000-0000-000000000000/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "This should fail"
+}
+
+### 4.6 Create Duplicate Review (Same Item, Same Session)
+# Run this twice to test duplicate prevention
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "First review"
+}
+
+### 4.7 Update Review - Unauthorized (Different Customer)
+PUT {{baseUrl}}/reviews/{{testReviewId}}
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 1,
+  "comment": "Trying to edit someone else's review"
+}
+
+### 4.8 Get Reviews - Non-Existent Menu Item
+GET {{baseUrl}}/menu-items/00000000-0000-0000-0000-000000000000/reviews
+Content-Type: application/json
+
+### ============================================
+### 5. WORKFLOW TEST SEQUENCE
+### ============================================
+
+### STEP 1: Customer completes order and session
+# (Use session-workflow-test.rest for this)
+
+### STEP 2: Get reviewable sessions
+GET {{baseUrl}}/reviews/reviewable-sessions
+Authorization: Bearer {{customerToken}}
+
+### STEP 3: Create review for first item
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/{{testMenuItemId}}/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Excellent meal!"
+}
+
+### STEP 4: View the review publicly
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews
+
+### STEP 5: Check my reviews
+GET {{baseUrl}}/reviews/my-reviews
+Authorization: Bearer {{customerToken}}
+
+### STEP 6: Update the review
+PUT {{baseUrl}}/reviews/e6f9c246-c1e7-4e0a-8ce8-df7a27e632bd
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Good, but not perfect."
+}
+
+### STEP 7: Verify updated review
+GET {{baseUrl}}/menu-items/{{testMenuItemId}}/reviews
+
+### ============================================
+### 6. PERFORMANCE TEST (Multiple Items)
+### ============================================
+
+### Create multiple reviews for different items in same session
+# IDs from session 33a91087-23fe-4305-b4a1-8f178427f916
+
+### Review Item 1 - Grilled Chicken Special (already reviewed)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/aa80c2ea-10bd-4c91-a954-f2b6d545c43a/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "comment": "Grilled Chicken was amazing!"
+}
+
+### Review Item 2 - Caesar Salad (not yet reviewed)
+POST {{baseUrl}}/sessions/{{testSessionId}}/items/ca078bca-2dd6-4679-a110-da6302df6006/review
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Fresh salad, very tasty!"
+}
+
+### ============================================
+### NOTES:
+### - Replace {{customerToken}} with actual JWT token from login
+### - Replace {{testMenuItemId}} with actual menu item UUID
+### - Replace {{testSessionId}} with completed session UUID
+### - Replace {{testReviewId}} with created review UUID
+### - Ensure customer has completed a session before testing reviews
+### ============================================
