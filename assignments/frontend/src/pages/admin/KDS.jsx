@@ -70,7 +70,6 @@ export default function KDS() {
     socket.on("connected", refresh);
     socket.on("new-order", refresh);
     socket.on("order-status-updated", refresh);
-    socket.on("item-status-updated", refresh);
     socket.on("disconnect", (reason) => {
       // Keep this quiet (reconnect is automatic). Useful for debugging.
       console.warn("Kitchen socket disconnected:", reason);
@@ -83,7 +82,6 @@ export default function KDS() {
       socket.off("connected", refresh);
       socket.off("new-order", refresh);
       socket.off("order-status-updated", refresh);
-      socket.off("item-status-updated", refresh);
       socket.disconnect();
     };
   }, [fetchAllOrders]);
@@ -294,7 +292,7 @@ export default function KDS() {
           fontSize: 12,
         }}
       >
-        Tip: Orders auto-refresh every 5 seconds.
+        Tip: Updates in real time via WebSocket.
       </div>
     </div>
   );

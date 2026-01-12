@@ -1,4 +1,4 @@
-import { Badge, Card, Typography } from "antd";
+import { Badge, Card, Space, Typography } from "antd";
 import { laneMeta } from "./constants";
 
 function KDSLaneColumn({ lane, orders, renderOrder }) {
