@@ -54,27 +54,26 @@ export default function Orders() {
     try {
       setLoading(true);
 
-      // Orders
-      const o = await orderService.getOrdersByTable(tableId);
-      const list = o.data || o.orders || o;
-      const normalized = Array.isArray(list)
-        ? list
-        : Array.isArray(list?.orders)
-        ? list.orders
-        : [];
-      setOrders(normalized);
-
-      // Active session (optional)
+      // Source of truth for customer order list is the active session.
+      // It includes the full `orders` array per the API docs.
       try {
         const s = await sessionService.getActiveSessionByTable(tableId);
-        setSession(s.data || s);
-        const id = (s.data || s)?.id;
+        const activeSession = s.data || s;
+        setSession(activeSession);
+
+        const id = activeSession?.id;
         if (id) localStorage.setItem("sessionId", id);
+
+        const sessionOrders = Array.isArray(activeSession?.orders)
+          ? activeSession.orders
+          : [];
+        setOrders(sessionOrders);
       } catch (e) {
         if (e?.response?.status === 404) {
           setSession(null);
+          setOrders([]);
         } else {
-          console.error(e);
+          throw e;
         }
       }
     } catch (error) {
