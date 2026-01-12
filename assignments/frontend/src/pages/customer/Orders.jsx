@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import {
   Alert,
   Button,
@@ -87,6 +88,67 @@ export default function Orders() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  // Real-time updates (Customer namespace): listen for order/session updates for this table.
+  // Docs: /customer requires join-table; emits new-order, order-status-updated, order-ready,
+  // item-status-updated, order-rejected, session-completed.
+  useEffect(() => {
+    if (!tableId) return;
+
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const socketBaseUrl = apiUrl.replace(/\/api\/?$/, "");
+
+    let refreshTimerId;
+    const scheduleRefresh = () => {
+      window.clearTimeout(refreshTimerId);
+      refreshTimerId = window.setTimeout(() => {
+        loadAll();
+      }, 200);
+    };
+
+    const socket = io(`${socketBaseUrl}/customer`, {
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
+
+    const join = () => {
+      socket.emit("join-table", tableId);
+    };
+
+    socket.on("connect", join);
+    socket.on("joined-table", scheduleRefresh);
+    socket.on("new-order", scheduleRefresh);
+    socket.on("order-status-updated", scheduleRefresh);
+    socket.on("order-ready", scheduleRefresh);
+    socket.on("item-status-updated", scheduleRefresh);
+    socket.on("order-rejected", scheduleRefresh);
+    socket.on("session-completed", scheduleRefresh);
+
+    socket.on("connect_error", (err) => {
+      console.error("Customer socket connect_error:", err?.message || err);
+    });
+
+    return () => {
+      window.clearTimeout(refreshTimerId);
+      try {
+        socket.emit("leave-table", tableId);
+      } catch {
+        // ignore
+      }
+      socket.off("connect", join);
+      socket.off("joined-table", scheduleRefresh);
+      socket.off("new-order", scheduleRefresh);
+      socket.off("order-status-updated", scheduleRefresh);
+      socket.off("order-ready", scheduleRefresh);
+      socket.off("item-status-updated", scheduleRefresh);
+      socket.off("order-rejected", scheduleRefresh);
+      socket.off("session-completed", scheduleRefresh);
+      socket.disconnect();
+    };
+  }, [loadAll, tableId]);
 
   const openOrderDetail = async (orderId) => {
     try {
