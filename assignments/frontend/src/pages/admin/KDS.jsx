@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Divider, message } from "antd";
+import { io } from "socket.io-client";
 import {
   acceptOrder,
   getOrders,
@@ -49,12 +50,42 @@ export default function KDS() {
     fetchAllOrders();
   }, [fetchAllOrders]);
 
-  // Poll orders (simple approach; websocket wiring can come later)
+  // Real-time updates via WebSocket (Socket.IO)
   useEffect(() => {
-    const id = window.setInterval(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+    const socketBaseUrl = apiUrl.replace(/\/api\/?$/, "");
+
+    const socket = io(`${socketBaseUrl}/kitchen`, {
+      transports: ["websocket", "polling"],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 500,
+    });
+
+    const refresh = () => {
       fetchAllOrders();
-    }, 5000);
-    return () => window.clearInterval(id);
+    };
+
+    socket.on("connected", refresh);
+    socket.on("new-order", refresh);
+    socket.on("order-status-updated", refresh);
+    socket.on("item-status-updated", refresh);
+    socket.on("disconnect", (reason) => {
+      // Keep this quiet (reconnect is automatic). Useful for debugging.
+      console.warn("Kitchen socket disconnected:", reason);
+    });
+    socket.on("connect_error", (err) => {
+      console.error("Kitchen socket connect_error:", err?.message || err);
+    });
+
+    return () => {
+      socket.off("connected", refresh);
+      socket.off("new-order", refresh);
+      socket.off("order-status-updated", refresh);
+      socket.off("item-status-updated", refresh);
+      socket.disconnect();
+    };
   }, [fetchAllOrders]);
 
   // Tick clock/timers
