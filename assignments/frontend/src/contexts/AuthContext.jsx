@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import authService from "../services/authService";
 
@@ -16,7 +17,8 @@ export const AuthProvider = ({ children }) => {
     }
     try {
       const response = await authService.getCurrentUser();
-      setUser(response);
+      // Backend returns { status: "success", data: { ...profile } }
+      setUser(response?.data || response);
     } catch {
       localStorage.removeItem("token");
       setUser(null);
