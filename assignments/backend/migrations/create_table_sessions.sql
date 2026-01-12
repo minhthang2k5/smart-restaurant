@@ -52,7 +52,7 @@ CREATE TRIGGER trigger_update_table_sessions_updated_at
 
 -- Add comments for documentation
 COMMENT ON TABLE table_sessions IS 'Dining sessions at tables - groups multiple orders for combined payment';
-COMMENT ON COLUMN table_sessions.session_number IS 'Format: SESS-YYYYMMDD-XXXX';
+COMMENT ON COLUMN table_sessions.session_number IS 'Format: SESS-YYYYMMDD-HHMMSS-XXXXXX (timestamp + random)';
 COMMENT ON COLUMN table_sessions.status IS 'active: Currently serving, completed: Payment completed, cancelled: Customer did not show';
 COMMENT ON COLUMN table_sessions.subtotal IS 'Sum of all orders subtotal in this session';
 COMMENT ON COLUMN table_sessions.total_amount IS 'Final amount to pay (includes all orders)';

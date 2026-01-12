@@ -30,7 +30,7 @@ const TableSession = sequelize.define(
             type: DataTypes.STRING(50),
             allowNull: false,
             unique: true,
-            comment: "Format: SESS-YYYYMMDD-XXXX",
+            comment: "Format: SESS-YYYYMMDD-HHMMSS-XXXXXX (timestamp + random)",
         },
         status: {
             type: DataTypes.ENUM(
