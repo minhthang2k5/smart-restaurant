@@ -11,6 +11,7 @@ const TableSession = require("./TableSession");
 const Table = require("./Table");
 const User = require("./User");
 const PaymentTransaction = require("./PaymentTransaction");
+const Review = require("./Review");
 
 // ==================== MENU ASSOCIATIONS ====================
 
@@ -222,6 +223,58 @@ PaymentTransaction.belongsTo(TableSession, {
     as: "tableSession",
 });
 
+// ==================== REVIEW ASSOCIATIONS ====================
+
+// Review belongs to MenuItem
+Review.belongsTo(MenuItem, {
+    foreignKey: "menu_item_id",
+    as: "menuItem",
+});
+
+// MenuItem has many Reviews
+MenuItem.hasMany(Review, {
+    foreignKey: "menu_item_id",
+    as: "reviews",
+    onDelete: "CASCADE",
+});
+
+// Review belongs to User (customer)
+Review.belongsTo(User, {
+    foreignKey: "customer_id",
+    as: "customer",
+});
+
+// User has many Reviews
+User.hasMany(Review, {
+    foreignKey: "customer_id",
+    as: "reviews",
+});
+
+// Review belongs to TableSession
+Review.belongsTo(TableSession, {
+    foreignKey: "session_id",
+    as: "session",
+});
+
+// TableSession has many Reviews
+TableSession.hasMany(Review, {
+    foreignKey: "session_id",
+    as: "reviews",
+    onDelete: "CASCADE",
+});
+
+// Review belongs to Order (optional)
+Review.belongsTo(Order, {
+    foreignKey: "order_id",
+    as: "order",
+});
+
+// Order has many Reviews
+Order.hasMany(Review, {
+    foreignKey: "order_id",
+    as: "reviews",
+});
+
 module.exports = {
     MenuItem,
     MenuCategory,
@@ -236,5 +289,6 @@ module.exports = {
     Table,
     User,
     PaymentTransaction,
+    Review,
 };
 

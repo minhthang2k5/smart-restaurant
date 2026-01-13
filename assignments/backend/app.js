@@ -16,6 +16,7 @@ const orderRouter = require("./routes/orderRoutes");
 const sessionRouter = require("./routes/sessionRoutes");
 const cartRouter = require("./routes/cartRoutes");
 const paymentRouter = require("./routes/paymentRoutes");
+const reviewRouter = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -79,5 +80,8 @@ app.use("/api/cart", cartRouter); // Cart validation and summary
 
 // Payment routes
 app.use("/api", paymentRouter); // Payment processing (MoMo)
+
+// Review routes
+app.use("/api", reviewRouter); // Reviews for menu items
 
 module.exports = app;
