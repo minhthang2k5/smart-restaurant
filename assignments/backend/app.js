@@ -17,6 +17,7 @@ const sessionRouter = require("./routes/sessionRoutes");
 const cartRouter = require("./routes/cartRoutes");
 const paymentRouter = require("./routes/paymentRoutes");
 const reviewRouter = require("./routes/reviewRoutes");
+const reportRouter = require("./routes/reportRoutes");
 
 const app = express();
 
@@ -77,6 +78,9 @@ app.use("/api/admin/menu/modifier-options", modifierOptionRouter); // admin-faci
 app.use("/api/orders", orderRouter); // Order status management
 app.use("/api/sessions", sessionRouter); // Session-based ordering with payment
 app.use("/api/cart", cartRouter); // Cart validation and summary
+
+// Report routes (Admin only) - MUST be before /api/* routes to avoid being caught by reviewRouter
+app.use("/api/reports", reportRouter); // Analytics and reports
 
 // Payment routes
 app.use("/api", paymentRouter); // Payment processing (MoMo)
