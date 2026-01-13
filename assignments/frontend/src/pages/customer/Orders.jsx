@@ -23,6 +23,33 @@ const readSessionId = () => localStorage.getItem("sessionId");
 
 const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
 
+const toNumber = (value) => {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const computeRunningSessionTotals = (orders) => {
+  const safeOrders = Array.isArray(orders) ? orders : [];
+
+  let subtotal = 0;
+  let tax = 0;
+  let total = 0;
+
+  for (const o of safeOrders) {
+    if (!o) continue;
+    if (o.status === "rejected") continue;
+    subtotal += toNumber(o.subtotal);
+    tax += toNumber(o.tax_amount);
+    total += toNumber(o.total_amount);
+  }
+
+  return {
+    subtotal,
+    tax_amount: tax,
+    total_amount: total,
+  };
+};
+
 export default function Orders() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -88,6 +115,27 @@ export default function Orders() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  const displayTotals = (() => {
+    if (!session) return { subtotal: 0, tax_amount: 0, total_amount: 0 };
+
+    // Backend only updates session totals on completeSession;
+    // while session is active, show running totals from orders.
+    const hasSessionTotals =
+      toNumber(session.subtotal) !== 0 ||
+      toNumber(session.tax_amount) !== 0 ||
+      toNumber(session.total_amount) !== 0;
+
+    if (session.status === "active" && !hasSessionTotals) {
+      return computeRunningSessionTotals(orders);
+    }
+
+    return {
+      subtotal: toNumber(session.subtotal),
+      tax_amount: toNumber(session.tax_amount),
+      total_amount: toNumber(session.total_amount),
+    };
+  })();
 
   // Real-time updates (Customer namespace): listen for order/session updates for this table.
   // Docs: /customer requires join-table; emits new-order, order-status-updated, order-ready,
@@ -182,7 +230,9 @@ export default function Orders() {
       await loadAll();
       navigate("/menu");
     } catch (error) {
-      message.error(error?.response?.data?.message || "Failed to complete session");
+      message.error(
+        error?.response?.data?.message || "Failed to complete session"
+      );
       console.error(error);
     } finally {
       setLoading(false);
@@ -190,10 +240,22 @@ export default function Orders() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f5", padding: "24px 0" }}>
+    <div
+      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "24px 0" }}
+    >
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/menu")}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/menu")}
+          >
             Back to Menu
           </Button>
           <Button icon={<ReloadOutlined />} onClick={loadAll}>
@@ -221,17 +283,25 @@ export default function Orders() {
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   <div>
                     <div style={{ color: "#666" }}>Session:</div>
-                    <div style={{ fontWeight: 600 }}>{session.session_number || session.id}</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {session.session_number || session.id}
+                    </div>
                   </div>
                   <div>
                     <div style={{ color: "#666" }}>Status:</div>
-                    <Tag color={session.status === "active" ? "green" : "default"}>
+                    <Tag
+                      color={session.status === "active" ? "green" : "default"}
+                    >
                       {String(session.status || "unknown").toUpperCase()}
                     </Tag>
                   </div>
                   <div>
                     <div style={{ color: "#666" }}>Payment:</div>
-                    <Tag color={session.payment_status === "paid" ? "green" : "orange"}>
+                    <Tag
+                      color={
+                        session.payment_status === "paid" ? "green" : "orange"
+                      }
+                    >
                       {String(session.payment_status || "unpaid").toUpperCase()}
                     </Tag>
                   </div>
@@ -242,24 +312,42 @@ export default function Orders() {
                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                   <div>
                     <div style={{ color: "#666" }}>Subtotal:</div>
-                    <div style={{ fontWeight: 600 }}>{formatMoney(session.subtotal)}</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatMoney(displayTotals.subtotal)}
+                    </div>
                   </div>
                   <div>
                     <div style={{ color: "#666" }}>Tax:</div>
-                    <div style={{ fontWeight: 600 }}>{formatMoney(session.tax_amount)}</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatMoney(displayTotals.tax_amount)}
+                    </div>
                   </div>
                   <div>
                     <div style={{ color: "#666" }}>Total:</div>
-                    <div style={{ fontWeight: 700, color: "#52c41a" }}>{formatMoney(session.total_amount)}</div>
+                    <div style={{ fontWeight: 700, color: "#52c41a" }}>
+                      {formatMoney(displayTotals.total_amount)}
+                    </div>
                   </div>
                 </div>
 
                 <Divider />
 
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <div>
-                    <div style={{ marginBottom: 8, fontWeight: 500 }}>Payment method:</div>
-                    <Radio.Group value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                    <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                      Payment method:
+                    </div>
+                    <Radio.Group
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                    >
                       <Radio value="cash">Cash</Radio>
                       <Radio value="card">Card</Radio>
                       <Radio value="momo">MoMo</Radio>
@@ -272,7 +360,10 @@ export default function Orders() {
                   <Button
                     type="primary"
                     danger
-                    disabled={session.payment_status === "paid" || session.status === "completed"}
+                    disabled={
+                      session.payment_status === "paid" ||
+                      session.status === "completed"
+                    }
                     onClick={handleCompleteSession}
                     loading={loading}
                   >
@@ -293,18 +384,43 @@ export default function Orders() {
                   <List.Item
                     onClick={() => openOrderDetail(o.id)}
                     style={{ cursor: "pointer" }}
-                    actions={[<span key="total" style={{ fontWeight: 600 }}>{formatMoney(o.total_amount)}</span>]}
+                    actions={[
+                      <span key="total" style={{ fontWeight: 600 }}>
+                        {formatMoney(o.total_amount)}
+                      </span>,
+                    ]}
                   >
                     <List.Item.Meta
                       title={
-                        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 600 }}>{o.order_number || o.id}</span>
-                          <Tag color={o.status === "pending" ? "orange" : o.status === "preparing" ? "blue" : "green"}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span style={{ fontWeight: 600 }}>
+                            {o.order_number || o.id}
+                          </span>
+                          <Tag
+                            color={
+                              o.status === "pending"
+                                ? "orange"
+                                : o.status === "preparing"
+                                ? "blue"
+                                : "green"
+                            }
+                          >
                             {String(o.status || "unknown").toUpperCase()}
                           </Tag>
                         </div>
                       }
-                      description={o.created_at ? new Date(o.created_at).toLocaleString() : null}
+                      description={
+                        o.created_at
+                          ? new Date(o.created_at).toLocaleString()
+                          : null
+                      }
                     />
                   </List.Item>
                 )}
@@ -328,7 +444,15 @@ export default function Orders() {
             ) : (
               <>
                 <div style={{ marginBottom: 12 }}>
-                  <Tag color={selectedOrder.status === "pending" ? "orange" : selectedOrder.status === "preparing" ? "blue" : "green"}>
+                  <Tag
+                    color={
+                      selectedOrder.status === "pending"
+                        ? "orange"
+                        : selectedOrder.status === "preparing"
+                        ? "blue"
+                        : "green"
+                    }
+                  >
                     {String(selectedOrder.status || "unknown").toUpperCase()}
                   </Tag>
                   <span style={{ marginLeft: 8, fontWeight: 600 }}>
@@ -343,9 +467,21 @@ export default function Orders() {
                       <List.Item.Meta
                         title={`${it.item_name || "Item"} x${it.quantity}`}
                         description={
-                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                            <Tag>{formatMoney(it.total_price || it.subtotal)}</Tag>
-                            {it.status && <Tag color="blue">{String(it.status).toUpperCase()}</Tag>}
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 8,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Tag>
+                              {formatMoney(it.total_price || it.subtotal)}
+                            </Tag>
+                            {it.status && (
+                              <Tag color="blue">
+                                {String(it.status).toUpperCase()}
+                              </Tag>
+                            )}
                           </div>
                         }
                       />
