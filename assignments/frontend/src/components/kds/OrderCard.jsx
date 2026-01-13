@@ -12,7 +12,7 @@ import { BellOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import OrderItemsList from "./OrderItems";
 import OrderActions from "./OrderActions";
 
-function OrderCard({ order, lane, nowMs, onAcceptStart, onMarkReady, onBump }) {
+function OrderCard({ order, lane, nowMs, onStartCooking, onMarkReady }) {
   const createdAt = safeDate(order?.created_at);
   const elapsedMs = createdAt ? nowMs - createdAt.getTime() : 0;
   const tone = orderTimerTone(elapsedMs);
@@ -107,9 +107,8 @@ function OrderCard({ order, lane, nowMs, onAcceptStart, onMarkReady, onBump }) {
         <OrderActions
           lane={lane}
           order={order}
-          onAcceptStart={onAcceptStart}
+          onStartCooking={onStartCooking}
           onMarkReady={onMarkReady}
-          onBump={onBump}
         />
       </div>
     </Card>

@@ -3,15 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Divider, message } from "antd";
 import { io } from "socket.io-client";
 import {
-  acceptOrder,
   getOrders,
   updateOrderStatus,
 } from "../../services/waiterOrderService";
-import { useAuth } from "../../contexts/AuthContext";
 import {
   formatClock,
   getOrderNumberLabel,
-  getUserId,
   playBeep,
   safeDate,
 } from "../../components/kds/utils";
@@ -23,10 +20,6 @@ import OrderCard from "../../components/kds/OrderCard";
 
 export default function KDS() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const waiterId = useMemo(() => getUserId(user), [user]);
-
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -120,9 +113,8 @@ export default function KDS() {
 
     for (const o of orders) {
       if (!o) continue;
-      if (o.status === "pending") received.push(o);
-      else if (o.status === "accepted" || o.status === "preparing")
-        preparing.push(o);
+      if (o.status === "pending" || o.status === "accepted") received.push(o);
+      else if (o.status === "preparing") preparing.push(o);
       else if (o.status === "ready") ready.push(o);
     }
 
@@ -166,21 +158,21 @@ export default function KDS() {
     [fetchAllOrders]
   );
 
-  const onAcceptStart = useCallback(
+  const onStartCooking = useCallback(
     async (order) => {
       const orderId = order?.id;
       if (!orderId) return;
-      if (!waiterId) {
-        message.error("Missing waiter id");
+
+      if (order?.status !== "accepted") {
+        message.info("This order must be accepted by Admin/Waiter first.");
         return;
       }
 
-      await runOrderAction(orderId, "Order accepted", async () => {
-        await acceptOrder(orderId, waiterId);
-        await updateOrderStatus(orderId, "preparing");
-      });
+      await runOrderAction(orderId, "Cooking started", () =>
+        updateOrderStatus(orderId, "preparing")
+      );
     },
-    [runOrderAction, waiterId]
+    [runOrderAction]
   );
 
   // Single-button workflow: if backend disallows accepted -> ready, do accepted -> preparing -> ready.
@@ -189,23 +181,14 @@ export default function KDS() {
       const orderId = order?.id;
       if (!orderId) return;
 
+      if (order?.status !== "preparing") {
+        message.info("Start cooking before marking ready.");
+        return;
+      }
+
       await runOrderAction(orderId, "Marked ready", async () => {
-        if (order?.status === "accepted") {
-          await updateOrderStatus(orderId, "preparing");
-        }
         await updateOrderStatus(orderId, "ready");
       });
-    },
-    [runOrderAction]
-  );
-
-  const onBump = useCallback(
-    async (order) => {
-      const orderId = order?.id;
-      if (!orderId) return;
-      await runOrderAction(orderId, "Bumped", () =>
-        updateOrderStatus(orderId, "served")
-      );
     },
     [runOrderAction]
   );
@@ -247,9 +230,8 @@ export default function KDS() {
               order={o}
               lane={LANE.received}
               nowMs={nowMs}
-              onAcceptStart={onAcceptStart}
+              onStartCooking={onStartCooking}
               onMarkReady={onMarkReady}
-              onBump={onBump}
             />
           )}
         />
@@ -262,9 +244,8 @@ export default function KDS() {
               order={o}
               lane={LANE.preparing}
               nowMs={nowMs}
-              onAcceptStart={onAcceptStart}
+              onStartCooking={onStartCooking}
               onMarkReady={onMarkReady}
-              onBump={onBump}
             />
           )}
         />
@@ -277,9 +258,8 @@ export default function KDS() {
               order={o}
               lane={LANE.ready}
               nowMs={nowMs}
-              onAcceptStart={onAcceptStart}
+              onStartCooking={onStartCooking}
               onMarkReady={onMarkReady}
-              onBump={onBump}
             />
           )}
         />

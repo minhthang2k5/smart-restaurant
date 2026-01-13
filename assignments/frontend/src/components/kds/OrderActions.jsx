@@ -1,16 +1,26 @@
 import { Button, Tooltip } from "antd";
 import { LANE } from "./constants.jsx";
 
-function OrderActions({ lane, order, onAcceptStart, onMarkReady, onBump }) {
+function OrderActions({ lane, order, onStartCooking, onMarkReady }) {
   if (lane === LANE.received) {
+    if (order?.status === "accepted") {
+      return (
+        <Button
+          type="primary"
+          style={{ flex: 1 }}
+          onClick={() => onStartCooking(order)}
+        >
+          🍳 Start Cooking
+        </Button>
+      );
+    }
+
     return (
-      <Button
-        type="primary"
-        style={{ flex: 1 }}
-        onClick={() => onAcceptStart(order)}
-      >
-        ✓ Accept & Start
-      </Button>
+      <Tooltip title="Only Admin/Waiter can accept orders">
+        <Button style={{ flex: 1 }} disabled>
+          Waiting for acceptance
+        </Button>
+      </Tooltip>
     );
   }
 
@@ -28,20 +38,11 @@ function OrderActions({ lane, order, onAcceptStart, onMarkReady, onBump }) {
 
   if (lane === LANE.ready) {
     return (
-      <>
-        <Button
-          type="primary"
-          style={{ flex: 1 }}
-          onClick={() => onBump(order)}
-        >
-          👍 Bump
+      <Tooltip title="This order will disappear after Admin/Waiter completes it">
+        <Button style={{ flex: 1 }} disabled>
+          Waiting for pickup
         </Button>
-        <Tooltip title="Recall is not supported by the current status transitions">
-          <Button style={{ flex: 1 }} disabled>
-            Recall
-          </Button>
-        </Tooltip>
-      </>
+      </Tooltip>
     );
   }
 
