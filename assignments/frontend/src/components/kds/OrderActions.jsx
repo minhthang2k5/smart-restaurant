@@ -1,5 +1,5 @@
 import { Button, Tooltip } from "antd";
-import { LANE } from "./constants";
+import { LANE } from "./constants.jsx";
 
 function OrderActions({ lane, order, onAcceptStart, onMarkReady, onBump }) {
   if (lane === LANE.received) {

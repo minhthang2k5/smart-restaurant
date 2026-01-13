@@ -4,7 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(),],
+  plugins: [
+    react({
+      include: "**/*.{jsx,js}",
+    }),
+    tailwindcss(),
+  ],
   server: {
     port: 5173,
     proxy: {
@@ -17,5 +22,16 @@ export default defineConfig({
   build: {
     outDir: "dist",
     sourcemap: false,
+  },
+  esbuild: {
+    loader: "jsx",
+    include: /src\/.*\.[jt]sx?$/,
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      loader: {
+        ".js": "jsx",
+      },
+    },
   },
 });

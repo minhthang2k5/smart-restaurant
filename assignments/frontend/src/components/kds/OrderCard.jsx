@@ -1,5 +1,5 @@
 import { Card, Divider, Tag, Typography } from "antd";
-import { LANE, laneMeta, OVERDUE_MINUTES } from "./constants";
+import { LANE, laneMeta, OVERDUE_MINUTES } from "./constants.jsx";
 import {
   formatElapsed,
   getOrderNumberLabel,

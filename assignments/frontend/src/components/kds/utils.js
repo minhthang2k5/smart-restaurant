@@ -1,4 +1,4 @@
-import { OVERDUE_MINUTES, WARNING_MINUTES } from "./constants";
+import { OVERDUE_MINUTES, WARNING_MINUTES } from "./constants.jsx";
 
 export const safeDate = (v) => {
   const d = v ? new Date(v) : null;
