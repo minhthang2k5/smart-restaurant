@@ -14,6 +14,7 @@ import Orders from "./pages/customer/Orders";
 import PaymentResult from "./pages/customer/PaymentResult";
 import AdminOrders from "./pages/admin/AdminOrders";
 import KDS from "./pages/admin/KDS";
+import Reports from "./pages/admin/Reports";
 import "./styles/global.css";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Login from "./pages/auth/Login";
@@ -58,8 +59,9 @@ function App() {
               <Route path="menu-items" element={<MenuItems />} />
               <Route path="menu-items/:id" element={<MenuItemDetail />} />
               <Route path="modifiers" element={<Modifiers />} />
-              <Route path="orders"  element={<AdminOrders/>} />
+              <Route path="orders" element={<AdminOrders />} />
               <Route path="kds" element={<KDS />} />
+              <Route path="reports" element={<Reports />} />
             </Route>
 
             {/* Customer Routes */}
