@@ -1,0 +1,88 @@
+.reportsHeaderCard {
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.95) 0%,
+    rgba(139, 92, 246, 0.95) 100%
+  );
+  border: none;
+}
+
+.reportsHeaderCard .ant-typography,
+.reportsHeaderCard .ant-typography-secondary {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.reportsHeaderActions .ant-btn {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+}
+
+.reportsHeaderActions .ant-btn:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+.reportsStatCard {
+  border: 1px solid rgba(255, 182, 193, 0.25);
+  box-shadow: 0 10px 30px rgba(236, 72, 153, 0.08);
+}
+
+.reportsStatIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.reportsStatValue {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.reportsStatLabel {
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.reportsTabs .ant-tabs-nav {
+  margin: 0 0 12px 0 !important;
+}
+
+.reportsTabs .ant-tabs-ink-bar {
+  display: none;
+}
+
+.reportsTabs .ant-tabs-nav::before {
+  border-bottom: none !important;
+}
+
+.reportsTabs .ant-tabs-tab {
+  margin: 0 8px 0 0 !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  background: rgba(236, 72, 153, 0.1);
+  border: 1px solid rgba(236, 72, 153, 0.18) !important;
+}
+
+.reportsTabs .ant-tabs-tab .ant-tabs-tab-btn {
+  color: rgba(17, 24, 39, 0.9);
+  font-weight: 600;
+}
+
+.reportsTabs .ant-tabs-tab-active {
+  background: linear-gradient(
+    135deg,
+    rgba(236, 72, 153, 0.95) 0%,
+    rgba(139, 92, 246, 0.95) 100%
+  ) !important;
+  border-color: transparent !important;
+}
+
+.reportsTabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+}
