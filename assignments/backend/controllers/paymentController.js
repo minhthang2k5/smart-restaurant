@@ -7,7 +7,7 @@ const paymentService = require('../services/paymentService');
 const initiateMoMoPayment = async (req, res) => {
   try {
     const { id: sessionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id ?? null;
 
     const result = await paymentService.initiatePayment(sessionId, userId);
 
@@ -51,7 +51,7 @@ const handleMoMoCallback = async (req, res) => {
 const getPaymentStatus = async (req, res) => {
   try {
     const { id: sessionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id ?? null;
 
     const status = await paymentService.getPaymentStatus(sessionId, userId);
 
@@ -75,7 +75,7 @@ const getPaymentStatus = async (req, res) => {
 const cancelMoMoPayment = async (req, res) => {
   try {
     const { id: sessionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id ?? null;
     const { reason } = req.body;
 
     const result = await paymentService.cancelPayment(sessionId, userId, reason || 'User cancelled');

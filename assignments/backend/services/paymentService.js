@@ -1,6 +1,22 @@
 const { TableSession, Order, MenuItem, PaymentTransaction } = require('../models/associations');
 const momoService = require('./momoService');
 const sequelize = require('../config/database');
+const { Op } = require('sequelize');
+
+const assertPaymentAccess = (session, userId) => {
+  // If a user is logged in, they must own the session.
+  if (userId) {
+    if (session.customer_id !== userId) {
+      throw new Error('Unauthorized: This session does not belong to you');
+    }
+    return;
+  }
+
+  // Guest flow: only allow if the session is not tied to an account.
+  if (session.customer_id) {
+    throw new Error('Unauthorized: Login required to access this session');
+  }
+};
 
   /**
    * Initiate payment for a table session
@@ -26,10 +42,8 @@ const sequelize = require('../config/database');
         throw new Error('Session not found');
       }
 
-      // Validate session belongs to user
-      if (session.customer_id !== userId) {
-        throw new Error('Unauthorized: This session does not belong to you');
-      }
+      // Validate access (login optional)
+      assertPaymentAccess(session, userId);
 
       // Validate session status
       if (session.status === 'completed' || session.status === 'cancelled') {
@@ -58,22 +72,22 @@ const sequelize = require('../config/database');
       
       const taxAmount = totalSubtotal * 0.1; // 10% tax
       const totalAmount = totalSubtotal + taxAmount;
+      const totalAmountVnd = Math.round(totalAmount);
 
-      if (totalAmount <= 0) {
+      if (totalAmountVnd <= 0) {
         throw new Error('Cannot initiate payment: Total amount must be greater than zero');
       }
 
       // MoMo requires minimum 1,000 VND and maximum 50,000,000 VND
-      if (totalAmount < 1000) {
-        throw new Error(`Cannot initiate payment: Total amount (${totalAmount} VND) is below MoMo minimum of 1,000 VND. Please add more items or check order pricing.`);
+      if (totalAmountVnd < 1000) {
+        throw new Error(`Cannot initiate payment: Total amount (${totalAmountVnd} VND) is below MoMo minimum of 1,000 VND. Please add more items or check order pricing.`);
       }
 
-      if (totalAmount > 50000000) {
-        throw new Error(`Cannot initiate payment: Total amount (${totalAmount} VND) exceeds MoMo maximum of 50,000,000 VND.`);
+      if (totalAmountVnd > 50000000) {
+        throw new Error(`Cannot initiate payment: Total amount (${totalAmountVnd} VND) exceeds MoMo maximum of 50,000,000 VND.`);
       }
 
-      // Update session status to pending payment
-      session.status = 'pending_payment';
+      // Mark payment as pending (keep session.status compatible with TableSession enum)
       session.payment_status = 'pending';
       session.payment_method = 'momo';
       await session.save({ transaction });
@@ -82,12 +96,12 @@ const sequelize = require('../config/database');
       const orderInfo = `Payment for session ${sessionId}`;
       const extraData = JSON.stringify({ sessionId, userId });
       
-      const momoResponse = await momoService.createPayment(orderInfo, totalAmount, extraData);
+      const momoResponse = await momoService.createPayment(orderInfo, totalAmountVnd, extraData);
 
       // Update session with MoMo tracking fields
       session.momo_request_id = momoResponse.requestId;
       session.momo_order_id = momoResponse.orderId;
-      session.momo_payment_amount = totalAmount;
+      session.momo_payment_amount = totalAmountVnd;
       session.momo_raw_response = momoResponse;
       await session.save({ transaction });
 
@@ -96,7 +110,7 @@ const sequelize = require('../config/database');
         table_session_id: sessionId,
         payment_method: 'momo',
         request_id: momoResponse.requestId,
-        amount: totalAmount,
+        amount: totalAmountVnd,
         status: 'pending',
         raw_response: momoResponse
       }, { transaction });
@@ -107,7 +121,7 @@ const sequelize = require('../config/database');
         payUrl: momoResponse.payUrl,
         requestId: momoResponse.requestId,
         orderId: momoResponse.orderId,
-        amount: totalAmount
+        amount: totalAmountVnd
       };
     } catch (error) {
       await transaction.rollback();
@@ -170,7 +184,8 @@ const processCallback = async (callbackData) => {
     }
 
     // Update session based on payment result
-    const isSuccess = callbackData.resultCode === 0;
+    // MoMo may send resultCode as string (e.g. "0")
+    const isSuccess = Number(callbackData.resultCode) === 0;
     
     session.momo_transaction_id = callbackData.transId;
     session.momo_payment_status = callbackData.message;
@@ -182,6 +197,22 @@ const processCallback = async (callbackData) => {
       session.payment_status = 'paid';
       session.status = 'completed';
       session.momo_payment_time = new Date();
+
+      // Automatically complete all orders in the session once payment succeeds.
+      // This removes the need for waiter/admin to click "Complete".
+      await Order.update(
+        {
+          status: 'completed',
+          completed_at: new Date()
+        },
+        {
+          where: {
+            session_id: sessionId,
+            status: { [Op.ne]: 'rejected' }
+          },
+          transaction
+        }
+      );
     } else {
       session.payment_status = 'failed';
       session.momo_error_message = callbackData.message;
@@ -228,10 +259,8 @@ const getPaymentStatus = async (sessionId, userId) => {
     throw new Error('Session not found');
   }
 
-  // Validate session belongs to user
-  if (session.customer_id !== userId) {
-    throw new Error('Unauthorized: This session does not belong to you');
-  }
+  // Validate access (login optional)
+  assertPaymentAccess(session, userId);
 
   return {
     payment_status: session.payment_status,
@@ -262,10 +291,8 @@ const cancelPayment = async (sessionId, userId, reason) => {
       throw new Error('Session not found');
     }
 
-    // Validate session belongs to user (TableSession uses customer_id)
-    if (session.customer_id !== userId) {
-      throw new Error('Unauthorized: This session does not belong to you');
-    }
+    // Validate access (login optional)
+    assertPaymentAccess(session, userId);
 
     // Validate can be cancelled
     if (session.payment_status === 'paid') {

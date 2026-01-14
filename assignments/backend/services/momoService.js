@@ -1,6 +1,14 @@
 const crypto = require('crypto');
 const axios = require('axios');
 
+const normalizeMoMoAmount = (amount) => {
+  // MoMo amounts are in VND and must be an integer.
+  // Normalizing prevents signature mismatches caused by float serialization.
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return '0';
+  return String(Math.round(n));
+};
+
 /**
  * Generate unique request ID for MoMo transaction
  * @returns {string} Request ID in format MOMO_timestamp
@@ -61,12 +69,13 @@ const createPayment = async (orderInfo, amount, extraData = '') => {
   const orderId = generateOrderId();
   // MoMo expects extraData to be Base64-encoded; keep empty string if none
   const encodedExtraData = extraData ? Buffer.from(extraData).toString('base64') : '';
+  const normalizedAmount = normalizeMoMoAmount(amount);
   
   const requestData = {
     partnerCode: process.env.MOMO_PARTNER_CODE,
     accessKey: process.env.MOMO_ACCESS_KEY,
     requestId: requestId,
-    amount: amount,
+    amount: normalizedAmount,
     orderId: orderId,
     orderInfo: orderInfo,
     redirectUrl: process.env.MOMO_REDIRECT_URL,
