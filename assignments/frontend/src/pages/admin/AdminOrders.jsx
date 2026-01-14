@@ -18,7 +18,6 @@ import {
 } from "antd";
 import {
   acceptOrder,
-  completeOrder,
   getOrders,
   rejectOrder,
   updateOrderStatus,
@@ -406,19 +405,6 @@ export default function AdminOrders() {
                   }
                 >
                   Mark Served
-                </Button>
-              ) : null}
-
-              {record.status === "served" ? (
-                <Button
-                  loading={isBusy && action === "complete"}
-                  onClick={() =>
-                    runOrderAction(record.id, "complete", () =>
-                      completeOrder(record.id)
-                    )
-                  }
-                >
-                  Complete
                 </Button>
               ) : null}
 
