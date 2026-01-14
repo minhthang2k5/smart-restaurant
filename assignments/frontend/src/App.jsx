@@ -11,6 +11,7 @@ import Modifiers from "./pages/admin/Modifiers";
 import GuestItemDetail from "./pages/customer/GuestItemDetail";
 import Cart from "./pages/customer/Cart";
 import Orders from "./pages/customer/Orders";
+import PaymentResult from "./pages/customer/PaymentResult";
 import AdminOrders from "./pages/admin/AdminOrders";
 import KDS from "./pages/admin/KDS";
 import "./styles/global.css";
@@ -66,6 +67,7 @@ function App() {
             <Route path="/menu/:itemId" element={<GuestItemDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/payment/result" element={<PaymentResult />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/admin/tables" replace />} />
