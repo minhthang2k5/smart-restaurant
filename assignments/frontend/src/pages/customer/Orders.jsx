@@ -17,9 +17,35 @@ import { ArrowLeftOutlined, ReloadOutlined } from "@ant-design/icons";
 import * as orderService from "../../services/orderService";
 import * as sessionService from "../../services/sessionService";
 import * as cartService from "../../services/cartService";
+import * as paymentService from "../../services/paymentService";
 
 const readTableId = () => localStorage.getItem("tableId");
 const readSessionId = () => localStorage.getItem("sessionId");
+
+const MOMO_STORAGE_PREFIX = "momoPayment:";
+
+const readStoredMoMo = (sessionId) => {
+  if (!sessionId) return null;
+  try {
+    const raw = localStorage.getItem(`${MOMO_STORAGE_PREFIX}${sessionId}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredMoMo = (sessionId, data) => {
+  if (!sessionId) return;
+  localStorage.setItem(
+    `${MOMO_STORAGE_PREFIX}${sessionId}`,
+    JSON.stringify(data)
+  );
+};
+
+const clearStoredMoMo = (sessionId) => {
+  if (!sessionId) return;
+  localStorage.removeItem(`${MOMO_STORAGE_PREFIX}${sessionId}`);
+};
 
 const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
 
@@ -63,6 +89,11 @@ export default function Orders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [paymentMethod, setPaymentMethod] = useState("cash");
+
+  const [momoModalOpen, setMoMoModalOpen] = useState(false);
+  const [momoPayInfo, setMoMoPayInfo] = useState(null);
+  const [momoStatus, setMoMoStatus] = useState(null);
+  const [momoBusy, setMoMoBusy] = useState(false);
 
   const urlTableId = searchParams.get("tableId") || searchParams.get("table");
   const tableId = urlTableId || readTableId();
@@ -135,6 +166,20 @@ export default function Orders() {
       tax_amount: toNumber(session.tax_amount),
       total_amount: toNumber(session.total_amount),
     };
+  })();
+
+  const canPayNow = (() => {
+    if (!session) return false;
+    if (session.payment_status === "paid") return false;
+    if (!Array.isArray(orders) || orders.length === 0) return false;
+
+    // Customer can pay only when all orders are served.
+    // Keep `completed` as allowed to avoid edge cases after payment settles.
+    const payable = orders.filter((o) => o && o.status !== "rejected");
+    if (payable.length === 0) return false;
+    return payable.every(
+      (o) => o.status === "served" || o.status === "completed"
+    );
   })();
 
   // Real-time updates (Customer namespace): listen for order/session updates for this table.
@@ -219,6 +264,53 @@ export default function Orders() {
       return;
     }
 
+    // MoMo payment is handled by the dedicated payment endpoints.
+    if (paymentMethod === "momo") {
+      // If we already initiated payment before (page refresh), restore payUrl from localStorage.
+      const stored = readStoredMoMo(sessionId);
+      if (stored?.payUrl) {
+        setMoMoPayInfo(stored);
+        setMoMoModalOpen(true);
+        return;
+      }
+
+      try {
+        setMoMoBusy(true);
+        const res = await paymentService.initiateMoMoPayment(sessionId);
+        const payload = res?.data || res;
+        const data = payload?.data || payload;
+
+        if (!data?.payUrl) {
+          message.error("Failed to initiate MoMo payment (missing payUrl)");
+          return;
+        }
+
+        const payInfo = {
+          payUrl: data.payUrl,
+          requestId: data.requestId,
+          orderId: data.orderId,
+          amount: data.amount,
+          createdAt: new Date().toISOString(),
+        };
+
+        writeStoredMoMo(sessionId, payInfo);
+        setMoMoPayInfo(payInfo);
+        setMoMoModalOpen(true);
+
+        // Open payment page immediately (still keep modal as fallback)
+        window.open(data.payUrl, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        message.error(
+          error?.response?.data?.message || "Failed to initiate MoMo payment"
+        );
+        console.error(error);
+      } finally {
+        setMoMoBusy(false);
+      }
+
+      return;
+    }
+
     try {
       setLoading(true);
       await sessionService.completeSession(sessionId, { paymentMethod });
@@ -238,6 +330,57 @@ export default function Orders() {
       setLoading(false);
     }
   };
+
+  // Poll MoMo payment status while the modal is open
+  useEffect(() => {
+    if (!momoModalOpen) return;
+    const sessionId = session?.id || readSessionId();
+    if (!sessionId) return;
+
+    let stopped = false;
+    let intervalId;
+
+    const tick = async () => {
+      try {
+        const res = await paymentService.getPaymentStatus(sessionId);
+        const payload = res?.data || res;
+        const status = payload?.data || payload;
+        if (stopped) return;
+
+        setMoMoStatus(status);
+
+        const paymentStatus = status?.payment_status;
+        if (paymentStatus === "paid") {
+          stopped = true;
+          window.clearInterval(intervalId);
+
+          message.success("Payment completed successfully");
+          clearStoredMoMo(sessionId);
+          localStorage.removeItem("sessionId");
+          cartService.clearLocalCart();
+          setMoMoModalOpen(false);
+          await loadAll();
+          navigate("/menu");
+        }
+
+        if (paymentStatus === "failed" || paymentStatus === "cancelled") {
+          // Keep modal open so user can see failure + optionally cancel
+          window.clearInterval(intervalId);
+        }
+      } catch (error) {
+        // Keep quiet; user can still open payUrl / retry
+        console.error(error);
+      }
+    };
+
+    tick();
+    intervalId = window.setInterval(tick, 2000);
+
+    return () => {
+      stopped = true;
+      window.clearInterval(intervalId);
+    };
+  }, [loadAll, momoModalOpen, navigate, session]);
 
   return (
     <div
@@ -351,9 +494,6 @@ export default function Orders() {
                       <Radio value="cash">Cash</Radio>
                       <Radio value="card">Card</Radio>
                       <Radio value="momo">MoMo</Radio>
-                      <Radio value="vnpay">VNPay</Radio>
-                      <Radio value="zalopay">ZaloPay</Radio>
-                      <Radio value="stripe">Stripe</Radio>
                     </Radio.Group>
                   </div>
 
@@ -362,14 +502,28 @@ export default function Orders() {
                     danger
                     disabled={
                       session.payment_status === "paid" ||
-                      session.status === "completed"
+                      session.status === "completed" ||
+                      !canPayNow ||
+                      momoBusy
                     }
                     onClick={handleCompleteSession}
-                    loading={loading}
+                    loading={loading || momoBusy}
                   >
-                    Complete Session
+                    {paymentMethod === "momo"
+                      ? "Pay with MoMo"
+                      : "Complete Session"}
                   </Button>
                 </div>
+
+                {paymentMethod === "momo" && !canPayNow ? (
+                  <Alert
+                    style={{ marginTop: 12 }}
+                    type="warning"
+                    showIcon
+                    message="Payment is locked"
+                    description="You can only pay after all orders are marked SERVED. Please wait for staff to serve your orders."
+                  />
+                ) : null}
               </>
             )}
           </Card>
@@ -491,6 +645,111 @@ export default function Orders() {
               </>
             )}
           </Spin>
+        </Modal>
+
+        <Modal
+          open={momoModalOpen}
+          title="MoMo Payment"
+          onCancel={() => setMoMoModalOpen(false)}
+          footer={null}
+        >
+          <Alert
+            type="info"
+            showIcon
+            message="Complete payment in MoMo"
+            description={
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div>
+                  Status:{" "}
+                  <b>
+                    {String(
+                      momoStatus?.payment_status || "unknown"
+                    ).toUpperCase()}
+                  </b>
+                </div>
+                {momoPayInfo?.amount != null ? (
+                  <div>
+                    Amount: <b>{momoPayInfo.amount}</b>
+                  </div>
+                ) : null}
+                {momoStatus?.momo_error_message ? (
+                  <div style={{ color: "#cf1322" }}>
+                    {momoStatus.momo_error_message}
+                  </div>
+                ) : null}
+              </div>
+            }
+          />
+
+          <div
+            style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}
+          >
+            <Button
+              type="primary"
+              disabled={!momoPayInfo?.payUrl}
+              onClick={() => {
+                if (momoPayInfo?.payUrl) {
+                  window.open(
+                    momoPayInfo.payUrl,
+                    "_blank",
+                    "noopener,noreferrer"
+                  );
+                }
+              }}
+            >
+              Open MoMo Payment
+            </Button>
+
+            <Button
+              disabled={!momoPayInfo?.payUrl}
+              onClick={async () => {
+                try {
+                  if (!momoPayInfo?.payUrl) return;
+                  await navigator.clipboard.writeText(momoPayInfo.payUrl);
+                  message.success("Payment link copied");
+                } catch {
+                  message.error("Failed to copy link");
+                }
+              }}
+            >
+              Copy Link
+            </Button>
+
+            <Button
+              danger
+              onClick={async () => {
+                const sessionId = session?.id || readSessionId();
+                if (!sessionId) return;
+                try {
+                  setMoMoBusy(true);
+                  await paymentService.cancelMoMoPayment(sessionId, {
+                    reason: "Cancelled by customer",
+                  });
+                  clearStoredMoMo(sessionId);
+                  message.success("Payment cancelled");
+                  setMoMoModalOpen(false);
+                  await loadAll();
+                } catch (error) {
+                  message.error(
+                    error?.response?.data?.message || "Failed to cancel payment"
+                  );
+                  console.error(error);
+                } finally {
+                  setMoMoBusy(false);
+                }
+              }}
+              disabled={momoBusy}
+            >
+              Cancel Payment
+            </Button>
+          </div>
+
+          {!momoPayInfo?.payUrl ? (
+            <div style={{ marginTop: 12, color: "rgba(0,0,0,0.45)" }}>
+              Tip: If you refreshed the page before saving the pay link, click
+              “Pay with MoMo” again to initiate.
+            </div>
+          ) : null}
         </Modal>
       </div>
     </div>
