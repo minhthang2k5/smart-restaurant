@@ -4,8 +4,13 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Button, Dropdown, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = ({ collapsed, onToggleCollapse }) => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
   const userMenuItems = [
     {
       key: "profile",
@@ -25,12 +30,32 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
     },
   ];
 
+  const displayName =
+    user?.firstName || user?.lastName
+      ? `${user?.firstName || ""} ${user?.lastName || ""}`.trim()
+      : user?.email || "Admin";
+
   const handleMenuClick = ({ key }) => {
+    if (key === "profile") {
+      navigate("/admin/profile");
+      return;
+    }
+
+    if (key === "settings") {
+      navigate("/admin/settings");
+      return;
+    }
+
     if (key === "logout") {
-      localStorage.removeItem("token");
-      sessionStorage.clear();
-      message.success("Logged out successfully");
-      window.location.href = "/admin/tables";
+      (async () => {
+        try {
+          await logout();
+        } finally {
+          sessionStorage.clear();
+        }
+        message.success("Logged out successfully");
+        navigate("/login", { replace: true });
+      })();
     }
   };
 
@@ -96,7 +121,7 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
           }}
           className="hover:bg-white/20"
         >
-          Admin
+          {displayName}
         </Button>
       </Dropdown>
     </div>
