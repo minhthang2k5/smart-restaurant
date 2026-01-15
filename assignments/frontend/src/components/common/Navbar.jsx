@@ -3,7 +3,7 @@ import {
   MenuUnfoldOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, message } from "antd";
 
 const Navbar = ({ collapsed, onToggleCollapse }) => {
   const userMenuItems = [
@@ -67,7 +67,8 @@ const Navbar = ({ collapsed, onToggleCollapse }) => {
             fontWeight: "800",
             color: "white",
             letterSpacing: "-0.5px",
-            textShadow: "0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)",
+            textShadow:
+              "0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2)",
             lineHeight: "1.2",
           }}
         >
