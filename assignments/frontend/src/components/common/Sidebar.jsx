@@ -9,16 +9,15 @@ import {
   BarChartOutlined,
   TeamOutlined,
 } from "@ant-design/icons";
+import { useAuth } from "../../contexts/AuthContext";
+import { normalizeRole } from "../../utils/roles";
 
 const Sidebar = ({ collapsed }) => {
   const location = useLocation();
+  const { user } = useAuth();
+  const role = normalizeRole(user?.role);
 
-  const menuItems = [
-    {
-      key: "/admin/dashboard",
-      icon: <DashboardOutlined />,
-      label: <Link to="/admin/dashboard">Dashboard</Link>,
-    },
+  const baseItems = [
     {
       key: "/admin/tables",
       icon: <TableOutlined />,
@@ -33,6 +32,14 @@ const Sidebar = ({ collapsed }) => {
       key: "/admin/kds",
       icon: <FireOutlined />,
       label: <Link to="/admin/kds">Kitchen Display</Link>,
+    },
+  ];
+
+  const adminOnlyItems = [
+    {
+      key: "/admin/dashboard",
+      icon: <DashboardOutlined />,
+      label: <Link to="/admin/dashboard">Dashboard</Link>,
     },
     {
       key: "/admin/reports",
@@ -57,6 +64,19 @@ const Sidebar = ({ collapsed }) => {
       label: <Link to="/admin/modifiers">Modifiers</Link>,
     },
   ];
+
+  let menuItems = [];
+  if (role === "admin") {
+    menuItems = [...adminOnlyItems, ...baseItems];
+  } else if (role === "waiter") {
+    menuItems = baseItems.filter(
+      (i) => i.key === "/admin/tables" || i.key === "/admin/orders"
+    );
+  } else if (role === "kitchen_staff") {
+    menuItems = baseItems.filter((i) => i.key === "/admin/kds");
+  } else {
+    menuItems = baseItems;
+  }
 
   return (
     <div
