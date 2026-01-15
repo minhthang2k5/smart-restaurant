@@ -6,6 +6,7 @@ import {
   QrcodeOutlined,
   SolutionOutlined,
   FireOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 
 const Sidebar = ({ collapsed }) => {
@@ -31,6 +32,11 @@ const Sidebar = ({ collapsed }) => {
       key: "/admin/kds",
       icon: <FireOutlined />,
       label: <Link to="/admin/kds">Kitchen Display</Link>,
+    },
+    {
+      key: "/admin/reports",
+      icon: <BarChartOutlined />,
+      label: <Link to="/admin/reports">Reports</Link>,
     },
     {
       key: "/admin/categories",
