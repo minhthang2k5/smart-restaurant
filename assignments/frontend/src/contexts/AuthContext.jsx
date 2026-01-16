@@ -13,18 +13,29 @@ export const AuthProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setInitializing(false);
-      return;
+      return null;
     }
     try {
       const response = await authService.getCurrentUser();
       // Backend returns { status: "success", data: { ...profile } }
-      setUser(response?.data || response);
+      const profile = response?.data || response;
+      setUser(profile);
+      return profile;
     } catch {
       localStorage.removeItem("token");
       setUser(null);
+      return null;
     } finally {
       setInitializing(false);
     }
+  };
+
+  const loginWithToken = async (token) => {
+    if (!token) throw new Error("Missing token");
+    localStorage.setItem("token", token);
+    const profile = await refreshUser();
+    if (!profile) throw new Error("Failed to load user profile");
+    return profile;
   };
 
   useEffect(() => {
@@ -100,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       await authService.logout();
     } finally {
       localStorage.removeItem("token");
+      sessionStorage.clear();
       setUser(null);
     }
   };
@@ -109,6 +121,7 @@ export const AuthProvider = ({ children }) => {
       user,
       initializing,
       login,
+      loginWithToken,
       register,
       verifyEmail,
       forgotPassword,
