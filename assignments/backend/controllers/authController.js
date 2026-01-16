@@ -465,13 +465,13 @@ exports.googleCallback = (req, res, next) => {
         if (err) {
             console.error('Google OAuth error:', err);
             return res.redirect(
-                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('Authentication failed')}`
+                `${process.env.FRONTEND_URL}/customer/auth/error?message=${encodeURIComponent('Authentication failed')}`
             );
         }
 
         if (!user) {
             return res.redirect(
-                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('No user found')}`
+                `${process.env.FRONTEND_URL}/customer/auth/error?message=${encodeURIComponent('No user found')}`
             );
         }
 
@@ -488,7 +488,7 @@ exports.googleCallback = (req, res, next) => {
         } catch (error) {
             console.error('Token generation error:', error);
             res.redirect(
-                `${process.env.FRONTEND_URL}/auth/error?message=${encodeURIComponent('Token generation failed')}`
+                `${process.env.FRONTEND_URL}/customer/auth/error?message=${encodeURIComponent('Token generation failed')}`
             );
         }
     })(req, res, next);
