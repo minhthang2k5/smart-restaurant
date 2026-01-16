@@ -19,15 +19,20 @@ import "./styles/global.css";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminIndexRedirect from "./routes/AdminIndexRedirect";
 import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
-import GoogleSuccess from "./pages/auth/GoogleSuccess";
 import AuthError from "./pages/auth/AuthError";
 import Staff from "./pages/admin/Staff";
 import Settings from "./pages/admin/Settings";
 import Profile from "./pages/admin/Profile";
+import CustomerLogin from "./pages/customerAuth/CustomerLogin";
+import CustomerRegister from "./pages/customerAuth/CustomerRegister";
+import CustomerGoogleSuccess from "./pages/customerAuth/CustomerGoogleSuccess";
+import CustomerAuthError from "./pages/customerAuth/CustomerAuthError";
+import CustomerProfile from "./pages/customer/CustomerProfile";
+import CustomerProtectedRoute from "./routes/CustomerProtectedRoute";
+import CustomerLayout from "./layouts/customer/CustomerLayout";
 
 function App() {
   return (
@@ -37,11 +42,26 @@ function App() {
           <Routes>
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            {/* Customer auth */}
+            <Route path="/customer/login" element={<CustomerLogin />} />
+            <Route path="/customer/register" element={<CustomerRegister />} />
+            <Route
+              path="/customer/auth/error"
+              element={<CustomerAuthError />}
+            />
+            <Route
+              path="/register"
+              element={<Navigate to="/customer/register" replace />}
+            />
+
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/google-success" element={<GoogleSuccess />} />
+            {/* Google OAuth is customer-only */}
+            <Route
+              path="/auth/google-success"
+              element={<CustomerGoogleSuccess />}
+            />
             <Route path="/auth/error" element={<AuthError />} />
 
             {/* Admin (Staff) Routes */}
@@ -165,11 +185,23 @@ function App() {
             </Route>
 
             {/* Customer Routes */}
-            <Route path="/menu" element={<Menu />} />
+            <Route element={<CustomerLayout />}>
+              <Route path="/menu" element={<Menu />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/payment/result" element={<PaymentResult />} />
+              <Route
+                path="/customer/profile"
+                element={
+                  <CustomerProtectedRoute>
+                    <CustomerProfile />
+                  </CustomerProtectedRoute>
+                }
+              />
+            </Route>
+
+            {/* Pages that should not show bottom nav */}
             <Route path="/menu/:itemId" element={<GuestItemDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/payment/result" element={<PaymentResult />} />
 
             {/* Default redirect */}
             <Route path="/" element={<Navigate to="/admin" replace />} />
