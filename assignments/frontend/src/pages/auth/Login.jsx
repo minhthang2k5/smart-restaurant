@@ -5,6 +5,7 @@ import { LogIn } from "lucide-react";
 
 import { useAuth } from "../../contexts/AuthContext";
 import AuthShell from "../../components/auth/AuthShell";
+import { getPostLoginPath } from "../../utils/roleRedirect";
 
 export default function Login() {
   const { login } = useAuth();
@@ -30,7 +31,7 @@ export default function Login() {
       message.success(response?.message || "Đăng nhập thành công");
 
       const role = response?.user?.role;
-      const target = role === "admin" ? "/admin/tables" : "/menu";
+      const target = getPostLoginPath(role);
 
       const from = location.state?.from?.pathname;
       navigate(from || target, { replace: true });
