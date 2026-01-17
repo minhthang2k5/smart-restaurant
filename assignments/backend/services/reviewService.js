@@ -278,6 +278,7 @@ class ReviewService {
     async getCustomerReviews(customerId) {
         const reviews = await Review.findAll({
             where: { customer_id: customerId },
+            attributes: ["id", "rating", "comment", "created_at", "updated_at"],
             include: [
                 {
                     model: MenuItem,

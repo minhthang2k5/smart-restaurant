@@ -543,4 +543,54 @@ exports.cancelSession = async (sessionId, reason = null) => {
     }
 };
 
+/**
+ * Get customer's session history
+ * @param {number} customerId - Customer ID
+ * @returns {Promise<Array>} List of customer's past sessions
+ */
+exports.getCustomerSessionHistory = async (customerId) => {
+    try {
+        const sessions = await TableSession.findAll({
+            where: {
+                customer_id: customerId,
+                status: {
+                    [Op.in]: ["completed", "cancelled"]
+                }
+            },
+            attributes: ["id", "session_number", "status", "total_amount", "created_at", "completed_at"],
+            include: [
+                {
+                    model: Table,
+                    as: "table",
+                    attributes: ["id", "table_number", "capacity"]
+                },
+                {
+                    model: Order,
+                    as: "orders",
+                    attributes: ["id", "order_number", "status", "subtotal", "total_amount", "created_at"],
+                    include: [
+                        {
+                            model: OrderItem,
+                            as: "items",
+                            attributes: ["id", "quantity", "unit_price", "total_price"],
+                            include: [
+                                {
+                                    model: MenuItem,
+                                    as: "menuItem",
+                                    attributes: ["id", "name", "price"]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            order: [["completed_at", "DESC"]],
+        });
+        
+        return sessions;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = exports;

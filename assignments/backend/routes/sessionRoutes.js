@@ -28,6 +28,14 @@ router.get("/table/:tableId", sessionController.getSessionByTableId);
 router.get("/table/:tableId/check", sessionController.checkTableSessionStatus);
 
 /**
+ * @route   GET /api/sessions/my-sessions
+ * @desc    Get customer's order history
+ * @access  Authenticated customers only
+ * @note    MUST be before /:id route to avoid UUID parsing conflict
+ */
+router.get("/my-sessions", authenticate, sessionController.getMySessionHistory);
+
+/**
  * @route   GET /api/sessions/:id
  * @desc    Get session details by ID
  * @access  Public

@@ -308,4 +308,35 @@ exports.cancelSession = async (req, res) => {
     }
 };
 
+/**
+ * Get customer's order history
+ * GET /api/sessions/my-sessions
+ * Requires authentication
+ */
+exports.getMySessionHistory = async (req, res) => {
+    try {
+        const customerId = req.user?.id;
+        
+        if (!customerId) {
+            return res.status(401).json({
+                success: false,
+                message: "Authentication required",
+            });
+        }
+        
+        const sessions = await sessionService.getCustomerSessionHistory(customerId);
+        
+        res.status(200).json({
+            success: true,
+            data: sessions,
+        });
+    } catch (error) {
+        console.error("Error fetching session history:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error fetching session history",
+        });
+    }
+};
+
 module.exports = exports;
