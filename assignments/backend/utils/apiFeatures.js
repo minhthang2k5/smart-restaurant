@@ -82,6 +82,7 @@ class APIFeatures {
             "name",
             "prep_time_minutes",
             "status",
+            "popularity", // Sort by order count (handled separately in controller)
         ];
 
         // Allow multiple fields, same direction for all

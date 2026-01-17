@@ -2,13 +2,31 @@ const MenuItem = require("../models/MenuItem");
 const MenuCategory = require("../models/MenuCategory");
 const MenuItemPhoto = require("../models/MenuItemPhoto");
 const APIFeatures = require("../utils/apiFeatures");
+const menuItemService = require("../services/menuItemService");
 
 // GET /api/admin/menu/items
 // Get all menu items with filtering, sorting, and pagination
 // Query params: ?page=1&limit=10&sort=price&order=ASC&name=chicken&category_id=1&status=available
 exports.getAllItems = async (req, res) => {
   try {
-    // Base filter: soft delete only (single tenant)
+    const { sort, order, page, limit, name, category_id, status } = req.query;
+
+    // Special handling for popularity sort - delegate to service
+    if (sort === 'popularity') {
+      const result = await menuItemService.getItemsByPopularity(
+        { name, category_id, status },
+        { order, page, limit }
+      );
+
+      return res.status(200).json({
+        status: "success",
+        results: result.items.length,
+        pagination: result.pagination,
+        data: result.items,
+      });
+    }
+
+    // Normal flow for other sorts using APIFeatures
     const baseWhere = {
       is_deleted: false,
     };
