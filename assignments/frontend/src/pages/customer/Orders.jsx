@@ -316,6 +316,13 @@ export default function Orders() {
       await sessionService.completeSession(sessionId, { paymentMethod });
 
       message.success("Session completed successfully");
+      
+      // Set post-payment mode to prevent creating new session on menu redirect
+      const tableId = localStorage.getItem("tableId");
+      if (tableId) {
+        localStorage.setItem("postPaymentMode", "true");
+        localStorage.setItem("postPaymentTableId", tableId);
+      }
       localStorage.removeItem("sessionId");
       cartService.clearLocalCart();
 
@@ -356,6 +363,13 @@ export default function Orders() {
 
           message.success("Payment completed successfully");
           clearStoredMoMo(sessionId);
+          
+          // Set post-payment mode to prevent creating new session on menu redirect
+          const tableId = localStorage.getItem("tableId");
+          if (tableId) {
+            localStorage.setItem("postPaymentMode", "true");
+            localStorage.setItem("postPaymentTableId", tableId);
+          }
           localStorage.removeItem("sessionId");
           cartService.clearLocalCart();
           setMoMoModalOpen(false);

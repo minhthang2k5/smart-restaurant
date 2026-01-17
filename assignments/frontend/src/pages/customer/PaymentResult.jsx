@@ -95,6 +95,13 @@ export default function PaymentResult() {
 
           message.success("Payment completed successfully");
           clearStoredMoMo(sessionId);
+          
+          // Set post-payment mode to prevent creating new session on menu redirect
+          const tableId = localStorage.getItem("tableId");
+          if (tableId) {
+            localStorage.setItem("postPaymentMode", "true");
+            localStorage.setItem("postPaymentTableId", tableId);
+          }
           localStorage.removeItem("sessionId");
           cartService.clearLocalCart();
           return;

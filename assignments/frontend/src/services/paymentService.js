@@ -1,17 +1,17 @@
-import api from "./api";
+import customerApi from "./customerApi";
 
 export const initiateMoMoPayment = async (sessionId) => {
-  return api.post(`/sessions/${sessionId}/payment/momo/initiate`);
+  return customerApi.post(`/sessions/${sessionId}/payment/momo/initiate`);
 };
 
 export const getPaymentStatus = async (sessionId) => {
-  return api.get(`/sessions/${sessionId}/payment/status`);
+  return customerApi.get(`/sessions/${sessionId}/payment/status`);
 };
 
 export const cancelMoMoPayment = async (sessionId, payload) => {
-  return api.post(`/sessions/${sessionId}/payment/momo/cancel`, payload);
+  return customerApi.post(`/sessions/${sessionId}/payment/momo/cancel`, payload);
 };
 
 export const processMoMoCallback = async (payload) => {
-  return api.post(`/payment/momo/callback`, payload);
+  return customerApi.post(`/payment/momo/callback`, payload);
 };

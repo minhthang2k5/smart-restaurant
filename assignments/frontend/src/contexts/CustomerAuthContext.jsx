@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
 import customerAuthService from "../services/customerAuthService";
+import * as sessionService from "../services/sessionService";
 
 const CustomerAuthContext = createContext(null);
 
@@ -54,6 +55,17 @@ export function CustomerAuthProvider({ children }) {
     localStorage.setItem(TOKEN_KEY, token);
     setCustomer(userInfo);
 
+    // IDENTITY CLAIM: If there's an active session, link it to this customer
+    const sessionId = localStorage.getItem("sessionId");
+    if (sessionId && userInfo?.id) {
+      try {
+        await sessionService.claimSession(sessionId, userInfo.id);
+      } catch (error) {
+        // Non-fatal: session might already be claimed or completed
+        console.warn("Could not claim session:", error?.message);
+      }
+    }
+
     return { user: userInfo, message: payload?.message };
   };
 
@@ -79,6 +91,17 @@ export function CustomerAuthProvider({ children }) {
       localStorage.removeItem(TOKEN_KEY);
       setCustomer(null);
       throw new Error("Google OAuth is for customers only");
+    }
+
+    // IDENTITY CLAIM: If there's an active session, link it to this customer
+    const sessionId = localStorage.getItem("sessionId");
+    if (sessionId && profile?.id) {
+      try {
+        await sessionService.claimSession(sessionId, profile.id);
+      } catch (error) {
+        // Non-fatal: session might already be claimed or completed
+        console.warn("Could not claim session:", error?.message);
+      }
     }
 
     return profile;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  Alert,
   Badge,
   Button,
   Row,
@@ -20,6 +21,7 @@ import {
   ClockCircleOutlined,
   ShoppingCartOutlined,
   ProfileOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
@@ -46,6 +48,37 @@ export default function Menu() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cartCount, setCartCount] = useState(() => cartService.getLocalCartCount());
+  const [isPostPaymentMode, setIsPostPaymentMode] = useState(
+    () => localStorage.getItem("postPaymentMode") === "true"
+  );
+
+  // Function to start a new order (clear post-payment mode)
+  const handleStartNewOrder = async () => {
+    const tableId = localStorage.getItem("tableId");
+    if (!tableId) {
+      message.error("No table context. Please scan QR code again.");
+      return;
+    }
+
+    try {
+      // Clear post-payment mode
+      localStorage.removeItem("postPaymentMode");
+      localStorage.removeItem("postPaymentTableId");
+      localStorage.removeItem("sessionId");
+      setIsPostPaymentMode(false);
+
+      // Create new session
+      const created = await sessionService.createSession({ tableId });
+      const session = created.data || created;
+      if (session?.id) {
+        localStorage.setItem("sessionId", session.id);
+        message.success("New order started!");
+      }
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Failed to start new order");
+      console.error(error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -104,6 +137,7 @@ export default function Menu() {
   }, []);
 
   // If tableId is present, create/get session and store sessionId
+  // SMART CHECK: Detect post-payment mode vs ordering mode
   useEffect(() => {
     let cancelled = false;
 
@@ -115,6 +149,25 @@ export default function Menu() {
     const ensureSession = async () => {
       const tableIdFromUrl = urlTableId;
       const tokenFromUrl = urlToken;
+
+      // Check if we're in post-payment mode (just completed payment on this device)
+      const postPaymentMode = localStorage.getItem("postPaymentMode");
+      const postPaymentTableId = localStorage.getItem("postPaymentTableId");
+      
+      // If in post-payment mode and same table, don't create new session
+      // User is just browsing menu after payment - show view-only mode
+      if (postPaymentMode === "true") {
+        const currentTableId = tableIdFromUrl || localStorage.getItem("tableId");
+        if (currentTableId === postPaymentTableId) {
+          // Still in post-payment mode for same table - don't create session
+          // The "Order Again" button will clear this flag when user wants to start fresh
+          return;
+        } else {
+          // Different table - clear post-payment mode and proceed normally
+          localStorage.removeItem("postPaymentMode");
+          localStorage.removeItem("postPaymentTableId");
+        }
+      }
 
       if (tableIdFromUrl) localStorage.setItem("tableId", String(tableIdFromUrl));
       if (tokenFromUrl) localStorage.setItem("qrToken", String(tokenFromUrl));
@@ -145,29 +198,45 @@ export default function Menu() {
 
       if (!tableId) return;
 
+      // SMART SESSION CHECK: Get both active and recent completed sessions
       try {
-        const active = await sessionService.getActiveSessionByTable(tableId);
-        const session = active.data || active;
+        const checkResult = await sessionService.checkTableSessionStatus(tableId);
+        const { active, recentCompleted } = checkResult.data || checkResult;
         if (cancelled) return;
-        if (session?.id) {
-          localStorage.setItem("sessionId", session.id);
+
+        // Case 1: Active session exists - use it
+        if (active?.id) {
+          localStorage.setItem("sessionId", active.id);
+          localStorage.removeItem("postPaymentMode");
+          localStorage.removeItem("postPaymentTableId");
+          setIsPostPaymentMode(false);
           return;
         }
-      } catch (error) {
-        if (error?.response?.status !== 404) {
-          console.error(error);
-        }
-      }
 
-      try {
+        // Case 2: No active session, but recently completed session exists
+        // Check if this device had this session (stored sessionId matches)
+        const storedSessionId = localStorage.getItem("sessionId");
+        if (recentCompleted?.id && storedSessionId === recentCompleted.id) {
+          // This device just completed payment - enter post-payment mode
+          localStorage.setItem("postPaymentMode", "true");
+          localStorage.setItem("postPaymentTableId", tableId);
+          setIsPostPaymentMode(true);
+          return;
+        }
+
+        // Case 3: No active session, no matching recent session - create new
+        // (This handles: new customer, or different device scanning after payment)
         const created = await sessionService.createSession({ tableId });
         const session = created.data || created;
         if (cancelled) return;
         if (session?.id) {
           localStorage.setItem("sessionId", session.id);
+          localStorage.removeItem("postPaymentMode");
+          localStorage.removeItem("postPaymentTableId");
+          setIsPostPaymentMode(false);
         }
       } catch (error) {
-        console.error(error);
+        console.error("Session check/create error:", error);
       }
     };
 
@@ -230,6 +299,25 @@ export default function Menu() {
             Browse our delicious selection
           </p>
         </div>
+
+        {/* Post-Payment Mode Banner */}
+        {isPostPaymentMode && (
+          <Alert
+            type="success"
+            icon={<CheckCircleOutlined />}
+            message="Payment Completed!"
+            description={
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                <span>Thank you for dining with us. Would you like to order more?</span>
+                <Button type="primary" onClick={handleStartNewOrder}>
+                  Order Again
+                </Button>
+              </div>
+            }
+            style={{ marginBottom: 24 }}
+            showIcon
+          />
+        )}
 
         {/* Customer actions */}
         <div
