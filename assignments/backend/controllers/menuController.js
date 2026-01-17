@@ -2,6 +2,7 @@
 require('../models/associations');
 
 const qrService = require("./../services/qrService");
+const menuItemService = require("../services/menuItemService");
 const MenuItem = require('../models/MenuItem');
 const MenuCategory = require('../models/MenuCategory');
 const MenuItemPhoto = require('../models/MenuItemPhoto');
@@ -12,6 +13,7 @@ const { Op } = require('sequelize');
 exports.verifyAndGetMenu = async (req, res) => {
     try {
         const { token } = req.query;
+
 
         if (!token) {
             return res.status(400).json({
@@ -215,3 +217,35 @@ exports.getPublicMenuItem = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get related menu items (same category)
+ * GET /api/menu/items/:itemId/related
+ * 
+ * Returns items from the same category, excluding the current item
+ * Prioritizes chef recommendations and sorts by name
+ */
+exports.getRelatedItems = async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const limit = parseInt(req.query.limit) || 4;
+
+    // Call service layer
+    const result = await menuItemService.getRelatedItems(itemId, limit);
+
+    res.json({
+      success: true,
+      data: result.items,
+    });
+  } catch (error) {
+    console.error('Get related items error:', error);
+    
+    // Handle custom error with statusCode
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || 'Không thể tải các món liên quan',
+    });
+  }
+};
+

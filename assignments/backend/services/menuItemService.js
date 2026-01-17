@@ -116,6 +116,83 @@ class MenuItemService {
             }
         };
     }
+
+    /**
+     * Get related menu items from same category
+     * Returns items that share the same category as the given item
+     * Prioritizes chef recommendations
+     * 
+     * @param {string} itemId - The ID of the current menu item
+     * @param {number} limit - Maximum number of related items to return (default: 4)
+     * @returns {Promise<Object>} Object containing related items array
+     * @throws {Error} If item not found
+     */
+    async getRelatedItems(itemId, limit = 4) {
+        // 1. Get current item to find its category
+        const currentItem = await MenuItem.findOne({
+            where: {
+                id: itemId,
+                is_deleted: false,
+            },
+            attributes: ['id', 'category_id', 'name'],
+        });
+
+        if (!currentItem) {
+            const error = new Error('Món ăn không tồn tại');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        // 2. Find items in same category (exclude current item)
+        const relatedItems = await MenuItem.findAll({
+            where: {
+                category_id: currentItem.category_id,
+                status: 'available',
+                is_deleted: false,
+                id: { [Op.ne]: itemId },  // Exclude current item
+            },
+            attributes: [
+                'id',
+                'name',
+                'description',
+                'price',
+                'status',
+                'prep_time_minutes',
+                'is_chef_recommended',
+                'category_id',
+            ],
+            order: [
+                // Prioritize chef recommendations first
+                ['is_chef_recommended', 'DESC'],
+                // Then sort alphabetically
+                ['name', 'ASC'],
+            ],
+            limit: parseInt(limit),
+        });
+
+        // 3. Fetch photos for each related item
+        const itemsWithPhotos = await Promise.all(
+            relatedItems.map(async (item) => {
+                const photos = await MenuItemPhoto.findAll({
+                    where: { menu_item_id: item.id },
+                    attributes: ['id', 'url', 'is_primary'],
+                    order: [['is_primary', 'DESC']],
+                });
+
+                return {
+                    ...item.toJSON(),
+                    photos: photos || [],
+                };
+            })
+        );
+
+        return {
+            items: itemsWithPhotos,
+            currentItemId: itemId,
+            categoryId: currentItem.category_id,
+        };
+    }
 }
 
 module.exports = new MenuItemService();
+
