@@ -34,3 +34,10 @@ export const createOrderInSession = async (sessionId, items) => {
 export const completeSession = async (sessionId, payload) => {
   return customerApi.post(`/sessions/${sessionId}/complete`, payload);
 };
+
+/**
+ * Get customer's order history (completed/cancelled sessions)
+ */
+export const getMySessionHistory = async () => {
+  return customerApi.get("/sessions/my-sessions");
+};

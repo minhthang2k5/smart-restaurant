@@ -33,6 +33,8 @@ import CustomerAuthError from "./pages/customerAuth/CustomerAuthError";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import CustomerProtectedRoute from "./routes/CustomerProtectedRoute";
 import CustomerLayout from "./layouts/customer/CustomerLayout";
+import OrderHistory from "./pages/customer/OrderHistory";
+import Reviews from "./pages/customer/Reviews";
 
 function App() {
   return (
@@ -195,6 +197,22 @@ function App() {
                 element={
                   <CustomerProtectedRoute>
                     <CustomerProfile />
+                  </CustomerProtectedRoute>
+                }
+              />
+              <Route
+                path="/customer/order-history"
+                element={
+                  <CustomerProtectedRoute>
+                    <OrderHistory />
+                  </CustomerProtectedRoute>
+                }
+              />
+              <Route
+                path="/customer/reviews"
+                element={
+                  <CustomerProtectedRoute>
+                    <Reviews />
                   </CustomerProtectedRoute>
                 }
               />

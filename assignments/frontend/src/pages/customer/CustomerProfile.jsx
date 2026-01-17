@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { App, Button, Card, Form, Input, Skeleton } from "antd";
-import { ArrowLeftOutlined, UserOutlined } from "@ant-design/icons";
+import { App, Button, Card, Form, Input, Skeleton, Space, Divider } from "antd";
+import {
+  ArrowLeftOutlined,
+  UserOutlined,
+  LogoutOutlined,
+  HistoryOutlined,
+  StarOutlined,
+} from "@ant-design/icons";
 import { useCustomerAuth } from "../../contexts/CustomerAuthContext";
 
 export default function CustomerProfile() {
   const { message } = App.useApp();
-  const { customer, refreshCustomer, updateProfile } = useCustomerAuth();
+  const { customer, refreshCustomer, updateProfile, logout } = useCustomerAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -51,6 +57,12 @@ export default function CustomerProfile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    message.success("Logged out successfully");
+    navigate("/customer/login");
   };
 
   return (
@@ -119,6 +131,37 @@ export default function CustomerProfile() {
               </Button>
             </Form>
           )}
+
+          <Divider />
+
+          {/* Quick Actions */}
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Button
+              icon={<HistoryOutlined />}
+              size="large"
+              block
+              onClick={() => navigate("/customer/order-history")}
+            >
+              View Order History
+            </Button>
+            <Button
+              icon={<StarOutlined />}
+              size="large"
+              block
+              onClick={() => navigate("/customer/reviews")}
+            >
+              My Reviews
+            </Button>
+            <Button
+              icon={<LogoutOutlined />}
+              size="large"
+              block
+              danger
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </Space>
         </Card>
       </div>
     </div>
