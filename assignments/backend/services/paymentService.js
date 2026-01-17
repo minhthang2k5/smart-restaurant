@@ -3,19 +3,46 @@ const momoService = require('./momoService');
 const sequelize = require('../config/database');
 const { Op } = require('sequelize');
 
-const assertPaymentAccess = (session, userId) => {
-  // If a user is logged in, they must own the session.
+/**
+ * Check payment access and optionally claim unclaimed session
+ * Logic:
+ * - If user is logged in AND session has no owner → claim it (link to user)
+ * - If user is logged in AND session belongs to them → allow
+ * - If user is logged in AND session belongs to someone else → deny
+ * - If guest AND session has no owner → allow (guest flow)
+ * - If guest AND session has owner → deny (must login)
+ */
+const assertPaymentAccess = async (session, userId) => {
+  // Case 1: Logged-in user
   if (userId) {
-    if (session.customer_id !== userId) {
-      throw new Error('Unauthorized: This session does not belong to you');
+    // Session has no owner - claim it for this user
+    if (!session.customer_id) {
+      session.customer_id = userId;
+      await session.save();
+      // Also update orders without customer_id
+      await Order.update(
+        { customer_id: userId },
+        { where: { session_id: session.id, customer_id: null } }
+      );
+      return; // Access granted after claiming
     }
-    return;
+    
+    // Session belongs to this user - allow
+    if (session.customer_id === userId) {
+      return;
+    }
+    
+    // Session belongs to someone else - deny
+    throw new Error('Unauthorized: This session does not belong to you');
   }
 
-  // Guest flow: only allow if the session is not tied to an account.
+  // Case 2: Guest (no userId)
+  // Only allow if the session is not tied to an account
   if (session.customer_id) {
     throw new Error('Unauthorized: Login required to access this session');
   }
+  
+  // Guest accessing unclaimed session - allow
 };
 
   /**
@@ -42,8 +69,8 @@ const assertPaymentAccess = (session, userId) => {
         throw new Error('Session not found');
       }
 
-      // Validate access (login optional)
-      assertPaymentAccess(session, userId);
+      // Validate access (login optional) - may claim session for logged-in user
+      await assertPaymentAccess(session, userId);
 
       // Validate session status
       if (session.status === 'completed' || session.status === 'cancelled') {
@@ -259,8 +286,8 @@ const getPaymentStatus = async (sessionId, userId) => {
     throw new Error('Session not found');
   }
 
-  // Validate access (login optional)
-  assertPaymentAccess(session, userId);
+  // Validate access (login optional) - may claim session for logged-in user
+  await assertPaymentAccess(session, userId);
 
   return {
     payment_status: session.payment_status,
@@ -291,8 +318,8 @@ const cancelPayment = async (sessionId, userId, reason) => {
       throw new Error('Session not found');
     }
 
-    // Validate access (login optional)
-    assertPaymentAccess(session, userId);
+    // Validate access (login optional) - may claim session for logged-in user
+    await assertPaymentAccess(session, userId);
 
     // Validate can be cancelled
     if (session.payment_status === 'paid') {

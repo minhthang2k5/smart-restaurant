@@ -65,6 +65,63 @@ exports.getSessionByTableId = async (req, res) => {
 };
 
 /**
+ * Smart session status check for a table
+ * GET /api/sessions/table/:tableId/check
+ * Returns both active session and recent completed session info
+ * Used by frontend to determine ordering vs post-payment mode
+ */
+exports.checkTableSessionStatus = async (req, res) => {
+    try {
+        const { tableId } = req.params;
+        
+        const result = await sessionService.checkTableSessionStatus(tableId);
+        
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error checking session status:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error checking session status",
+        });
+    }
+};
+
+/**
+ * Claim/link session to customer (called after login)
+ * POST /api/sessions/:id/claim
+ */
+exports.claimSession = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const customerId = req.user?.id || req.body?.customerId;
+        
+        if (!customerId) {
+            return res.status(400).json({
+                success: false,
+                message: "Customer ID is required",
+            });
+        }
+        
+        const session = await sessionService.claimSession(id, customerId);
+        
+        res.status(200).json({
+            success: true,
+            message: "Session claimed successfully",
+            data: session,
+        });
+    } catch (error) {
+        console.error("Error claiming session:", error);
+        res.status(400).json({
+            success: false,
+            message: error.message || "Error claiming session",
+        });
+    }
+};
+
+/**
  * Get session details by ID
  * GET /api/sessions/:id
  */

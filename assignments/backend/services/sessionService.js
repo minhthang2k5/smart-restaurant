@@ -117,6 +117,87 @@ exports.createTableSession = async (tableId, customerId = null) => {
 };
 
 /**
+ * Smart session check for a table
+ * Returns: { active: Session|null, recentCompleted: Session|null }
+ * - active: currently active session if exists
+ * - recentCompleted: most recent completed session within buffer window (for post-payment detection)
+ */
+exports.checkTableSessionStatus = async (tableId, bufferMinutes = 30) => {
+    try {
+        // Check for active session
+        const activeSession = await TableSession.findOne({
+            where: {
+                table_id: tableId,
+                status: "active",
+            },
+            attributes: ["id", "session_number", "status", "customer_id", "started_at"],
+        });
+
+        // Check for recently completed session (within buffer window)
+        const bufferTime = new Date(Date.now() - bufferMinutes * 60 * 1000);
+        const recentCompleted = await TableSession.findOne({
+            where: {
+                table_id: tableId,
+                status: "completed",
+                completed_at: {
+                    [Op.gte]: bufferTime,
+                },
+            },
+            order: [["completed_at", "DESC"]],
+            attributes: ["id", "session_number", "status", "customer_id", "completed_at", "total_amount"],
+        });
+
+        return {
+            active: activeSession,
+            recentCompleted: recentCompleted,
+        };
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
+ * Claim/link a session to a customer (used when guest logs in)
+ */
+exports.claimSession = async (sessionId, customerId) => {
+    try {
+        const session = await TableSession.findByPk(sessionId);
+        
+        if (!session) {
+            throw new Error("Session not found");
+        }
+        
+        if (session.status !== "active") {
+            throw new Error("Can only claim active sessions");
+        }
+        
+        // Only update if not already claimed by another customer
+        if (session.customer_id && session.customer_id !== customerId) {
+            // Session already belongs to a different customer - don't override
+            return session;
+        }
+        
+        session.customer_id = customerId;
+        await session.save();
+        
+        // Also update any orders in this session that don't have customer_id
+        await Order.update(
+            { customer_id: customerId },
+            {
+                where: {
+                    session_id: sessionId,
+                    customer_id: null,
+                },
+            }
+        );
+        
+        return session;
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
  * Get active session for a table
  */
 exports.getActiveSessionByTableId = async (tableId) => {

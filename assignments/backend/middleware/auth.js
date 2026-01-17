@@ -26,6 +26,29 @@ exports.authenticate = (req, res, next) => {
 };
 
 /**
+ * Optional authentication middleware
+ * Tries to authenticate user but allows request to proceed even without valid token
+ * Sets req.user if token is valid, otherwise req.user remains undefined
+ * Use this for endpoints that work for both guests and logged-in users
+ */
+exports.optionalAuthenticate = (req, res, next) => {
+    passport.authenticate("jwt", { session: false }, (err, user, info) => {
+        if (err) {
+            // Log error but don't fail - allow guest access
+            console.error("Optional auth error:", err.message);
+            return next();
+        }
+
+        // Set user if authenticated, otherwise leave undefined (guest)
+        if (user) {
+            req.user = user;
+        }
+        
+        next();
+    })(req, res, next);
+};
+
+/**
  * Role-based access control middleware
  * @param {Array<string>} allowedRoles - Array of allowed roles (e.g., ['admin', 'waiter'])
  * @returns {Function} Express middleware function
