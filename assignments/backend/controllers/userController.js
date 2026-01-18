@@ -1,4 +1,5 @@
 const userService = require("../services/userService");
+const uploadService = require("../services/uploadService");
 
 /**
  * @desc    Create a new staff member (Waiter, Kitchen Staff, or Admin)
@@ -298,6 +299,49 @@ exports.updateProfile = async (req, res) => {
         res.status(500).json({
             status: "error",
             message: "Failed to update profile",
+            error: error.message,
+        });
+    }
+};
+
+/**
+ * @desc    Upload user avatar
+ * @route   POST /api/users/profile/avatar
+ * @access  Private (All authenticated users)
+ */
+exports.uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Please upload an image file",
+            });
+        }
+
+        // Upload to Cloudinary
+        const result = await uploadService.uploadAvatarToCloudinary(
+            file.buffer,
+            userId
+        );
+
+        // Update user profile with new avatar URL
+        const updatedUser = await userService.updateUserProfile(userId, {
+            avatar: result.url,
+        });
+
+        res.status(200).json({
+            status: "success",
+            message: "Avatar updated successfully",
+            data: updatedUser,
+        });
+    } catch (error) {
+        console.error("Error uploading avatar:", error);
+        res.status(500).json({
+            status: "error",
+            message: "Failed to upload avatar",
             error: error.message,
         });
     }

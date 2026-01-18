@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const uploadService = require("../services/uploadService");
 const { authenticate, authorize } = require("../middleware/auth");
 const {
     createStaffValidation,
@@ -125,6 +126,18 @@ router.put(
     updateProfileValidation,
     validate,
     userController.updateProfile
+);
+
+/**
+ * @route   POST /api/users/profile/avatar
+ * @desc    Upload user avatar
+ * @access  Private (All authenticated users)
+ */
+router.post(
+    "/profile/avatar",
+    authenticate,
+    uploadService.photosUpload.single("avatar"),
+    userController.uploadAvatar
 );
 
 module.exports = router;

@@ -274,7 +274,7 @@ const getUserProfile = async (userId) => {
  * Any authenticated user can update their own profile
  */
 const updateUserProfile = async (userId, updateData) => {
-    const { firstName, lastName } = updateData;
+    const { firstName, lastName, avatar } = updateData;
 
     const user = await User.findByPk(userId);
 
@@ -284,9 +284,9 @@ const updateUserProfile = async (userId, updateData) => {
         throw error;
     }
 
-    // Only allow updating name fields
     if (firstName) user.firstName = firstName;
     if (lastName) user.lastName = lastName;
+    if (avatar) user.avatar = avatar;
 
     await user.save();
 

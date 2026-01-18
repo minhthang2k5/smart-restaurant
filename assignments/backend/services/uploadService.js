@@ -113,10 +113,46 @@ async function deletePhotoFromCloudinary(publicId) {
     return cloudinary.uploader.destroy(publicId);
 }
 
+/**
+ * Upload an avatar to Cloudinary.
+ * @param {Buffer} fileBuffer
+ * @param {string} userId
+ * @returns {Promise<{url: string, publicId: string}>}
+ */
+async function uploadAvatarToCloudinary(fileBuffer, userId) {
+    const folder = `smart-restaurant/avatars/${userId}`;
+    const publicId = "avatar_" + Date.now(); // Simple versioning
+
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: folder,
+                public_id: publicId,
+                resource_type: "image",
+                transformation: [
+                    { width: 400, height: 400, crop: "fill", gravity: "face" }, // Avatar specific transform
+                    { quality: "auto" },
+                    { fetch_format: "auto" },
+                ],
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else
+                    resolve({
+                        url: result.secure_url,
+                        publicId: result.public_id,
+                    });
+            }
+        );
+        streamifier.createReadStream(fileBuffer).pipe(uploadStream);
+    });
+}
+
 module.exports = {
     photosUpload,
     uploadPhotosToCloudinary,
     deletePhotoFromCloudinary,
+    uploadAvatarToCloudinary,
     ALLOWED_MIME_TYPES,
     MAX_FILE_SIZE_MB,
     cloudinary,
