@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, Descriptions, Form, Input, Button, App, Space } from "antd";
+import { Card, Descriptions, Form, Input, Button, App, Space, Avatar, Upload } from "antd";
+import { UserOutlined, UploadOutlined } from "@ant-design/icons";
 import userService from "../../services/userService";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -9,6 +10,7 @@ export default function Profile() {
   const [form] = Form.useForm();
 
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const initialValues = useMemo(
     () => ({
@@ -74,6 +76,30 @@ export default function Profile() {
             </Descriptions.Item>
             <Descriptions.Item label="Status">
               {user?.status || "—"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Avatar">
+              <Space>
+                <Avatar size={64} src={user?.avatar} icon={<UserOutlined />} />
+                <Upload
+                  showUploadList={false}
+                  customRequest={async ({ file, onSuccess, onError }) => {
+                    setUploading(true);
+                    try {
+                      await userService.uploadAvatar(file);
+                      message.success("Avatar updated");
+                      await refreshUser();
+                      onSuccess("ok");
+                    } catch (err) {
+                      message.error("Failed to upload avatar");
+                      onError(err);
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} loading={uploading}>Change</Button>
+                </Upload>
+              </Space>
             </Descriptions.Item>
           </Descriptions>
         </Card>

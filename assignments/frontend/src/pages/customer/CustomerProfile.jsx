@@ -7,8 +7,11 @@ import {
   LogoutOutlined,
   HistoryOutlined,
   StarOutlined,
+  UploadOutlined
 } from "@ant-design/icons";
 import { useCustomerAuth } from "../../contexts/CustomerAuthContext";
+import customerAuthService from "../../services/customerAuthService";
+import { Avatar, Upload } from "antd";
 
 export default function CustomerProfile() {
   const { message } = App.useApp();
@@ -17,6 +20,7 @@ export default function CustomerProfile() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -85,6 +89,30 @@ export default function CustomerProfile() {
             </span>
           }
         >
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <Space direction="vertical" align="center">
+              <Avatar size={100} src={customer?.avatar} icon={<UserOutlined />} />
+              <Upload
+                showUploadList={false}
+                customRequest={async ({ file, onSuccess, onError }) => {
+                  setUploading(true);
+                  try {
+                    await customerAuthService.uploadAvatar(file);
+                    message.success("Avatar updated");
+                    await refreshCustomer();
+                    onSuccess("ok");
+                  } catch (err) {
+                    message.error("Failed to upload avatar");
+                    onError(err);
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              >
+                <Button icon={<UploadOutlined />} loading={uploading}>Change Photo</Button>
+              </Upload>
+            </Space>
+          </div>
           {loading ? (
             <Skeleton active />
           ) : (
