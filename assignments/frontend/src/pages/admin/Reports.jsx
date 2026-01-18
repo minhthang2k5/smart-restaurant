@@ -8,7 +8,7 @@ import RevenueDataTable from "../../components/reports/RevenueDataTable";
 import TopItemsTable from "../../components/reports/TopItemsTable";
 import ChartPanels from "../../components/reports/ChartPanels";
 import * as reportService from "../../services/reportService";
-import "../../styles/reports.css";
+import "../../styles/Reports.css";
 
 const toIsoOrNull = (dayjsValue) => {
   if (!dayjsValue) return null;
