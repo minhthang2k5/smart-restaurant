@@ -14,6 +14,7 @@ import {
   Empty,
   Spin,
   message,
+  Pagination,
 } from "antd";
 import {
   SearchOutlined,
@@ -54,6 +55,10 @@ export default function Menu() {
   const [isPostPaymentMode, setIsPostPaymentMode] = useState(
     () => localStorage.getItem("postPaymentMode") === "true"
   );
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   // Function to start a new order (clear post-payment mode)
   const handleStartNewOrder = async () => {
@@ -276,6 +281,21 @@ export default function Menu() {
     return filtered;
   }, [items, selectedCategory, search]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory]);
+
+  // Get items for current page
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredItems.slice(startIndex, endIndex);
+  }, [filteredItems, currentPage, pageSize]);
+
+  // Total count for pagination
+  const totalItems = filteredItems.length;
+
   // Category options
   const categoryOptions = [
     { label: "All", value: "all" },
@@ -409,7 +429,7 @@ export default function Menu() {
             />
           ) : (
             <Row gutter={[16, 16]}>
-              {filteredItems.map((item) => (
+              {paginatedItems.map((item) => (
                 <Col key={item.id} xs={24} sm={12} md={8}>
                   <Card
                     hoverable
@@ -507,6 +527,37 @@ export default function Menu() {
             </Row>
           )}
         </Spin>
+
+        {/* Pagination */}
+        {filteredItems.length > 0 && (
+          <div 
+            style={{ 
+              marginTop: 32, 
+              marginBottom: 24,
+              display: "flex", 
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalItems}
+              onChange={(page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              }}
+              showSizeChanger
+              showTotal={(total, range) =>
+                `${range[0]}-${range[1]} of ${total} items`
+              }
+              pageSizeOptions={[6, 12, 24, 48]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
