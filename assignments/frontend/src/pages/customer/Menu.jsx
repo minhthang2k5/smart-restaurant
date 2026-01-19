@@ -22,6 +22,8 @@ import {
   ShoppingCartOutlined,
   ProfileOutlined,
   CheckCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
@@ -274,7 +276,7 @@ export default function Menu() {
     return filtered;
   }, [items, selectedCategory, search]);
 
-  // Category options for Segmented control
+  // Category options
   const categoryOptions = [
     { label: "All", value: "all" },
     ...categories.map((cat) => ({
@@ -362,12 +364,34 @@ export default function Menu() {
               <div style={{ marginBottom: 12, fontWeight: 500 }}>
                 Filter by Category:
               </div>
-              <Segmented
-                options={categoryOptions}
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-                block
-              />
+              <div 
+                style={{ 
+                  display: "flex", 
+                  gap: 8,
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  paddingBottom: 8,
+                  scrollbarWidth: "thin",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {categoryOptions.map((cat) => (
+                  <Button
+                    key={cat.value}
+                    type={selectedCategory === cat.value ? "primary" : "default"}
+                    size="large"
+                    onClick={() => setSelectedCategory(cat.value)}
+                    style={{
+                      flexShrink: 0,
+                      minWidth: 100,
+                      height: 48,
+                      fontWeight: selectedCategory === cat.value ? 600 : 400
+                    }}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           </Space>
         </Card>

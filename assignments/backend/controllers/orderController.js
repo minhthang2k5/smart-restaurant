@@ -11,16 +11,16 @@ const { Op } = require("sequelize");
 exports.getOrderByTableId = async (req, res) => {
     try {
         const { tableId } = req.params;
-        
+
         const order = await orderService.getActiveOrderByTableId(tableId);
-        
+
         if (!order) {
             return res.status(404).json({
                 success: false,
                 message: "No active order found for this table",
             });
         }
-        
+
         res.status(200).json({
             success: true,
             data: order,
@@ -41,16 +41,16 @@ exports.getOrderByTableId = async (req, res) => {
 exports.getOrderById = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const order = await orderService.getOrderDetails(id);
-        
+
         if (!order) {
             return res.status(404).json({
                 success: false,
                 message: "Order not found",
             });
         }
-        
+
         res.status(200).json({
             success: true,
             data: order,
@@ -71,9 +71,9 @@ exports.getOrderById = async (req, res) => {
 exports.getAllOrders = async (req, res) => {
     try {
         const { status, tableId, date, limit = 50 } = req.query;
-        
+
         const where = {};
-        
+
         if (status) {
             // Support comma-separated status values (e.g., "pending,accepted,preparing")
             const statusArray = status.split(',').map(s => s.trim());
@@ -83,22 +83,22 @@ exports.getAllOrders = async (req, res) => {
                 where.status = status;
             }
         }
-        
+
         if (tableId) {
             where.table_id = tableId;
         }
-        
+
         if (date) {
             const startDate = new Date(date);
             startDate.setHours(0, 0, 0, 0);
             const endDate = new Date(date);
             endDate.setHours(23, 59, 59, 999);
-            
+
             where.created_at = {
                 [Op.between]: [startDate, endDate],
             };
         }
-        
+
         const orders = await Order.findAll({
             where,
             limit: parseInt(limit),
@@ -112,11 +112,18 @@ exports.getAllOrders = async (req, res) => {
                 {
                     model: require("../models/OrderItem"),
                     as: "items",
-                    attributes: ["id", "item_name", "quantity", "total_price", "status"],
+                    attributes: ["id", "item_name", "quantity", "total_price", "status", "special_instructions"],
+                    include: [
+                        {
+                            model: require("../models/OrderItemModifier"),
+                            as: "modifiers",
+                            attributes: ["id", "modifier_option_id", "price_adjustment", "option_name"], // Adjust attributes as needed based on your DB
+                        }
+                    ]
                 },
             ],
         });
-        
+
         res.status(200).json({
             success: true,
             count: orders.length,
@@ -140,9 +147,9 @@ exports.acceptOrder = async (req, res) => {
         const { id } = req.params;
         // For testing: use req.user.id if authenticated, otherwise use dummy ID
         const waiterId = req.user?.id || req.body?.waiterId || null;
-        
+
         const order = await orderService.acceptOrder(id, waiterId);
-        
+
         res.status(200).json({
             success: true,
             message: "Order accepted successfully",
@@ -167,16 +174,16 @@ exports.rejectOrder = async (req, res) => {
         const { reason } = req.body;
         // For testing: use req.user.id if authenticated, otherwise use dummy ID
         const waiterId = req.user?.id || req.body?.waiterId || null;
-        
+
         if (!reason) {
             return res.status(400).json({
                 success: false,
                 message: "Rejection reason is required",
             });
         }
-        
+
         const order = await orderService.rejectOrder(id, waiterId, reason);
-        
+
         res.status(200).json({
             success: true,
             message: "Order rejected successfully",
@@ -199,18 +206,18 @@ exports.updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        
+
         const validStatuses = ["pending", "accepted", "preparing", "ready", "served", "completed"];
-        
+
         if (!status || !validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: `Status must be one of: ${validStatuses.join(", ")}`,
             });
         }
-        
+
         const order = await orderService.updateOrderStatus(id, status);
-        
+
         res.status(200).json({
             success: true,
             message: "Order status updated successfully",
@@ -233,18 +240,18 @@ exports.updateOrderItemStatus = async (req, res) => {
     try {
         const { itemId } = req.params;
         const { status } = req.body;
-        
+
         const validStatuses = ["pending", "confirmed", "preparing", "ready", "served", "cancelled"];
-        
+
         if (!status || !validStatuses.includes(status)) {
             return res.status(400).json({
                 success: false,
                 message: `Status must be one of: ${validStatuses.join(", ")}`,
             });
         }
-        
+
         const orderItem = await orderService.updateOrderItemStatus(itemId, status);
-        
+
         res.status(200).json({
             success: true,
             message: "Order item status updated successfully",
@@ -267,9 +274,9 @@ exports.updateOrderItemStatus = async (req, res) => {
 exports.completeOrder = async (req, res) => {
     try {
         const { id } = req.params;
-        
+
         const order = await orderService.completeOrder(id);
-        
+
         res.status(200).json({
             success: true,
             message: "Order completed successfully",
