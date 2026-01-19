@@ -48,6 +48,7 @@ exports.formatCartSummaryResponse = (cartSummary) => {
             id: item.menuItem.id,
             name: item.menuItem.name,
             basePrice: parseFloat(item.menuItem.price),
+            photos: item.menuItem.photos || [],
         },
         quantity: item.quantity,
         modifiers: item.modifiers.map((mod) => ({

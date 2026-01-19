@@ -235,6 +235,13 @@ exports.getActiveSessionByTableId = async (tableId) => {
                                     model: MenuItem,
                                     as: "menuItem",
                                     attributes: ["id", "name", "price"],
+                                    include: [
+                                        {
+                                            model: require("../models/MenuItemPhoto"),
+                                            as: "photos",
+                                            attributes: ["id", "url", "is_primary"],
+                                        },
+                                    ],
                                 },
                                 {
                                     model: OrderItemModifier,
@@ -286,6 +293,13 @@ exports.getSessionDetails = async (sessionId) => {
                                 {
                                     model: MenuItem,
                                     as: "menuItem",
+                                    include: [
+                                        {
+                                            model: require("../models/MenuItemPhoto"),
+                                            as: "photos",
+                                            attributes: ["id", "url", "is_primary"],
+                                        },
+                                    ],
                                 },
                                 {
                                     model: OrderItemModifier,

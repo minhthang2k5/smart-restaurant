@@ -51,9 +51,21 @@ exports.getSessionByTableId = async (req, res) => {
             });
         }
         
+        // Convert to JSON to ensure nested associations are serialized properly
+        const sessionData = session.toJSON();
+        
+        // Debug: Check if photos are included
+        if (sessionData.orders && sessionData.orders.length > 0) {
+            const firstOrder = sessionData.orders[0];
+            if (firstOrder.items && firstOrder.items.length > 0) {
+                const firstItem = firstOrder.items[0];
+                console.log('DEBUG - First item menuItem:', firstItem.menuItem);
+            }
+        }
+        
         res.status(200).json({
             success: true,
-            data: session,
+            data: sessionData,
         });
     } catch (error) {
         console.error("Error fetching session:", error);

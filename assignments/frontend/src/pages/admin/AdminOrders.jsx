@@ -612,9 +612,20 @@ export default function AdminOrders() {
             {viewingOrder?.table?.table_number || viewingOrder?.table?.id || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Created">
-            {viewingOrder?.created_at
-              ? new Date(viewingOrder.created_at).toLocaleString()
-              : "—"}
+            {(() => {
+              const dateValue = viewingOrder?.createdAt || viewingOrder?.created_at;
+              if (!dateValue) return "—";
+              const date = new Date(dateValue);
+              if (isNaN(date.getTime())) return "—";
+              return date.toLocaleString('vi-VN', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+              });
+            })()}
           </Descriptions.Item>
           <Descriptions.Item label="Total">
             {formatMoney(viewingOrder?.total_amount)}
@@ -687,7 +698,6 @@ export default function AdminOrders() {
                       </div>
                     }
                   />
-                  <Typography.Text>{formatMoney(it?.total_price)}</Typography.Text>
                 </List.Item>
               );
             }}
