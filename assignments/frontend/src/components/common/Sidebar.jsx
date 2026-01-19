@@ -8,6 +8,9 @@ import {
   FireOutlined,
   BarChartOutlined,
   TeamOutlined,
+  TagsOutlined,
+  CoffeeOutlined,
+  ControlOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { normalizeRole } from "../../utils/roles";
@@ -53,14 +56,17 @@ const Sidebar = ({ collapsed }) => {
     },
     {
       key: "/admin/categories",
+      icon: <TagsOutlined />,
       label: <Link to="/admin/categories">Categories</Link>,
     },
     {
       key: "/admin/menu-items",
+      icon: <CoffeeOutlined />,
       label: <Link to="/admin/menu-items">Menu Items</Link>,
     },
     {
       key: "/admin/modifiers",
+      icon: <ControlOutlined />,
       label: <Link to="/admin/modifiers">Modifiers</Link>,
     },
   ];
