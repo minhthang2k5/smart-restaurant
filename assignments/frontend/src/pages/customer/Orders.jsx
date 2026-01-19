@@ -12,6 +12,7 @@ import {
   Radio,
   Spin,
   Tag,
+  Avatar,
 } from "antd";
 import { ArrowLeftOutlined, ReloadOutlined } from "@ant-design/icons";
 import * as orderService from "../../services/orderService";
@@ -490,31 +491,26 @@ export default function Orders() {
 
                 <Divider />
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div style={{ marginBottom: 8, fontWeight: 500 }}>
-                      Payment method:
-                    </div>
-                    <Radio.Group
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    >
-                      <Radio value="cash">Cash</Radio>
-                      <Radio value="card">Card</Radio>
-                      <Radio value="momo">MoMo</Radio>
-                    </Radio.Group>
+                <div>
+                  <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                    Payment method:
                   </div>
+                  <Radio.Group
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <Radio value="cash">Cash</Radio>
+                    <Radio value="card">Card</Radio>
+                    <Radio value="momo">MoMo</Radio>
+                  </Radio.Group>
+                </div>
 
+                <div style={{ marginTop: 16 }}>
                   <Button
                     type="primary"
                     danger
+                    block
+                    size="large"
                     disabled={
                       session.payment_status === "paid" ||
                       session.status === "completed" ||
@@ -634,27 +630,48 @@ export default function Orders() {
                   renderItem={(it) => (
                     <List.Item>
                       <List.Item.Meta
+                        avatar={
+                          it.menuItem?.photos && it.menuItem.photos.length > 0 ? (
+                            <Avatar
+                              src={it.menuItem.photos.find((p) => p.is_primary)?.url || it.menuItem.photos[0]?.url}
+                              size={64}
+                              shape="square"
+                            />
+                          ) : (
+                            <Avatar size={64} shape="square" style={{ backgroundColor: "#f0f0f0", fontSize: 24 }}>
+                              🍴
+                            </Avatar>
+                          )
+                        }
                         title={`${it.item_name || "Item"} x${it.quantity}`}
                         description={
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             <div
                               style={{
                                 display: "flex",
-                                gap: 8,
+                                gap: 6,
                                 flexWrap: "wrap",
+                                alignItems: "center",
                               }}
                             >
-                              <Tag>
+                              <Tag style={{ margin: 0 }}>
                                 {formatMoney(it.total_price || it.subtotal)}
                               </Tag>
                               {it.status && (
-                                <Tag color="blue">
+                                <Tag color="blue" style={{ margin: 0 }}>
                                   {String(it.status).toUpperCase()}
                                 </Tag>
                               )}
                             </div>
+                            {it.menuItem?.status && (
+                              <div>
+                                <Tag color="green" style={{ margin: 0, fontSize: 10 }}>
+                                  {String(it.menuItem.status).toUpperCase()}
+                                </Tag>
+                              </div>
+                            )}
                             {Array.isArray(it?.modifiers) && it.modifiers.length > 0 && (
-                              <div style={{ color: "#3498db", fontSize: 12 }}>
+                              <div style={{ color: "#3498db", fontSize: 11, lineHeight: 1.4 }}>
                                 + {it.modifiers.map((mod, idx) => (
                                   <span key={idx}>
                                     {mod.option_name || mod.name || 'Unknown'}
@@ -665,7 +682,7 @@ export default function Orders() {
                               </div>
                             )}
                             {it?.special_instructions && it.special_instructions.trim().length > 0 && (
-                              <div style={{ color: "#9b59b6", fontSize: 12, fontStyle: "italic", fontWeight: 600 }}>
+                              <div style={{ color: "#9b59b6", fontSize: 11, fontStyle: "italic", fontWeight: 600, lineHeight: 1.4 }}>
                                 ✎ {it.special_instructions}
                               </div>
                             )}

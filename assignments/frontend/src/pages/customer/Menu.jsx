@@ -438,6 +438,43 @@ export default function Menu() {
                       height: "100%",
                       opacity: item.status === "sold_out" ? 0.6 : 1,
                     }}
+                    cover={
+                      item.photos && item.photos.length > 0 ? (
+                        <div
+                          style={{
+                            height: 200,
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        >
+                          <img
+                            alt={item.name}
+                            src={item.photos.find((p) => p.is_primary)?.url || item.photos[0]?.url}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            height: 200,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f0f0f0",
+                            fontSize: 48,
+                          }}
+                        >
+                          🍴
+                        </div>
+                      )
+                    }
                   >
                     {/* Category & Status Tags */}
                     <Space

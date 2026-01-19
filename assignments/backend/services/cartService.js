@@ -66,6 +66,11 @@ exports.validateCartItems = async (cartItems) => {
                         },
                     ],
                 },
+                {
+                    model: require("../models/MenuItemPhoto"),
+                    as: "photos",
+                    attributes: ["id", "url", "is_primary"],
+                },
             ],
         });
         
@@ -110,6 +115,7 @@ exports.validateCartItems = async (cartItems) => {
                     description: menuItem.description,
                     price: menuItem.price,
                     status: menuItem.status,
+                    photos: menuItem.photos || [],
                 },
                 quantity: quantity,
                 specialInstructions: specialInstructions || null,

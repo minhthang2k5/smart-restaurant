@@ -12,6 +12,7 @@ import {
   Modal,
   Spin,
   Tag,
+  Avatar,
 } from "antd";
 import { ArrowLeftOutlined, ShoppingCartOutlined, EditOutlined } from "@ant-design/icons";
 import * as cartService from "../../services/cartService";
@@ -247,6 +248,12 @@ export default function Cart() {
                     summaryItem?.total_price ??
                     null;
 
+                  // Debug: Check if photos exist
+                  if (index === 0) {
+                    console.log('Cart item summaryItem:', summaryItem);
+                    console.log('Photos:', summaryItem?.menuItem?.photos);
+                  }
+
                   return (
                     <List.Item
                       actions={[
@@ -263,6 +270,19 @@ export default function Cart() {
                       ]}
                     >
                       <List.Item.Meta
+                        avatar={
+                          summaryItem?.menuItem?.photos && summaryItem.menuItem.photos.length > 0 ? (
+                            <Avatar
+                              src={summaryItem.menuItem.photos.find((p) => p.is_primary)?.url || summaryItem.menuItem.photos[0]?.url}
+                              size={64}
+                              shape="square"
+                            />
+                          ) : (
+                            <Avatar size={64} shape="square" style={{ backgroundColor: "#f0f0f0", fontSize: 24 }}>
+                              🍴
+                            </Avatar>
+                          )
+                        }
                         title={
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                             <span style={{ fontWeight: 600 }}>{name}</span>
@@ -272,19 +292,20 @@ export default function Cart() {
                           </div>
                         }
                         description={
-                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                              <span>Qty:</span>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <span style={{ fontSize: 13 }}>Qty:</span>
                               <InputNumber
                                 min={1}
                                 value={Number(it.quantity || 1)}
                                 onChange={(v) => handleQtyChange(index, v)}
+                                size="small"
                               />
                             </div>
                             
                             {/* Display modifiers */}
                             {summaryItem?.modifiers && summaryItem.modifiers.length > 0 && (
-                              <div style={{ fontSize: 13, color: "#666" }}>
+                              <div style={{ fontSize: 12, color: "#666", lineHeight: 1.4 }}>
                                 <strong>Modifiers:</strong>{" "}
                                 {summaryItem.modifiers.map((mod, idx) => (
                                   <span key={idx}>
@@ -298,7 +319,7 @@ export default function Cart() {
                             
                             {/* Display special instructions */}
                             {it.specialInstructions && (
-                              <div style={{ fontSize: 13, color: "#666", fontStyle: "italic" }}>
+                              <div style={{ fontSize: 12, color: "#666", fontStyle: "italic", lineHeight: 1.4 }}>
                                 <strong>Note:</strong> {it.specialInstructions}
                               </div>
                             )}
