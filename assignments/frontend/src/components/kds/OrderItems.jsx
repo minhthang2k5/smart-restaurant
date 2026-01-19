@@ -49,37 +49,59 @@ function OrderItemRow({ item, index, orderId }) {
       </div>
 
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 14 }}>
+        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
           {item?.item_name || "Item"}
         </div>
         
         {/* Display modifiers */}
-        {item?.modifiers && item.modifiers.length > 0 && (
+        {Array.isArray(item?.modifiers) && item.modifiers.length > 0 && (
           <div
             style={{
-              color: "#3498db",
-              fontSize: 12,
-              marginTop: 3,
+              background: '#e6f7ff',
+              padding: '4px 8px',
+              borderRadius: 4,
+              marginTop: 4,
+              borderLeft: '2px solid #1890ff'
             }}
           >
-            + {item.modifiers.map(mod => mod.option_name).join(", ")}
+            <div style={{ color: "#1890ff", fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+              OPTIONS:
+            </div>
+            <div style={{ color: "#3498db", fontSize: 12 }}>
+              {item.modifiers.map((mod, idx) => (
+                <span key={idx}>
+                  {mod.option_name || mod.name || 'Unknown'}
+                  {idx < item.modifiers.length - 1 && ", "}
+                </span>
+              ))}
+            </div>
           </div>
         )}
         
         {/* Display special instructions */}
-        {item?.special_instructions ? (
+        {item?.special_instructions && item.special_instructions.trim().length > 0 && (
           <div
             style={{
-              color: "#9b59b6",
-              fontSize: 12,
-              marginTop: 3,
-              fontStyle: "italic",
-              fontWeight: 600,
+              background: '#f9f0ff',
+              padding: '4px 8px',
+              borderRadius: 4,
+              marginTop: 4,
+              borderLeft: '2px solid #9b59b6'
             }}
           >
-            ✎ {item.special_instructions}
+            <div style={{ color: "#9b59b6", fontSize: 11, fontWeight: 600, marginBottom: 2 }}>
+              ✎ SPECIAL NOTE:
+            </div>
+            <div style={{
+              color: "#9b59b6",
+              fontSize: 12,
+              fontStyle: "italic",
+              fontWeight: 600,
+            }}>
+              {item.special_instructions}
+            </div>
           </div>
-        ) : null}
+        )}
       </div>
 
       <div style={{ fontSize: 18 }}>{icon}</div>

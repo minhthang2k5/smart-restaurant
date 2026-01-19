@@ -112,12 +112,12 @@ exports.getAllOrders = async (req, res) => {
                 {
                     model: require("../models/OrderItem"),
                     as: "items",
-                    attributes: ["id", "item_name", "quantity", "total_price", "status", "special_instructions"],
+                    // Get all fields from OrderItem
                     include: [
                         {
                             model: require("../models/OrderItemModifier"),
                             as: "modifiers",
-                            attributes: ["id", "modifier_option_id", "price_adjustment", "option_name"], // Adjust attributes as needed based on your DB
+                            // Get all fields from OrderItemModifier
                         }
                     ]
                 },

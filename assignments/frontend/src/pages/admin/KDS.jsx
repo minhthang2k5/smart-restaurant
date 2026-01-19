@@ -9,6 +9,7 @@ import {
 import {
   formatClock,
   getOrderNumberLabel,
+  getCreatedAt,
   playBeep,
   safeDate,
 } from "../../components/kds/utils";
@@ -119,8 +120,8 @@ export default function KDS() {
     }
 
     const sortByCreatedAsc = (a, b) => {
-      const at = safeDate(a?.created_at)?.getTime() || 0;
-      const bt = safeDate(b?.created_at)?.getTime() || 0;
+      const at = safeDate(getCreatedAt(a))?.getTime() || 0;
+      const bt = safeDate(getCreatedAt(b))?.getTime() || 0;
       return at - bt;
     };
 
@@ -134,10 +135,10 @@ export default function KDS() {
   const overdueCount = useMemo(() => {
     const thresholdMs = OVERDUE_MINUTES * 60 * 1000;
     return orders.filter((o) => {
-      if (!o?.created_at) return false;
+      if (!getCreatedAt(o)) return false;
       if (!["pending", "accepted", "preparing"].includes(o.status))
         return false;
-      const createdAt = safeDate(o.created_at);
+      const createdAt = safeDate(getCreatedAt(o));
       if (!createdAt) return false;
       return nowMs - createdAt.getTime() >= thresholdMs;
     }).length;

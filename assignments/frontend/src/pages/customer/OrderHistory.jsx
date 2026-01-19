@@ -149,18 +149,18 @@ export default function OrderHistory() {
                               <div style={{ fontWeight: 600 }}>
                                 {item.menuItem?.name || "Unknown"} x{item.quantity}
                               </div>
-                              {item.modifiers && item.modifiers.length > 0 && (
+                              {Array.isArray(item?.modifiers) && item.modifiers.length > 0 && (
                                 <div style={{ color: "#3498db", fontSize: 12, marginTop: 4 }}>
                                   + {item.modifiers.map((mod, idx) => (
                                     <span key={idx}>
-                                      {mod.option_name}
+                                      {mod.option_name || mod.name || 'Unknown'}
                                       {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
                                       {idx < item.modifiers.length - 1 && ", "}
                                     </span>
                                   ))}
                                 </div>
                               )}
-                              {item.special_instructions && (
+                              {item?.special_instructions && item.special_instructions.trim().length > 0 && (
                                 <div style={{ color: "#9b59b6", fontSize: 12, marginTop: 4, fontStyle: "italic", fontWeight: 600 }}>
                                   ✎ {item.special_instructions}
                                 </div>

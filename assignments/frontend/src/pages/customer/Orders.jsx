@@ -653,18 +653,18 @@ export default function Orders() {
                                 </Tag>
                               )}
                             </div>
-                            {it.modifiers && it.modifiers.length > 0 && (
+                            {Array.isArray(it?.modifiers) && it.modifiers.length > 0 && (
                               <div style={{ color: "#3498db", fontSize: 12 }}>
                                 + {it.modifiers.map((mod, idx) => (
                                   <span key={idx}>
-                                    {mod.option_name}
+                                    {mod.option_name || mod.name || 'Unknown'}
                                     {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
                                     {idx < it.modifiers.length - 1 && ", "}
                                   </span>
                                 ))}
                               </div>
                             )}
-                            {it.special_instructions && (
+                            {it?.special_instructions && it.special_instructions.trim().length > 0 && (
                               <div style={{ color: "#9b59b6", fontSize: 12, fontStyle: "italic", fontWeight: 600 }}>
                                 ✎ {it.special_instructions}
                               </div>

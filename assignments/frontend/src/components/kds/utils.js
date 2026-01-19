@@ -6,6 +6,10 @@ export const safeDate = (v) => {
   return d;
 };
 
+export const getCreatedAt = (order) => {
+  return order?.createdAt || order?.created_at;
+};
+
 export const formatClock = (d) =>
   d.toLocaleTimeString([], {
     hour: "2-digit",
@@ -36,7 +40,7 @@ export const getTableLabel = (order) => {
 
 export const isNewPendingOrder = (order, nowMs) => {
   if (order?.status !== "pending") return false;
-  const createdAt = safeDate(order?.created_at);
+  const createdAt = safeDate(getCreatedAt(order));
   if (!createdAt) return false;
   return nowMs - createdAt.getTime() <= 60 * 1000;
 };
