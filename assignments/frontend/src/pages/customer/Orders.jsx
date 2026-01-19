@@ -14,7 +14,7 @@ import {
   Tag,
   Avatar,
 } from "antd";
-import { ArrowLeftOutlined, ReloadOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, ReloadOutlined, DollarCircleOutlined, WalletOutlined } from "@ant-design/icons";
 import * as orderService from "../../services/orderService";
 import * as sessionService from "../../services/sessionService";
 import * as cartService from "../../services/cartService";
@@ -502,8 +502,14 @@ export default function Orders() {
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                   >
-                    <Radio value="cash">Cash</Radio>
-                    <Radio value="momo">MoMo</Radio>
+                    <Radio value="cash" style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                      <DollarCircleOutlined style={{ marginRight: 8, fontSize: 18, color: '#52c41a' }} />
+                      <span style={{ fontSize: 16 }}>Cash</span>
+                    </Radio>
+                    <Radio value="momo" style={{ display: 'flex', alignItems: 'center' }}>
+                      <WalletOutlined style={{ marginRight: 8, fontSize: 18, color: '#A50064' }} />
+                      <span style={{ fontSize: 16 }}>MoMo E-Wallet</span>
+                    </Radio>
                   </Radio.Group>
                 </div>
 
