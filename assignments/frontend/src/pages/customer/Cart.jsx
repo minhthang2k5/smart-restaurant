@@ -14,6 +14,7 @@ import {
 import { ArrowLeftOutlined, ShoppingCartOutlined } from "@ant-design/icons";
 import * as cartService from "../../services/cartService";
 import * as sessionService from "../../services/sessionService";
+import { formatVND } from "../../utils/currency";
 
 const readSessionId = () => localStorage.getItem("sessionId");
 const readTableId = () => localStorage.getItem("tableId");
@@ -233,7 +234,7 @@ export default function Cart() {
                           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                             <span style={{ fontWeight: 600 }}>{name}</span>
                             {price != null && (
-                              <Tag color="green">${Number(price).toFixed(2)}</Tag>
+                              <Tag color="green">{formatVND(price)}</Tag>
                             )}
                           </div>
                         }
@@ -259,15 +260,15 @@ export default function Cart() {
                 <div>
                   <div style={{ color: "#666" }}>Subtotal:</div>
                   <div style={{ fontSize: 18, fontWeight: 600 }}>
-                    ${Number(summary?.subtotal || 0).toFixed(2)}
+                    {formatVND(summary?.subtotal || 0)}
                   </div>
                   <div style={{ color: "#666" }}>Tax:</div>
                   <div style={{ fontSize: 18, fontWeight: 600 }}>
-                    ${Number(summary?.tax || 0).toFixed(2)}
+                    {formatVND(summary?.tax || 0)}
                   </div>
                   <div style={{ color: "#666" }}>Total:</div>
                   <div style={{ fontSize: 22, fontWeight: 700, color: "#52c41a" }}>
-                    ${Number(summary?.total || 0).toFixed(2)}
+                    {formatVND(summary?.total || 0)}
                   </div>
                 </div>
 

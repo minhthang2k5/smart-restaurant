@@ -27,6 +27,7 @@ import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
 import * as sessionService from "../../services/sessionService";
 import tableService from "../../services/tableService";
+import { formatVND } from "../../utils/currency";
 
 const { Meta } = Card;
 
@@ -459,7 +460,7 @@ export default function Menu() {
                               color: "#1890ff",
                             }}
                           >
-                            ${Number(item.price).toFixed(2)}
+                            {formatVND(item.price)}
                           </div>
 
                           {/* Chef's Pick Badge */}

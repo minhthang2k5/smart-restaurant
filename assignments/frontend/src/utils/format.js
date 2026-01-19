@@ -1,7 +1,7 @@
+import { formatVND } from "./currency";
+
 export const formatMoney = (value) => {
-  const num = Number(value);
-  if (Number.isNaN(num)) return `$${value ?? "0.00"}`;
-  return `$${num.toFixed(2)}`;
+  return formatVND(value);
 };
 
 export const formatNumber = (value) => {

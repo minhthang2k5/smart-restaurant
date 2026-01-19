@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import * as sessionService from "../../services/sessionService";
 import { useCustomerAuth } from "../../contexts/CustomerAuthContext";
+import { formatVND } from "../../utils/currency";
 
 const { Title, Text } = Typography;
 
@@ -28,7 +29,7 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString();
 };
 
-const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+const formatMoney = (value) => formatVND(value);
 
 export default function OrderHistory() {
   const navigate = useNavigate();

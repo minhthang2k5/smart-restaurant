@@ -18,6 +18,7 @@ import * as orderService from "../../services/orderService";
 import * as sessionService from "../../services/sessionService";
 import * as cartService from "../../services/cartService";
 import * as paymentService from "../../services/paymentService";
+import { formatVND } from "../../utils/currency";
 
 const readTableId = () => localStorage.getItem("tableId");
 const readSessionId = () => localStorage.getItem("sessionId");
@@ -47,7 +48,7 @@ const clearStoredMoMo = (sessionId) => {
   localStorage.removeItem(`${MOMO_STORAGE_PREFIX}${sessionId}`);
 };
 
-const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+const formatMoney = (value) => formatVND(value);
 
 const toNumber = (value) => {
   const n = Number.parseFloat(value);

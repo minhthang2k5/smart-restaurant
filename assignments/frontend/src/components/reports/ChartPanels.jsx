@@ -55,7 +55,7 @@ export default function ChartPanels({ charts, loading }) {
                   <YAxis
                     yAxisId="right"
                     orientation="right"
-                    tickFormatter={(v) => formatMoney(v).replace("$", "")}
+                    tickFormatter={(v) => formatMoney(v)}
                   />
                   <Tooltip
                     formatter={(value, name) => {

@@ -23,6 +23,7 @@ import {
   updateOrderStatus,
 } from "../../services/waiterOrderService";
 import { useAuth } from "../../contexts/AuthContext";
+import { formatVND } from "../../utils/currency";
 
 const STATUS_TABS = [
   { key: "all", label: "All Orders" },
@@ -65,8 +66,8 @@ const isNewOrder = (order) => {
 
 const formatMoney = (value) => {
   const num = Number(value);
-  if (Number.isNaN(num)) return `$${value ?? "0.00"}`;
-  return `$${num.toFixed(2)}`;
+  if (Number.isNaN(num)) return formatVND(0);
+  return formatVND(num);
 };
 
 const statusLabel = (status) => {

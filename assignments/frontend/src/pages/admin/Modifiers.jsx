@@ -19,6 +19,7 @@ import {
 } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
+import { formatVND } from "../../utils/currency";
 
 export default function Modifiers() {
   const [groups, setGroups] = useState([]);
@@ -255,7 +256,7 @@ export default function Modifiers() {
       title: "Phụ phí",
       dataIndex: "price_adjustment",
       key: "price_adjustment",
-      render: (price) => `$${Number(price).toFixed(2)}`,
+      render: (price) => formatVND(price),
     },
     {
       title: "Trạng thái",

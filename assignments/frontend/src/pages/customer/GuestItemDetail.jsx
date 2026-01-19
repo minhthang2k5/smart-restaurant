@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
+import { formatVND } from "../../utils/currency";
 
 const statusColor = {
   available: "green",
@@ -183,7 +184,7 @@ export default function GuestItemDetail() {
       specialInstructions: null,
     });
 
-    message.success(`Added "${item.name}" to cart - $${totalPrice.toFixed(2)}`);
+    message.success(`Added "${item.name}" to cart - ${formatVND(totalPrice)}`);
 
     // Navigate back to menu
     navigate("/menu");
@@ -274,7 +275,7 @@ export default function GuestItemDetail() {
               marginBottom: 16,
             }}
           >
-            Base Price: ${Number(item.price).toFixed(2)}
+            Base Price: {formatVND(item.price)}
           </div>
 
           {/* Warnings */}
@@ -373,10 +374,7 @@ export default function GuestItemDetail() {
                                   <span>{option.name}</span>
                                   {option.price_adjustment > 0 && (
                                     <span style={{ color: "#1890ff" }}>
-                                      +$
-                                      {Number(option.price_adjustment).toFixed(
-                                        2
-                                      )}
+                                      +{formatVND(option.price_adjustment)}
                                     </span>
                                   )}
                                 </Space>
@@ -402,10 +400,7 @@ export default function GuestItemDetail() {
                                   <span>{option.name}</span>
                                   {option.price_adjustment > 0 && (
                                     <span style={{ color: "#1890ff" }}>
-                                      +$
-                                      {Number(option.price_adjustment).toFixed(
-                                        2
-                                      )}
+                                      +{formatVND(option.price_adjustment)}
                                     </span>
                                   )}
                                 </Space>
@@ -440,7 +435,7 @@ export default function GuestItemDetail() {
                   color: "#52c41a",
                 }}
               >
-                ${totalPrice.toFixed(2)}
+                {formatVND(totalPrice)}
               </div>
             </div>
             <Button

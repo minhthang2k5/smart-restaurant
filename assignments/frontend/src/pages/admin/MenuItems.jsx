@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import * as menuService from "../../services/menuService";
+import { formatVND } from "../../utils/currency";
 
 const statusColor = {
   available: "green",
@@ -376,7 +377,7 @@ export default function MenuItems() {
                               color: "#1890ff",
                             }}
                           >
-                            ${Number(item.price).toFixed(2)}
+                            {formatVND(item.price)}
                           </div>
                           {item.description && (
                             <div
