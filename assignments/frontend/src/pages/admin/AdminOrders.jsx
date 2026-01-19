@@ -604,7 +604,29 @@ export default function AdminOrders() {
                       <Tag color={statusToColor(it?.status)}>{it?.status || "—"}</Tag>
                     </Space>
                   }
-                  description={it?.special_instructions || null}
+                  description={
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {/* Display modifiers */}
+                      {it?.modifiers && it.modifiers.length > 0 && (
+                        <div style={{ fontSize: 13, color: "#666" }}>
+                          <strong>Options:</strong>{" "}
+                          {it.modifiers.map((mod, idx) => (
+                            <span key={idx}>
+                              {mod.option_name}
+                              {mod.price_adjustment > 0 && ` (+${formatMoney(mod.price_adjustment)})`}
+                              {idx < it.modifiers.length - 1 && ", "}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Display special instructions */}
+                      {it?.special_instructions && (
+                        <div style={{ fontSize: 13, color: "#9b59b6", fontStyle: "italic" }}>
+                          <strong>Note:</strong> {it.special_instructions}
+                        </div>
+                      )}
+                    </div>
+                  }
                 />
                 <Typography.Text>{formatMoney(it?.total_price)}</Typography.Text>
               </List.Item>

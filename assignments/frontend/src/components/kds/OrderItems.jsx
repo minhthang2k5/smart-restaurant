@@ -52,6 +52,21 @@ function OrderItemRow({ item, index, orderId }) {
         <div style={{ fontWeight: 600, fontSize: 14 }}>
           {item?.item_name || "Item"}
         </div>
+        
+        {/* Display modifiers */}
+        {item?.modifiers && item.modifiers.length > 0 && (
+          <div
+            style={{
+              color: "#3498db",
+              fontSize: 12,
+              marginTop: 3,
+            }}
+          >
+            + {item.modifiers.map(mod => mod.option_name).join(", ")}
+          </div>
+        )}
+        
+        {/* Display special instructions */}
         {item?.special_instructions ? (
           <div
             style={{
@@ -59,6 +74,7 @@ function OrderItemRow({ item, index, orderId }) {
               fontSize: 12,
               marginTop: 3,
               fontStyle: "italic",
+              fontWeight: 600,
             }}
           >
             ✎ {item.special_instructions}

@@ -482,7 +482,7 @@ export default function Modifiers() {
               min={0}
               step={0.01}
               precision={2}
-              prefix="$"
+              prefix="VNĐ"
               style={{ width: "100%" }}
             />
           </Form.Item>

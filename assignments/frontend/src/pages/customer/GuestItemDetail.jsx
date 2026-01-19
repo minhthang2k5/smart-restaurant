@@ -11,6 +11,7 @@ import {
   message,
   Spin,
   Alert,
+  Input,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -38,6 +39,7 @@ export default function GuestItemDetail() {
   const [category, setCategory] = useState(null);
   const [modifierGroups, setModifierGroups] = useState([]);
   const [selectedModifiers, setSelectedModifiers] = useState({});
+  const [specialInstructions, setSpecialInstructions] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -181,7 +183,7 @@ export default function GuestItemDetail() {
       menuItemId: item.id,
       quantity: 1,
       modifiers: optionIds.map((optionId) => ({ optionId })),
-      specialInstructions: null,
+      specialInstructions: specialInstructions.trim() || null,
     });
 
     message.success(`Added "${item.name}" to cart - ${formatVND(totalPrice)}`);
@@ -417,6 +419,19 @@ export default function GuestItemDetail() {
               <Divider />
             </>
           )}
+
+          {/* Special Instructions */}
+          <div style={{ marginBottom: 24 }}>
+            <h3 style={{ marginBottom: 8 }}>Special Instructions (Optional)</h3>
+            <Input.TextArea
+              rows={3}
+              placeholder="Any special requests? E.g., no onions, less spicy, extra sauce..."
+              value={specialInstructions}
+              onChange={(e) => setSpecialInstructions(e.target.value)}
+              maxLength={500}
+              showCount
+            />
+          </div>
 
           {/* Total Price & Add to Cart */}
           <div

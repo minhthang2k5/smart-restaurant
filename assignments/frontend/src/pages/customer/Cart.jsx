@@ -5,13 +5,15 @@ import {
   Button,
   Card,
   Divider,
+  Input,
   InputNumber,
   List,
   message,
+  Modal,
   Spin,
   Tag,
 } from "antd";
-import { ArrowLeftOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, ShoppingCartOutlined, EditOutlined } from "@ant-design/icons";
 import * as cartService from "../../services/cartService";
 import * as sessionService from "../../services/sessionService";
 import { formatVND } from "../../utils/currency";
@@ -32,6 +34,8 @@ export default function Cart() {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
   const [errors, setErrors] = useState([]);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editInstructions, setEditInstructions] = useState("");
 
   const itemCount = useMemo(
     () => items.reduce((sum, it) => sum + Number(it.quantity || 0), 0),
@@ -78,6 +82,28 @@ export default function Cart() {
     const next = cartService.removeLocalCartItem(index);
     setItems(next);
     refreshSummary(next);
+  };
+
+  const handleEditInstructions = (index) => {
+    setEditingIndex(index);
+    setEditInstructions(items[index]?.specialInstructions || "");
+  };
+
+  const handleSaveInstructions = () => {
+    if (editingIndex === null) return;
+    
+    const next = [...items];
+    next[editingIndex] = {
+      ...next[editingIndex],
+      specialInstructions: editInstructions.trim() || null,
+    };
+    
+    cartService.setLocalCartItems(next);
+    setItems(next);
+    setEditingIndex(null);
+    setEditInstructions("");
+    refreshSummary(next);
+    message.success("Special instructions updated");
   };
 
   const ensureSession = async () => {
@@ -224,6 +250,13 @@ export default function Cart() {
                   return (
                     <List.Item
                       actions={[
+                        <Button 
+                          key="edit" 
+                          icon={<EditOutlined />} 
+                          onClick={() => handleEditInstructions(index)}
+                        >
+                          Note
+                        </Button>,
                         <Button key="remove" danger onClick={() => handleRemove(index)}>
                           Remove
                         </Button>,
@@ -239,13 +272,36 @@ export default function Cart() {
                           </div>
                         }
                         description={
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <span>Qty:</span>
-                            <InputNumber
-                              min={1}
-                              value={Number(it.quantity || 1)}
-                              onChange={(v) => handleQtyChange(index, v)}
-                            />
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              <span>Qty:</span>
+                              <InputNumber
+                                min={1}
+                                value={Number(it.quantity || 1)}
+                                onChange={(v) => handleQtyChange(index, v)}
+                              />
+                            </div>
+                            
+                            {/* Display modifiers */}
+                            {summaryItem?.modifiers && summaryItem.modifiers.length > 0 && (
+                              <div style={{ fontSize: 13, color: "#666" }}>
+                                <strong>Modifiers:</strong>{" "}
+                                {summaryItem.modifiers.map((mod, idx) => (
+                                  <span key={idx}>
+                                    {mod.option_name}
+                                    {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
+                                    {idx < summaryItem.modifiers.length - 1 && ", "}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Display special instructions */}
+                            {it.specialInstructions && (
+                              <div style={{ fontSize: 13, color: "#666", fontStyle: "italic" }}>
+                                <strong>Note:</strong> {it.specialInstructions}
+                              </div>
+                            )}
                           </div>
                         }
                       />
@@ -287,6 +343,28 @@ export default function Cart() {
             </Spin>
           )}
         </Card>
+
+        {/* Edit Special Instructions Modal */}
+        <Modal
+          title="Special Instructions"
+          open={editingIndex !== null}
+          onOk={handleSaveInstructions}
+          onCancel={() => {
+            setEditingIndex(null);
+            setEditInstructions("");
+          }}
+          okText="Save"
+          cancelText="Cancel"
+        >
+          <Input.TextArea
+            rows={4}
+            placeholder="Any special requests? E.g., no onions, less spicy, extra sauce..."
+            value={editInstructions}
+            onChange={(e) => setEditInstructions(e.target.value)}
+            maxLength={500}
+            showCount
+          />
+        </Modal>
       </div>
     </div>
   );

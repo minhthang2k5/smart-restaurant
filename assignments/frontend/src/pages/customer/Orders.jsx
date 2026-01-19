@@ -636,20 +636,38 @@ export default function Orders() {
                       <List.Item.Meta
                         title={`${it.item_name || "Item"} x${it.quantity}`}
                         description={
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 8,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <Tag>
-                              {formatMoney(it.total_price || it.subtotal)}
-                            </Tag>
-                            {it.status && (
-                              <Tag color="blue">
-                                {String(it.status).toUpperCase()}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 8,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <Tag>
+                                {formatMoney(it.total_price || it.subtotal)}
                               </Tag>
+                              {it.status && (
+                                <Tag color="blue">
+                                  {String(it.status).toUpperCase()}
+                                </Tag>
+                              )}
+                            </div>
+                            {it.modifiers && it.modifiers.length > 0 && (
+                              <div style={{ color: "#3498db", fontSize: 12 }}>
+                                + {it.modifiers.map((mod, idx) => (
+                                  <span key={idx}>
+                                    {mod.option_name}
+                                    {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
+                                    {idx < it.modifiers.length - 1 && ", "}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {it.special_instructions && (
+                              <div style={{ color: "#9b59b6", fontSize: 12, fontStyle: "italic", fontWeight: 600 }}>
+                                ✎ {it.special_instructions}
+                              </div>
                             )}
                           </div>
                         }
