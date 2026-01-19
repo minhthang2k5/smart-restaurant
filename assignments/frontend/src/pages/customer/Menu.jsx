@@ -14,6 +14,7 @@ import {
   Empty,
   Spin,
   message,
+  Pagination,
 } from "antd";
 import {
   SearchOutlined,
@@ -22,11 +23,14 @@ import {
   ShoppingCartOutlined,
   ProfileOutlined,
   CheckCircleOutlined,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
 import * as sessionService from "../../services/sessionService";
 import tableService from "../../services/tableService";
+import { formatVND } from "../../utils/currency";
 
 const { Meta } = Card;
 
@@ -51,6 +55,10 @@ export default function Menu() {
   const [isPostPaymentMode, setIsPostPaymentMode] = useState(
     () => localStorage.getItem("postPaymentMode") === "true"
   );
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   // Function to start a new order (clear post-payment mode)
   const handleStartNewOrder = async () => {
@@ -273,7 +281,22 @@ export default function Menu() {
     return filtered;
   }, [items, selectedCategory, search]);
 
-  // Category options for Segmented control
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory]);
+
+  // Get items for current page
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredItems.slice(startIndex, endIndex);
+  }, [filteredItems, currentPage, pageSize]);
+
+  // Total count for pagination
+  const totalItems = filteredItems.length;
+
+  // Category options
   const categoryOptions = [
     { label: "All", value: "all" },
     ...categories.map((cat) => ({
@@ -289,13 +312,13 @@ export default function Menu() {
 
   return (
     <div
-      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "24px 0" }}
+      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "16px 0" }}
     >
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 12px" }}>
         {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <h1 style={{ fontSize: 32, marginBottom: 8 }}>Our Menu</h1>
-          <p style={{ color: "#666", fontSize: 16 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <h1 style={{ fontSize: 28, marginBottom: 6, margin: 0 }}>Our Menu</h1>
+          <p style={{ color: "#666", fontSize: 14, margin: 0 }}>
             Browse our delicious selection
           </p>
         </div>
@@ -325,11 +348,11 @@ export default function Menu() {
             display: "flex",
             justifyContent: "flex-end",
             gap: 8,
-            marginBottom: 16,
+            marginBottom: 12,
             flexWrap: "wrap",
           }}
         >
-          <Button icon={<ProfileOutlined />} onClick={() => navigate("/orders")}>
+          <Button icon={<ProfileOutlined />} onClick={() => navigate("/orders")} size="middle">
             My Orders
           </Button>
           <Badge count={cartCount} size="small">
@@ -337,6 +360,7 @@ export default function Menu() {
               type="primary"
               icon={<ShoppingCartOutlined />}
               onClick={() => navigate("/cart")}
+              size="middle"
             >
               Cart
             </Button>
@@ -344,29 +368,52 @@ export default function Menu() {
         </div>
 
         {/* Filters */}
-        <Card style={{ marginBottom: 24 }}>
-          <Space direction="vertical" style={{ width: "100%" }} size="large">
+        <Card style={{ marginBottom: 16, borderRadius: 8 }}>
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
             {/* Search */}
             <Input
-              size="large"
               placeholder="Search menu items..."
               prefix={<SearchOutlined />}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               allowClear
+              size="middle"
             />
 
             {/* Category Filter */}
             <div>
-              <div style={{ marginBottom: 12, fontWeight: 500 }}>
+              <div style={{ marginBottom: 10, fontWeight: 500, fontSize: 14 }}>
                 Filter by Category:
               </div>
-              <Segmented
-                options={categoryOptions}
-                value={selectedCategory}
-                onChange={setSelectedCategory}
-                block
-              />
+              <div 
+                style={{ 
+                  display: "flex", 
+                  gap: 6,
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  paddingBottom: 6,
+                  scrollbarWidth: "thin",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                {categoryOptions.map((cat) => (
+                  <Button
+                    key={cat.value}
+                    type={selectedCategory === cat.value ? "primary" : "default"}
+                    size="middle"
+                    onClick={() => setSelectedCategory(cat.value)}
+                    style={{
+                      flexShrink: 0,
+                      minWidth: 90,
+                      height: 40,
+                      fontSize: 14,
+                      fontWeight: selectedCategory === cat.value ? 600 : 400
+                    }}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           </Space>
         </Card>
@@ -384,7 +431,7 @@ export default function Menu() {
             />
           ) : (
             <Row gutter={[16, 16]}>
-              {filteredItems.map((item) => (
+              {paginatedItems.map((item) => (
                 <Col key={item.id} xs={24} sm={12} md={8}>
                   <Card
                     hoverable
@@ -393,32 +440,75 @@ export default function Menu() {
                       height: "100%",
                       opacity: item.status === "sold_out" ? 0.6 : 1,
                     }}
+                    cover={
+                      item.photos && item.photos.length > 0 ? (
+                        <div
+                          style={{
+                            height: 200,
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        >
+                          <img
+                            alt={item.name}
+                            src={item.photos.find((p) => p.is_primary)?.url || item.photos[0]?.url}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "contain",
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            height: 200,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f0f0f0",
+                            fontSize: 48,
+                          }}
+                        >
+                          🍴
+                        </div>
+                      )
+                    }
                   >
                     {/* Category & Status Tags */}
-                    <Space
+                    <div
                       style={{
                         marginBottom: 12,
-                        width: "100%",
-                        justifyContent: "space-between",
+                        display: "flex",
+                        gap: 6,
+                        flexWrap: "wrap",
+                        alignItems: "center"
                       }}
                     >
-                      <Tag color="blue">
+                      <Tag color="blue" style={{ margin: 0 }}>
                         {getCategoryName(item.category_id)}
                       </Tag>
-                      <Tag color={statusColor[item.status]}>
-                        {item.status.replace("_", " ").toUpperCase()}
-                      </Tag>
-                    </Space>
+                      {item.status !== "available" && (
+                        <Tag color={statusColor[item.status]} style={{ margin: 0 }}>
+                          {item.status.replace("_", " ").toUpperCase()}
+                        </Tag>
+                      )}
+                      {item.is_chef_recommended && (
+                        <Tag color="gold" icon={<StarFilled />} style={{ margin: 0 }}>
+                          Chef's Pick
+                        </Tag>
+                      )}
+                    </div>
 
                     {/* Item Info */}
                     <Meta
                       title={
-                        <Space>
-                          <span>{item.name}</span>
-                          {item.is_chef_recommended && (
-                            <StarFilled style={{ color: "#faad14" }} />
-                          )}
-                        </Space>
+                        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                          {item.name}
+                        </div>
                       }
                       description={
                         <Space
@@ -459,19 +549,12 @@ export default function Menu() {
                               color: "#1890ff",
                             }}
                           >
-                            ${Number(item.price).toFixed(2)}
+                            {formatVND(item.price)}
                           </div>
-
-                          {/* Chef's Pick Badge */}
-                          {item.is_chef_recommended && (
-                            <Tag color="gold" icon={<StarFilled />}>
-                              Chef's Pick
-                            </Tag>
-                          )}
 
                           {/* Sold Out Warning */}
                           {item.status === "sold_out" && (
-                            <Tag color="red">SOLD OUT</Tag>
+                            <Tag color="red" style={{ margin: 0 }}>SOLD OUT</Tag>
                           )}
                         </Space>
                       }
@@ -482,6 +565,37 @@ export default function Menu() {
             </Row>
           )}
         </Spin>
+
+        {/* Pagination */}
+        {filteredItems.length > 0 && (
+          <div 
+            style={{ 
+              marginTop: 32, 
+              marginBottom: 24,
+              display: "flex", 
+              justifyContent: "center",
+              alignItems: "center"
+            }}
+          >
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={totalItems}
+              onChange={(page, newPageSize) => {
+                setCurrentPage(page);
+                if (newPageSize !== pageSize) {
+                  setPageSize(newPageSize);
+                  setCurrentPage(1);
+                }
+              }}
+              showSizeChanger
+              showTotal={(total, range) =>
+                `${range[0]}-${range[1]} of ${total} items`
+              }
+              pageSizeOptions={[6, 12, 24, 48]}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

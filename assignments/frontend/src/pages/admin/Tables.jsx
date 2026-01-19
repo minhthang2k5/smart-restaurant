@@ -1,11 +1,38 @@
 import { useState } from "react";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, LayoutDashboard, CheckCircle, XCircle, QrCode } from "lucide-react";
 import TableList from "../../components/tables/TableList";
 import TableForm from "../../components/tables/TableForm";
 import QRCodeModal from "../../components/tables/QRCodeModal";
 import DownloadButtons from "../../components/tables/DownloadButtons";
 import BulkRegenerateButton from "../../components/tables/BulkRegenerateButton";
 import { useTables } from "../../hooks/useTables";
+
+const StatCard = ({ title, value, icon: Icon, gradient, delay }) => (
+  <div
+    className="glass-card p-6 rounded-3xl shadow-lg transition-all duration-500 stagger-item"
+    style={{ animationDelay: `${delay}s` }}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-xs font-semibold text-pink-400 uppercase tracking-wider mb-2">
+          {title}
+        </p>
+        <h3 className="text-4xl font-bold bg-linear-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+          {value}
+        </h3>
+      </div>
+      <div
+        className="p-4 rounded-3xl shadow-xl transition-all duration-300"
+        style={{
+          background: gradient,
+          boxShadow: "0 10px 40px rgba(255, 107, 157, 0.25)",
+        }}
+      >
+        <Icon size={28} className="text-white drop-shadow-lg" />
+      </div>
+    </div>
+  </div>
+);
 
 const Tables = () => {
   const {
@@ -23,8 +50,48 @@ const Tables = () => {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
 
+  // Calculate stats
+  const stats = {
+    total: tables.length,
+    active: tables.filter((t) => t.status === "active").length,
+    inactive: tables.filter((t) => t.status === "inactive").length,
+    withQR: tables.filter((t) => t.qrToken).length,
+  };
+
   return (
-    <div className="h-full flex flex-col overflow-visible p-8">
+    <div className="p-8 overflow-y-auto">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <StatCard
+          title="Tổng số bàn"
+          value={stats.total}
+          icon={LayoutDashboard}
+          gradient="linear-gradient(135deg, #FF6B9D, #FF8FAB)"
+          delay={0.1}
+        />
+        <StatCard
+          title="Đang hoạt động"
+          value={stats.active}
+          icon={CheckCircle}
+          gradient="linear-gradient(135deg, #EC4899, #FF6B9D)"
+          delay={0.2}
+        />
+        <StatCard
+          title="Ngừng hoạt động"
+          value={stats.inactive}
+          icon={XCircle}
+          gradient="linear-gradient(135deg, #F472B6, #FB7185)"
+          delay={0.3}
+        />
+        <StatCard
+          title="Mã QR khả dụng"
+          value={stats.withQR}
+          icon={QrCode}
+          gradient="linear-gradient(135deg, #FFA8B6, #FFB6C1)"
+          delay={0.4}
+        />
+      </div>
+
       <div className="glass-card rounded-3xl p-8 mb-6 shadow-xl border-2 border-white/40 shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
@@ -95,7 +162,7 @@ const Tables = () => {
         </div>
       </div>
 
-      <div className="glass-card rounded-3xl overflow-hidden shadow-xl border-2 border-white/40 flex-1 flex flex-col min-h-0">
+      <div className="glass-card rounded-3xl overflow-hidden shadow-xl border-2 border-white/40">
         <TableList
           tables={tables}
           loading={loading}

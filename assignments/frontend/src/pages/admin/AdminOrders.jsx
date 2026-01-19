@@ -23,6 +23,7 @@ import {
   updateOrderStatus,
 } from "../../services/waiterOrderService";
 import { useAuth } from "../../contexts/AuthContext";
+import { formatVND } from "../../utils/currency";
 
 const STATUS_TABS = [
   { key: "all", label: "All Orders" },
@@ -65,8 +66,8 @@ const isNewOrder = (order) => {
 
 const formatMoney = (value) => {
   const num = Number(value);
-  if (Number.isNaN(num)) return `$${value ?? "0.00"}`;
-  return `$${num.toFixed(2)}`;
+  if (Number.isNaN(num)) return formatVND(0);
+  return formatVND(num);
 };
 
 const statusLabel = (status) => {
@@ -273,7 +274,7 @@ export default function AdminOrders() {
         title: "Order ID",
         dataIndex: "order_number",
         key: "order_number",
-        width: 180,
+        width: 140,
         render: (_, record) => (
           <Space direction="vertical" size={0}>
             <Typography.Text strong>{record?.order_number || "—"}</Typography.Text>
@@ -289,7 +290,7 @@ export default function AdminOrders() {
         title: "Table",
         dataIndex: "table",
         key: "table",
-        width: 130,
+        width: 120,
         render: (table) =>
           table?.table_number ? (
             <Space direction="vertical" size={0}>
@@ -308,7 +309,7 @@ export default function AdminOrders() {
         title: "Status",
         dataIndex: "status",
         key: "status",
-        width: 140,
+        width: 100,
         render: (status) => (
           <Tag color={statusToColor(status)} style={{ textTransform: "capitalize" }}>
             {status || "unknown"}
@@ -319,6 +320,7 @@ export default function AdminOrders() {
         title: "Items",
         dataIndex: "items",
         key: "items",
+        width: 180,
         render: (items) => {
           const safeItems = Array.isArray(items) ? items : [];
           const preview = safeItems.slice(0, 2);
@@ -329,17 +331,39 @@ export default function AdminOrders() {
           }
 
           return (
-            <Space direction="vertical" size={0}>
-              {preview.map((it) => (
-                <Typography.Text key={it?.id} style={{ fontSize: 13 }}>
-                  {it?.quantity || 1}x {it?.item_name || "Item"}
-                </Typography.Text>
-              ))}
-              {remaining > 0 ? (
+            <Space direction="vertical" size={4} style={{ width: '100%' }}>
+              {preview.map((it) => {
+                const modifiers = Array.isArray(it?.modifiers) ? it.modifiers : [];
+                const hasModifiers = modifiers.length > 0;
+                const hasNote = it?.special_instructions && it.special_instructions.trim().length > 0;
+                
+                return (
+                  <div key={it?.id} style={{ width: '100%' }}>
+                    <Typography.Text style={{ fontSize: 13, display: 'block' }}>
+                      {it?.quantity || 1}x {it?.item_name || "Item"}
+                    </Typography.Text>
+                    {(hasModifiers || hasNote) && (
+                      <div style={{ marginTop: 2, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {hasModifiers && (
+                          <Tag color="blue" style={{ margin: 0, fontSize: 11 }}>
+                            {modifiers.length} Modifier{modifiers.length > 1 ? 's' : ''}
+                          </Tag>
+                        )}
+                        {hasNote && (
+                          <Tag color="purple" style={{ margin: 0, fontSize: 11 }}>
+                            ✎ Special Note
+                          </Tag>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {remaining > 0 && (
                 <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  +{remaining} more
+                  +{remaining} more item{remaining > 1 ? 's' : ''}
                 </Typography.Text>
-              ) : null}
+              )}
             </Space>
           );
         },
@@ -348,15 +372,27 @@ export default function AdminOrders() {
         title: "Total",
         dataIndex: "total_amount",
         key: "total_amount",
-        width: 120,
+        width: 100,
         render: (v) => <Typography.Text>{formatMoney(v)}</Typography.Text>,
       },
       {
         title: "Time",
-        dataIndex: "created_at",
-        key: "created_at",
-        width: 200,
-        render: (v) => (v ? new Date(v).toLocaleString() : "—"),
+        dataIndex: "createdAt",
+        key: "createdAt",
+        width: 120,
+        render: (v, record) => {
+          const dateValue = v || record.created_at;
+          if (!dateValue) return <Typography.Text type="secondary">—</Typography.Text>;
+          const date = new Date(dateValue);
+          const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+          const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          return (
+            <Space direction="vertical" size={0}>
+              <Typography.Text style={{ fontWeight: 600 }}>{timeStr}</Typography.Text>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>{dateStr}</Typography.Text>
+            </Space>
+          );
+        },
       },
       {
         title: "Actions",
@@ -576,9 +612,20 @@ export default function AdminOrders() {
             {viewingOrder?.table?.table_number || viewingOrder?.table?.id || "—"}
           </Descriptions.Item>
           <Descriptions.Item label="Created">
-            {viewingOrder?.created_at
-              ? new Date(viewingOrder.created_at).toLocaleString()
-              : "—"}
+            {(() => {
+              const dateValue = viewingOrder?.createdAt || viewingOrder?.created_at;
+              if (!dateValue) return "—";
+              const date = new Date(dateValue);
+              if (isNaN(date.getTime())) return "—";
+              return date.toLocaleString('vi-VN', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+              });
+            })()}
           </Descriptions.Item>
           <Descriptions.Item label="Total">
             {formatMoney(viewingOrder?.total_amount)}
@@ -592,22 +639,68 @@ export default function AdminOrders() {
           <List
             dataSource={Array.isArray(viewingOrder?.items) ? viewingOrder.items : []}
             locale={{ emptyText: "No items" }}
-            renderItem={(it) => (
-              <List.Item>
-                <List.Item.Meta
-                  title={
-                    <Space>
-                      <Typography.Text strong>
-                        {it?.quantity || 1}x {it?.item_name || "Item"}
-                      </Typography.Text>
-                      <Tag color={statusToColor(it?.status)}>{it?.status || "—"}</Tag>
-                    </Space>
-                  }
-                  description={it?.special_instructions || null}
-                />
-                <Typography.Text>{formatMoney(it?.total_price)}</Typography.Text>
-              </List.Item>
-            )}
+            renderItem={(it) => {
+              const modifiers = Array.isArray(it?.modifiers) ? it.modifiers : [];
+              const hasModifiers = modifiers.length > 0;
+              const hasNote = it?.special_instructions && it.special_instructions.trim().length > 0;
+              
+              return (
+                <List.Item>
+                  <List.Item.Meta
+                    title={
+                      <Space>
+                        <Typography.Text strong>
+                          {it?.quantity || 1}x {it?.item_name || "Item"}
+                        </Typography.Text>
+                        <Tag color={statusToColor(it?.status)}>{it?.status || "—"}</Tag>
+                      </Space>
+                    }
+                    description={
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {/* Display modifiers */}
+                        {hasModifiers && (
+                          <div style={{ 
+                            padding: '6px 10px', 
+                            background: '#e6f7ff', 
+                            borderLeft: '3px solid #1890ff',
+                            borderRadius: 4
+                          }}>
+                            <div style={{ fontSize: 12, color: '#1890ff', fontWeight: 600, marginBottom: 4 }}>
+                              OPTIONS:
+                            </div>
+                            <div style={{ fontSize: 13, color: "#666" }}>
+                              {modifiers.map((mod, idx) => (
+                                <span key={idx}>
+                                  {mod.option_name || mod.name || 'Unknown'}
+                                  {mod.price_adjustment > 0 && ` (+${formatMoney(mod.price_adjustment)})`}
+                                  {idx < modifiers.length - 1 && ", "}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {/* Display special instructions */}
+                        {hasNote && (
+                          <div style={{ 
+                            padding: '6px 10px', 
+                            background: '#f9f0ff', 
+                            borderLeft: '3px solid #9b59b6',
+                            borderRadius: 4
+                          }}>
+                            <div style={{ fontSize: 12, color: '#9b59b6', fontWeight: 600, marginBottom: 4 }}>
+                              ✎ SPECIAL NOTE:
+                            </div>
+                            <div style={{ fontSize: 13, color: "#9b59b6", fontStyle: "italic", fontWeight: 500 }}>
+                              {it.special_instructions}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    }
+                  />
+                </List.Item>
+              );
+            }}
           />
         </div>
       </Modal>

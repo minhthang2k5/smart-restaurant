@@ -282,6 +282,13 @@ exports.getOrderDetails = async (orderId) => {
                             model: MenuItem,
                             as: "menuItem",
                             attributes: ["id", "name", "price"],
+                            include: [
+                                {
+                                    model: require("../models/MenuItemPhoto"),
+                                    as: "photos",
+                                    attributes: ["id", "url", "is_primary"],
+                                },
+                            ],
                         },
                         {
                             model: OrderItemModifier,

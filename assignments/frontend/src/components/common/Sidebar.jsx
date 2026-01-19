@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Menu } from "antd";
 import {
-  DashboardOutlined,
   TableOutlined,
   QrcodeOutlined,
   SolutionOutlined,
@@ -39,11 +38,6 @@ const Sidebar = ({ collapsed }) => {
   ];
 
   const adminOnlyItems = [
-    {
-      key: "/admin/dashboard",
-      icon: <DashboardOutlined />,
-      label: <Link to="/admin/dashboard">Dashboard</Link>,
-    },
     {
       key: "/admin/reports",
       icon: <BarChartOutlined />,

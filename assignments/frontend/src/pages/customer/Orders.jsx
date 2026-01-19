@@ -12,12 +12,14 @@ import {
   Radio,
   Spin,
   Tag,
+  Avatar,
 } from "antd";
 import { ArrowLeftOutlined, ReloadOutlined } from "@ant-design/icons";
 import * as orderService from "../../services/orderService";
 import * as sessionService from "../../services/sessionService";
 import * as cartService from "../../services/cartService";
 import * as paymentService from "../../services/paymentService";
+import { formatVND } from "../../utils/currency";
 
 const readTableId = () => localStorage.getItem("tableId");
 const readSessionId = () => localStorage.getItem("sessionId");
@@ -47,7 +49,7 @@ const clearStoredMoMo = (sessionId) => {
   localStorage.removeItem(`${MOMO_STORAGE_PREFIX}${sessionId}`);
 };
 
-const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+const formatMoney = (value) => formatVND(value);
 
 const toNumber = (value) => {
   const n = Number.parseFloat(value);
@@ -398,29 +400,31 @@ export default function Orders() {
 
   return (
     <div
-      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "24px 0" }}
+      style={{ minHeight: "100vh", background: "#f5f5f5", padding: "16px 0" }}
     >
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 12px" }}>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             gap: 8,
+            marginBottom: 12,
             flexWrap: "wrap",
           }}
         >
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/menu")}
+            size="middle"
           >
             Back to Menu
           </Button>
-          <Button icon={<ReloadOutlined />} onClick={loadAll}>
+          <Button icon={<ReloadOutlined />} onClick={loadAll} size="middle">
             Refresh
           </Button>
         </div>
 
-        <Divider />
+        <Divider style={{ margin: "12px 0" }} />
 
         {!tableId && (
           <Alert
@@ -432,28 +436,28 @@ export default function Orders() {
         )}
 
         <Spin spinning={loading}>
-          <Card title="Active Session" style={{ marginBottom: 16 }}>
+          <Card title={<span style={{ fontSize: 16 }}>Active Session</span>} style={{ marginBottom: 16, borderRadius: 8 }}>
             {!session ? (
               <Alert type="info" showIcon message="No active session" />
             ) : (
               <>
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  <div>
-                    <div style={{ color: "#666" }}>Session:</div>
-                    <div style={{ fontWeight: 600 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ color: "#666", fontSize: 14 }}>Session:</span>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>
                       {session.session_number || session.id}
-                    </div>
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ color: "#666" }}>Status:</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ color: "#666", fontSize: 14 }}>Status:</span>
                     <Tag
                       color={session.status === "active" ? "green" : "default"}
                     >
                       {String(session.status || "unknown").toUpperCase()}
                     </Tag>
                   </div>
-                  <div>
-                    <div style={{ color: "#666" }}>Payment:</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ color: "#666", fontSize: 14 }}>Payment:</span>
                     <Tag
                       color={
                         session.payment_status === "paid" ? "green" : "orange"
@@ -464,56 +468,52 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <Divider />
+                <Divider style={{ margin: "16px 0" }} />
 
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                  <div>
-                    <div style={{ color: "#666" }}>Subtotal:</div>
-                    <div style={{ fontWeight: 600 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#666", fontSize: 14 }}>Subtotal:</span>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>
                       {formatMoney(displayTotals.subtotal)}
-                    </div>
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ color: "#666" }}>Tax:</div>
-                    <div style={{ fontWeight: 600 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#666", fontSize: 14 }}>Tax:</span>
+                    <span style={{ fontWeight: 600, fontSize: 14 }}>
                       {formatMoney(displayTotals.tax_amount)}
-                    </div>
+                    </span>
                   </div>
-                  <div>
-                    <div style={{ color: "#666" }}>Total:</div>
-                    <div style={{ fontWeight: 700, color: "#52c41a" }}>
+                  <Divider style={{ margin: "8px 0" }} />
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ fontWeight: 600, fontSize: 16 }}>Total:</span>
+                    <span style={{ fontWeight: 700, color: "#52c41a", fontSize: 18 }}>
                       {formatMoney(displayTotals.total_amount)}
-                    </div>
+                    </span>
                   </div>
                 </div>
 
                 <Divider />
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 12,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div style={{ marginBottom: 8, fontWeight: 500 }}>
-                      Payment method:
-                    </div>
-                    <Radio.Group
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    >
-                      <Radio value="cash">Cash</Radio>
-                      <Radio value="card">Card</Radio>
-                      <Radio value="momo">MoMo</Radio>
-                    </Radio.Group>
+                <div>
+                  <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                    Payment method:
                   </div>
+                  <Radio.Group
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  >
+                    <Radio value="cash">Cash</Radio>
+                    <Radio value="card">Card</Radio>
+                    <Radio value="momo">MoMo</Radio>
+                  </Radio.Group>
+                </div>
 
+                <div style={{ marginTop: 16 }}>
                   <Button
                     type="primary"
                     danger
+                    block
+                    size="large"
                     disabled={
                       session.payment_status === "paid" ||
                       session.status === "completed" ||
@@ -630,31 +630,79 @@ export default function Orders() {
 
                 <List
                   dataSource={selectedOrder.items || []}
-                  renderItem={(it) => (
+                  renderItem={(it, index) => {
+                    // Debug: log photo data
+                    if (index === 0) {
+                      console.log('Order item:', it);
+                      console.log('MenuItem:', it.menuItem);
+                      console.log('Photos:', it.menuItem?.photos);
+                    }
+                    
+                    return (
                     <List.Item>
                       <List.Item.Meta
+                        avatar={
+                          it.menuItem?.photos && it.menuItem.photos.length > 0 ? (
+                            <Avatar
+                              src={it.menuItem.photos.find((p) => p.is_primary)?.url || it.menuItem.photos[0]?.url}
+                              size={64}
+                              shape="square"
+                            />
+                          ) : (
+                            <Avatar size={64} shape="square" style={{ backgroundColor: "#f0f0f0", fontSize: 24 }}>
+                              🍴
+                            </Avatar>
+                          )
+                        }
                         title={`${it.item_name || "Item"} x${it.quantity}`}
                         description={
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: 8,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <Tag>
-                              {formatMoney(it.total_price || it.subtotal)}
-                            </Tag>
-                            {it.status && (
-                              <Tag color="blue">
-                                {String(it.status).toUpperCase()}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 6,
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Tag style={{ margin: 0 }}>
+                                {formatMoney(it.total_price || it.subtotal)}
                               </Tag>
+                              {it.status && (
+                                <Tag color="blue" style={{ margin: 0 }}>
+                                  {String(it.status).toUpperCase()}
+                                </Tag>
+                              )}
+                            </div>
+                            {it.menuItem?.status && (
+                              <div>
+                                <Tag color="green" style={{ margin: 0, fontSize: 10 }}>
+                                  {String(it.menuItem.status).toUpperCase()}
+                                </Tag>
+                              </div>
+                            )}
+                            {Array.isArray(it?.modifiers) && it.modifiers.length > 0 && (
+                              <div style={{ color: "#3498db", fontSize: 11, lineHeight: 1.4 }}>
+                                + {it.modifiers.map((mod, idx) => (
+                                  <span key={idx}>
+                                    {mod.option_name || mod.name || 'Unknown'}
+                                    {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
+                                    {idx < it.modifiers.length - 1 && ", "}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {it?.special_instructions && it.special_instructions.trim().length > 0 && (
+                              <div style={{ color: "#9b59b6", fontSize: 11, fontStyle: "italic", fontWeight: 600, lineHeight: 1.4 }}>
+                                ✎ {it.special_instructions}
+                              </div>
                             )}
                           </div>
                         }
                       />
                     </List.Item>
-                  )}
+                    );
+                  }}
                 />
               </>
             )}

@@ -31,7 +31,7 @@ export default function RevenueLineChart({ dataPoints, loading }) {
               <YAxis
                 yAxisId="right"
                 orientation="right"
-                tickFormatter={(v) => formatMoney(v).replace("$", "")}
+                tickFormatter={(v) => formatMoney(v)}
               />
               <Tooltip
                 formatter={(value, name) => {

@@ -25,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import * as menuService from "../../services/menuService";
+import { formatVND } from "../../utils/currency";
 
 const statusColor = {
   available: "green",
@@ -117,7 +118,11 @@ export default function MenuItems() {
 
   const openEdit = (item) => {
     setEditing(item);
-    form.setFieldsValue(item);
+    form.setFieldsValue({
+      ...item,
+      price: parseFloat(item.price),
+      prep_time_minutes: item.prep_time_minutes ? parseInt(item.prep_time_minutes) : undefined,
+    });
     setOpen(true);
   };
 
@@ -376,7 +381,7 @@ export default function MenuItems() {
                               color: "#1890ff",
                             }}
                           >
-                            ${Number(item.price).toFixed(2)}
+                            {formatVND(item.price)}
                           </div>
                           {item.description && (
                             <div
@@ -476,7 +481,7 @@ export default function MenuItems() {
               min={0.01}
               step={0.01}
               precision={2}
-              prefix="$"
+              prefix="VNĐ"
             />
           </Form.Item>
 

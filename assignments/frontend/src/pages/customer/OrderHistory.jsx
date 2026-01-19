@@ -20,6 +20,7 @@ import {
 } from "@ant-design/icons";
 import * as sessionService from "../../services/sessionService";
 import { useCustomerAuth } from "../../contexts/CustomerAuthContext";
+import { formatVND } from "../../utils/currency";
 
 const { Title, Text } = Typography;
 
@@ -28,7 +29,7 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString();
 };
 
-const formatMoney = (value) => `$${Number(value || 0).toFixed(2)}`;
+const formatMoney = (value) => formatVND(value);
 
 export default function OrderHistory() {
   const navigate = useNavigate();
@@ -144,9 +145,27 @@ export default function OrderHistory() {
                       <div style={{ marginTop: "8px" }}>
                         {orders.map((order) =>
                           (order.items || []).map((item) => (
-                            <Tag key={item.id} style={{ margin: "4px" }}>
-                              {item.menuItem?.name || "Unknown"} x{item.quantity}
-                            </Tag>
+                            <div key={item.id} style={{ marginBottom: "8px", padding: "8px", background: "#f9f9f9", borderRadius: "4px" }}>
+                              <div style={{ fontWeight: 600 }}>
+                                {item.menuItem?.name || "Unknown"} x{item.quantity}
+                              </div>
+                              {Array.isArray(item?.modifiers) && item.modifiers.length > 0 && (
+                                <div style={{ color: "#3498db", fontSize: 12, marginTop: 4 }}>
+                                  + {item.modifiers.map((mod, idx) => (
+                                    <span key={idx}>
+                                      {mod.option_name || mod.name || 'Unknown'}
+                                      {mod.price_adjustment > 0 && ` (+${formatVND(mod.price_adjustment)})`}
+                                      {idx < item.modifiers.length - 1 && ", "}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {item?.special_instructions && item.special_instructions.trim().length > 0 && (
+                                <div style={{ color: "#9b59b6", fontSize: 12, marginTop: 4, fontStyle: "italic", fontWeight: 600 }}>
+                                  ✎ {item.special_instructions}
+                                </div>
+                              )}
+                            </div>
                           ))
                         )}
                       </div>

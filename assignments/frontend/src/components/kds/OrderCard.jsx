@@ -4,6 +4,7 @@ import {
   formatElapsed,
   getOrderNumberLabel,
   getTableLabel,
+  getCreatedAt,
   isNewPendingOrder,
   orderTimerTone,
   safeDate,
@@ -13,7 +14,7 @@ import OrderItemsList from "./OrderItems";
 import OrderActions from "./OrderActions";
 
 function OrderCard({ order, lane, nowMs, onStartCooking, onMarkReady }) {
-  const createdAt = safeDate(order?.created_at);
+  const createdAt = safeDate(getCreatedAt(order));
   const elapsedMs = createdAt ? nowMs - createdAt.getTime() : 0;
   const tone = orderTimerTone(elapsedMs);
 

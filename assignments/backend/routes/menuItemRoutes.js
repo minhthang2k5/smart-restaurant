@@ -3,7 +3,7 @@ const router = express.Router();
 const menuItemController = require("../controllers/menuItemController");
 const photoController = require("../controllers/photoController");
 const menuItemModifierController = require("../controllers/menuItemModifierController");
-const { photosUpload } = require("../services/uploadService");
+const { photosUpload, MAX_FILE_SIZE_MB } = require("../services/uploadService");
 const { authenticate, authorize } = require("../middleware/auth");
 
 // Apply authentication and authorization to all routes (Admin only)
@@ -25,7 +25,29 @@ router
 // Photos: upload multiple, delete one, set primary
 router.post(
     "/:id/photos",
-    photosUpload.array("photos", 5),
+    (req, res, next) => {
+        photosUpload.array("photos", 5)(req, res, (err) => {
+            if (err) {
+                if (err.code === "LIMIT_FILE_SIZE") {
+                    return res.status(400).json({
+                        status: "fail",
+                        message: `File too large. Maximum size is ${MAX_FILE_SIZE_MB}MB`,
+                    });
+                }
+                if (err.message) {
+                    return res.status(400).json({
+                        status: "fail",
+                        message: err.message,
+                    });
+                }
+                return res.status(500).json({
+                    status: "error",
+                    message: "Upload failed",
+                });
+            }
+            next();
+        });
+    },
     photoController.uploadPhotos
 );
 
