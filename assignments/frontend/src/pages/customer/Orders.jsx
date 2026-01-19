@@ -503,7 +503,6 @@ export default function Orders() {
                     onChange={(e) => setPaymentMethod(e.target.value)}
                   >
                     <Radio value="cash">Cash</Radio>
-                    <Radio value="card">Card</Radio>
                     <Radio value="momo">MoMo</Radio>
                   </Radio.Group>
                 </div>
