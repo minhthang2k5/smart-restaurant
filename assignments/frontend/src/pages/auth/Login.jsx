@@ -60,10 +60,7 @@ export default function Login() {
       icon={<LogIn className="text-white" size={22} />}
       footer={
         <>
-          Chưa có tài khoản?{" "}
-          <Link to="/register" className="text-pink-500 font-semibold">
-            Tạo ngay
-          </Link>
+
           <div className="mt-2">
             Quên mật khẩu?{" "}
             <Link to="/forgot-password" className="text-rose-500 font-semibold">
