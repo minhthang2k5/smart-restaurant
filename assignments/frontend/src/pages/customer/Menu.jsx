@@ -210,14 +210,13 @@ export default function Menu() {
       try {
         const checkResult = await sessionService.checkTableSessionStatus(tableId);
         const { active, recentCompleted } = checkResult.data || checkResult;
-        if (cancelled) return;
 
         // Case 1: Active session exists - use it
         if (active?.id) {
           localStorage.setItem("sessionId", active.id);
           localStorage.removeItem("postPaymentMode");
           localStorage.removeItem("postPaymentTableId");
-          setIsPostPaymentMode(false);
+          if (!cancelled) setIsPostPaymentMode(false);
           return;
         }
 
@@ -228,7 +227,7 @@ export default function Menu() {
           // This device just completed payment - enter post-payment mode
           localStorage.setItem("postPaymentMode", "true");
           localStorage.setItem("postPaymentTableId", tableId);
-          setIsPostPaymentMode(true);
+          if (!cancelled) setIsPostPaymentMode(true);
           return;
         }
 
@@ -236,12 +235,12 @@ export default function Menu() {
         // (This handles: new customer, or different device scanning after payment)
         const created = await sessionService.createSession({ tableId });
         const session = created.data || created;
-        if (cancelled) return;
+        
         if (session?.id) {
           localStorage.setItem("sessionId", session.id);
           localStorage.removeItem("postPaymentMode");
           localStorage.removeItem("postPaymentTableId");
-          setIsPostPaymentMode(false);
+          if (!cancelled) setIsPostPaymentMode(false);
         }
       } catch (error) {
         console.error("Session check/create error:", error);
