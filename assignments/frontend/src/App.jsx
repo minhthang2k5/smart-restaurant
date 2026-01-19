@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ConfigProvider, App as AntApp, theme } from "antd";
 import Layout from "./components/common/Layout";
 import Tables from "./pages/admin/Tables";
-import Dashboard from "./pages/admin/Dashboard";
 import Menu from "./pages/customer/Menu";
 import Categories from "./pages/admin/Categories";
 import MenuItems from "./pages/admin/MenuItems";
@@ -81,14 +80,7 @@ function App() {
 
               {/* Admin-only */}
               <Route
-                path="dashboard"
-                element={
-                  <ProtectedRoute allowedRoles={["admin"]}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
+
                 path="categories"
                 element={
                   <ProtectedRoute allowedRoles={["admin"]}>
