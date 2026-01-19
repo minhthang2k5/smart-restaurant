@@ -53,8 +53,8 @@ export default function MenuItemDetail() {
         name: itemData.name,
         description: itemData.description,
         category_id: itemData.category_id,
-        price: itemData.price,
-        prep_time_minutes: itemData.prep_time_minutes,
+        price: parseFloat(itemData.price),
+        prep_time_minutes: itemData.prep_time_minutes ? parseInt(itemData.prep_time_minutes) : undefined,
         status: itemData.status,
         is_chef_recommended: itemData.is_chef_recommended,
       });

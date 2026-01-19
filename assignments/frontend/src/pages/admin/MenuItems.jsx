@@ -118,7 +118,11 @@ export default function MenuItems() {
 
   const openEdit = (item) => {
     setEditing(item);
-    form.setFieldsValue(item);
+    form.setFieldsValue({
+      ...item,
+      price: parseFloat(item.price),
+      prep_time_minutes: item.prep_time_minutes ? parseInt(item.prep_time_minutes) : undefined,
+    });
     setOpen(true);
   };
 
