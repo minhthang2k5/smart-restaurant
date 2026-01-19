@@ -12,6 +12,8 @@ import {
   Spin,
   Alert,
   Input,
+  Carousel,
+  Image,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -229,55 +231,96 @@ export default function GuestItemDetail() {
         </Button>
 
         {/* Item Detail Card */}
-        <Card>
+        <Card bodyStyle={{ padding: 0 }}>
+          {/* Image Carousel */}
+          {item.photos && item.photos.length > 0 && (
+            <div style={{ marginBottom: 0 }}>
+              <Carousel 
+                autoplay 
+                dots={{ className: "custom-dots" }}
+                style={{ 
+                  borderRadius: "8px 8px 0 0", 
+                  overflow: "hidden",
+                  backgroundColor: "#f5f5f5"
+                }}
+              >
+                {item.photos.map((photo) => (
+                  <div 
+                    key={photo.id}
+                    style={{
+                      height: 400,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f5f5f5"
+                    }}
+                  >
+                    <Image
+                      src={photo.url}
+                      alt={item.name}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                      preview={true}
+                    />
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          )}
+
+          {/* Content with padding */}
+          <div style={{ padding: 24 }}>
+
           {/* Header */}
-          <Space style={{ marginBottom: 16 }} wrap>
-            <h1 style={{ margin: 0, fontSize: 28 }}>
+          <div style={{ marginBottom: 20 }}>
+            <h1 style={{ margin: 0, fontSize: 32, fontWeight: 700, lineHeight: 1.2 }}>
               {item.name}
               {item.is_chef_recommended && (
-                <StarFilled style={{ color: "#faad14", marginLeft: 8 }} />
+                <StarFilled style={{ color: "#faad14", marginLeft: 12, fontSize: 28 }} />
               )}
             </h1>
-          </Space>
+          </div>
 
           {/* Tags */}
-          <Space style={{ marginBottom: 16 }} wrap>
-            {category && <Tag color="blue">{category.name}</Tag>}
-            <Tag color={statusColor[item.status]}>
+          <Space style={{ marginBottom: 20 }} wrap size="middle">
+            {category && <Tag color="blue" style={{ fontSize: 14, padding: "4px 12px" }}>{category.name}</Tag>}
+            <Tag color={statusColor[item.status]} style={{ fontSize: 14, padding: "4px 12px" }}>
               {item.status.replace("_", " ").toUpperCase()}
             </Tag>
             {item.is_chef_recommended && (
-              <Tag color="gold" icon={<StarFilled />}>
+              <Tag color="gold" icon={<StarFilled />} style={{ fontSize: 14, padding: "4px 12px" }}>
                 Chef's Pick
+              </Tag>
+            )}
+            {item.prep_time_minutes > 0 && (
+              <Tag icon={<ClockCircleOutlined />} style={{ fontSize: 14, padding: "4px 12px" }}>
+                {item.prep_time_minutes} mins
               </Tag>
             )}
           </Space>
 
           {/* Description */}
           {item.description && (
-            <p style={{ fontSize: 16, color: "#666", marginBottom: 16 }}>
+            <p style={{ fontSize: 16, color: "#555", lineHeight: 1.6, marginBottom: 24 }}>
               {item.description}
             </p>
           )}
 
-          {/* Prep Time */}
-          {item.prep_time_minutes > 0 && (
-            <div style={{ color: "#999", marginBottom: 16 }}>
-              <ClockCircleOutlined /> Preparation time: {item.prep_time_minutes}{" "}
-              minutes
-            </div>
-          )}
-
           {/* Base Price */}
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: "bold",
-              color: "#1890ff",
-              marginBottom: 16,
-            }}
-          >
-            Base Price: {formatVND(item.price)}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 14, color: "#999", marginBottom: 4 }}>Base Price</div>
+            <div
+              style={{
+                fontSize: 36,
+                fontWeight: "bold",
+                color: "#1890ff",
+              }}
+            >
+              {formatVND(item.price)}
+            </div>
           </div>
 
           {/* Warnings */}
@@ -371,7 +414,19 @@ export default function GuestItemDetail() {
                         >
                           <Space direction="vertical" style={{ width: "100%" }}>
                             {activeOptions.map((option) => (
-                              <Radio key={option.id} value={option.id}>
+                              <Radio 
+                                key={option.id} 
+                                value={option.id}
+                                onClick={() => {
+                                  // Allow deselect if clicking the same option
+                                  if (selectedModifiers[group.id] === option.id) {
+                                    setSelectedModifiers((prev) => ({
+                                      ...prev,
+                                      [group.id]: undefined,
+                                    }));
+                                  }
+                                }}
+                              >
                                 <Space>
                                   <span>{option.name}</span>
                                   {option.price_adjustment > 0 && (
@@ -436,32 +491,53 @@ export default function GuestItemDetail() {
           {/* Total Price & Add to Cart */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              padding: "24px",
+              background: "#fafafa",
+              borderRadius: 8,
+              marginTop: 24,
             }}
           >
-            <div>
-              <div style={{ fontSize: 14, color: "#999" }}>Total Price:</div>
-              <div
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 14, color: "#999", marginBottom: 4 }}>Total Price</div>
+                <div
+                  style={{
+                    fontSize: 40,
+                    fontWeight: "bold",
+                    color: "#52c41a",
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatVND(totalPrice)}
+                </div>
+              </div>
+              <Button
+                type="primary"
+                size="large"
+                icon={<ShoppingCartOutlined />}
+                onClick={handleAddToCart}
+                disabled={!canAddToCart}
                 style={{
-                  fontSize: 32,
-                  fontWeight: "bold",
-                  color: "#52c41a",
+                  height: 56,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  borderRadius: 8,
                 }}
               >
-                {formatVND(totalPrice)}
-              </div>
+                Add to Cart
+              </Button>
             </div>
-            <Button
-              type="primary"
-              size="large"
-              icon={<ShoppingCartOutlined />}
-              onClick={handleAddToCart}
-              disabled={!canAddToCart}
-            >
-              Add to Cart
-            </Button>
+          </div>
           </div>
         </Card>
       </div>
