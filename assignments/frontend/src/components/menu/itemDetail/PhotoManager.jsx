@@ -39,8 +39,8 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
       setPhotos([...photos, ...uploadedPhotos]);
       setError("");
     } catch (err) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.message || "Failed to upload photos");
+      const errorMessage = err.response?.data?.message || err.message || "Failed to upload photos";
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }

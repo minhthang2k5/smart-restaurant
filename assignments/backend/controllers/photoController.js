@@ -61,7 +61,7 @@ exports.uploadPhotos = async (req, res) => {
         console.error("uploadPhotos error:", err);
         return res
             .status(500)
-            .json({ status: "error", message: "Failed to upload photos" });
+            .json({ status: "error", message: err.message || "Failed to upload photos" });
     }
 };
 

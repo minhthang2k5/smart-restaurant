@@ -207,7 +207,7 @@ export default function MenuItemDetail() {
                 min={0.01}
                 step={0.01}
                 precision={2}
-                prefix="$"
+                prefix="VNĐ"
               />
             </Form.Item>
 
@@ -269,18 +269,6 @@ export default function MenuItemDetail() {
       children: (
         <Card>
           <PhotoManager itemId={item.id} initialPhotos={item.photos || []} />
-          <div
-            style={{
-              marginTop: 16,
-              padding: 12,
-              background: "#fff7e6",
-              borderRadius: 4,
-            }}
-          >
-            <p style={{ margin: 0, color: "#fa8c16" }}>
-              ⚠️ <strong>Lưu ý:</strong> Tính năng tải ảnh hiện đang trong quá trình phát triển.
-            </p>
-          </div>
         </Card>
       ),
     },

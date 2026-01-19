@@ -477,7 +477,7 @@ export default function MenuItems() {
               min={0.01}
               step={0.01}
               precision={2}
-              prefix="$"
+              prefix="VNĐ"
             />
           </Form.Item>
 
