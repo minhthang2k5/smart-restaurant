@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, List, Rate, Avatar, Empty, Pagination, Spin, Divider, Button, Alert } from "antd";
+import {
+  Card,
+  List,
+  Rate,
+  Avatar,
+  Empty,
+  Pagination,
+  Spin,
+  Divider,
+  Button,
+  Alert,
+} from "antd";
 import { UserOutlined, StarFilled, EditOutlined } from "@ant-design/icons";
 import * as reviewService from "../../services/reviewService";
 import { useCustomerAuth } from "../../contexts/CustomerAuthContext";
@@ -29,9 +40,9 @@ export default function ItemReviews({ itemId, itemName }) {
       const response = await reviewService.getItemReviews(itemId, {
         page,
         limit: pageSize,
-        sort: 'recent'
+        sort: "recent",
       });
-      
+
       if (response.data) {
         const reviews = response.data.reviews || [];
         const pagination = response.data.pagination || {};
@@ -104,7 +115,14 @@ export default function ItemReviews({ itemId, itemName }) {
                   marginBottom: 8,
                 }}
               >
-                <div style={{ width: 60, display: "flex", alignItems: "center", gap: 4 }}>
+                <div
+                  style={{
+                    width: 60,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
                   <StarFilled style={{ color: "#faad14", fontSize: 14 }} />
                   <span style={{ fontSize: 14 }}>{rating}</span>
                 </div>
@@ -126,7 +144,14 @@ export default function ItemReviews({ itemId, itemName }) {
                     }}
                   />
                 </div>
-                <div style={{ width: 50, textAlign: "right", fontSize: 14, color: "#666" }}>
+                <div
+                  style={{
+                    width: 50,
+                    textAlign: "right",
+                    fontSize: 14,
+                    color: "#666",
+                  }}
+                >
                   {count}
                 </div>
               </div>
@@ -143,7 +168,14 @@ export default function ItemReviews({ itemId, itemName }) {
         <span style={{ fontSize: 20, fontWeight: 600 }}>
           Customer Reviews
           {stats && stats.totalReviews > 0 && (
-            <span style={{ color: "#999", fontWeight: 400, fontSize: 16, marginLeft: 8 }}>
+            <span
+              style={{
+                color: "#999",
+                fontWeight: 400,
+                fontSize: 16,
+                marginLeft: 8,
+              }}
+            >
               ({stats.totalReviews})
             </span>
           )}
@@ -243,10 +275,19 @@ export default function ItemReviews({ itemId, itemName }) {
                           </p>
                         )}
                         {review.session && (
-                          <div style={{ fontSize: 13, color: "#999", marginTop: 8 }}>
-                            Table {review.session.table?.table_number || "N/A"} •{" "}
+                          <div
+                            style={{
+                              fontSize: 13,
+                              color: "#999",
+                              marginTop: 8,
+                            }}
+                          >
+                            Table {review.session.table?.table_number || "N/A"}{" "}
+                            •{" "}
                             {review.session.created_at
-                              ? dayjs(review.session.created_at).format("MMM DD, YYYY")
+                              ? dayjs(review.session.created_at).format(
+                                  "MMM DD, YYYY",
+                                )
                               : ""}
                           </div>
                         )}
