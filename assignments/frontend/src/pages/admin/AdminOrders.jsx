@@ -284,10 +284,52 @@ export default function AdminOrders() {
           // Price: High to Low
           return (Number(b.total_amount) || 0) - (Number(a.total_amount) || 0);
         case "popularity": {
-          // Sort by number of items (more items = more popular order)
-          const itemsA = Array.isArray(a.items) ? a.items.length : 0;
-          const itemsB = Array.isArray(b.items) ? b.items.length : 0;
-          return itemsB - itemsA;
+          // Sort by frequency of items across all orders
+          // Count how many times each item appears in all orders
+          const itemFrequency = {};
+          filtered.forEach(order => {
+            const items = Array.isArray(order.items) ? order.items : [];
+            items.forEach(item => {
+              const itemName = item?.item_name || item?.menuItem?.name || '';
+              if (itemName) {
+                itemFrequency[itemName] = (itemFrequency[itemName] || 0) + 1;
+              }
+            });
+          });
+          
+          // Get the most frequently ordered item in each order
+          const getMostFrequentItem = (order) => {
+            const items = Array.isArray(order.items) ? order.items : [];
+            if (items.length === 0) return { name: '', frequency: 0 };
+            
+            let mostFrequent = items[0];
+            let maxFreq = itemFrequency[mostFrequent?.item_name || mostFrequent?.menuItem?.name || ''] || 0;
+            
+            for (const item of items) {
+              const itemName = item?.item_name || item?.menuItem?.name || '';
+              const freq = itemFrequency[itemName] || 0;
+              if (freq > maxFreq) {
+                maxFreq = freq;
+                mostFrequent = item;
+              }
+            }
+            
+            return {
+              name: mostFrequent?.item_name || mostFrequent?.menuItem?.name || '',
+              frequency: maxFreq
+            };
+          };
+          
+          const itemA = getMostFrequentItem(a);
+          const itemB = getMostFrequentItem(b);
+          
+          // First sort by frequency (highest first)
+          if (itemB.frequency !== itemA.frequency) {
+            return itemB.frequency - itemA.frequency;
+          }
+          
+          // Then sort by item name to group same items together
+          return itemA.name.localeCompare(itemB.name);
         }
         default:
           // Default: newest first
@@ -586,7 +628,7 @@ export default function AdminOrders() {
             <Select.Option value="created_asc">Oldest First</Select.Option>
             <Select.Option value="price_desc">Price: High to Low</Select.Option>
             <Select.Option value="price_asc">Price: Low to High</Select.Option>
-            <Select.Option value="popularity">Most Items</Select.Option>
+            <Select.Option value="popularity">Popularity</Select.Option>
           </Select>
         </div>
 
