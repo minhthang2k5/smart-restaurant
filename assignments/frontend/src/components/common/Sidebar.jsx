@@ -10,6 +10,7 @@ import {
   TagsOutlined,
   CoffeeOutlined,
   ControlOutlined,
+  FileTextOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { normalizeRole } from "../../utils/roles";
@@ -34,6 +35,14 @@ const Sidebar = ({ collapsed }) => {
       key: "/admin/kds",
       icon: <FireOutlined />,
       label: <Link to="/admin/kds">Kitchen Display</Link>,
+    },
+  ];
+
+  const adminWaiterItems = [
+    {
+      key: "/admin/bill-requests",
+      icon: <FileTextOutlined />,
+      label: <Link to="/admin/bill-requests">Bill Requests</Link>,
     },
   ];
 
@@ -67,11 +76,12 @@ const Sidebar = ({ collapsed }) => {
 
   let menuItems = [];
   if (role === "admin") {
-    menuItems = [...adminOnlyItems, ...baseItems];
+    menuItems = [...adminOnlyItems, ...baseItems, ...adminWaiterItems];
   } else if (role === "waiter") {
-    menuItems = baseItems.filter(
+    const waiterBaseItems = baseItems.filter(
       (i) => i.key === "/admin/tables" || i.key === "/admin/orders"
     );
+    menuItems = [...waiterBaseItems, ...adminWaiterItems];
   } else if (role === "kitchen_staff") {
     menuItems = baseItems.filter((i) => i.key === "/admin/kds");
   } else {
