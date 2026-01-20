@@ -13,6 +13,7 @@ import {
   Spin,
   Tag,
   Avatar,
+  Tabs,
 } from "antd";
 import { ArrowLeftOutlined, ReloadOutlined, DollarCircleOutlined, WalletOutlined } from "@ant-design/icons";
 import * as orderService from "../../services/orderService";
@@ -81,11 +82,14 @@ const computeRunningSessionTotals = (orders) => {
 
 export default function Orders() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [session, setSession] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("status") || "all"
+  );
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -152,6 +156,17 @@ export default function Orders() {
     loadAll();
   }, [loadAll]);
 
+  // Update URL when status filter changes
+  useEffect(() => {
+    const params = {};
+    if (statusFilter !== "all") params.status = statusFilter;
+    
+    const tableId = urlTableId || readTableId();
+    if (tableId) params.table = tableId;
+    
+    setSearchParams(params, { replace: true });
+  }, [statusFilter, urlTableId, setSearchParams]);
+
   const displayTotals = (() => {
     if (!session) return { subtotal: 0, tax_amount: 0, total_amount: 0 };
 
@@ -185,6 +200,34 @@ export default function Orders() {
     return payable.every(
       (o) => o.status === "served" || o.status === "completed"
     );
+  })();
+
+  // Filter orders by status
+  const filteredOrders = (() => {
+    if (statusFilter === "all") return orders;
+    return orders.filter((o) => o.status === statusFilter);
+  })();
+
+  // Count orders by status
+  const statusCounts = (() => {
+    const counts = {
+      all: orders.length,
+      pending: 0,
+      confirmed: 0,
+      preparing: 0,
+      ready: 0,
+      served: 0,
+      completed: 0,
+      rejected: 0,
+    };
+    
+    orders.forEach((o) => {
+      if (counts[o.status] !== undefined) {
+        counts[o.status]++;
+      }
+    });
+    
+    return counts;
   })();
 
   // Real-time updates (Customer namespace): listen for order/session updates for this table.
@@ -590,12 +633,93 @@ export default function Orders() {
             )}
           </Card>
 
-          <Card title={`Orders (${orders.length})`}>
-            {orders.length === 0 ? (
-              <Alert type="info" showIcon message="No orders yet" />
+          <Card 
+            title={
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Orders ({filteredOrders.length})</span>
+              </div>
+            }
+          >
+            {/* Status Filter Tabs */}
+            <Tabs
+              activeKey={statusFilter}
+              onChange={(key) => setStatusFilter(key)}
+              style={{ marginBottom: 16 }}
+              items={[
+                {
+                  key: "all",
+                  label: `All (${statusCounts.all})`,
+                },
+                {
+                  key: "pending",
+                  label: (
+                    <span>
+                      <Tag color="orange" style={{ margin: 0 }}>Pending</Tag>
+                      {statusCounts.pending > 0 && ` (${statusCounts.pending})`}
+                    </span>
+                  ),
+                },
+                {
+                  key: "confirmed",
+                  label: (
+                    <span>
+                      <Tag color="cyan" style={{ margin: 0 }}>Confirmed</Tag>
+                      {statusCounts.confirmed > 0 && ` (${statusCounts.confirmed})`}
+                    </span>
+                  ),
+                },
+                {
+                  key: "preparing",
+                  label: (
+                    <span>
+                      <Tag color="blue" style={{ margin: 0 }}>Preparing</Tag>
+                      {statusCounts.preparing > 0 && ` (${statusCounts.preparing})`}
+                    </span>
+                  ),
+                },
+                {
+                  key: "ready",
+                  label: (
+                    <span>
+                      <Tag color="purple" style={{ margin: 0 }}>Ready</Tag>
+                      {statusCounts.ready > 0 && ` (${statusCounts.ready})`}
+                    </span>
+                  ),
+                },
+                {
+                  key: "served",
+                  label: (
+                    <span>
+                      <Tag color="green" style={{ margin: 0 }}>Served</Tag>
+                      {statusCounts.served > 0 && ` (${statusCounts.served})`}
+                    </span>
+                  ),
+                },
+                {
+                  key: "rejected",
+                  label: (
+                    <span>
+                      <Tag color="red" style={{ margin: 0 }}>Rejected</Tag>
+                      {statusCounts.rejected > 0 && ` (${statusCounts.rejected})`}
+                    </span>
+                  ),
+                },
+              ]}
+            />
+
+            {filteredOrders.length === 0 ? (
+              <Alert 
+                type="info" 
+                showIcon 
+                message={
+                  statusFilter === "all" 
+                    ? "No orders yet" 
+                    : `No ${statusFilter} orders`
+                } 
+              />
             ) : (
               <List
-                dataSource={orders}
+                dataSource={filteredOrders}
                 renderItem={(o) => (
                   <List.Item
                     onClick={() => openOrderDetail(o.id)}

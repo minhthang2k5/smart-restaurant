@@ -13,7 +13,6 @@ import {
   Empty,
   Spin,
   message,
-  Pagination,
 } from "antd";
 import {
   SearchOutlined,
@@ -57,9 +56,9 @@ export default function Menu() {
     () => localStorage.getItem("postPaymentMode") === "true"
   );
 
-  // Pagination state
+  // Pagination state for infinite scroll
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const [pageSize] = useState(12);
 
   // Function to start a new order (clear post-payment mode)
   const handleStartNewOrder = async () => {
@@ -296,11 +295,30 @@ const response = await menuService.getPublicMenu(params);
     setCurrentPage(1);
   }, [search, selectedCategory]);
 
-  // Get items for current page
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user scrolled near bottom
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const bottomPosition = document.documentElement.scrollHeight - 200;
+
+      if (scrollPosition >= bottomPosition && !loading) {
+        // Check if there are more items to load
+        const hasMore = currentPage * pageSize < filteredItems.length;
+        if (hasMore) {
+          setCurrentPage((prev) => prev + 1);
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loading, currentPage, pageSize, filteredItems.length]);
+
+  // Get items for infinite scroll (all items up to current page)
   const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return filteredItems.slice(startIndex, endIndex);
+    const endIndex = currentPage * pageSize;
+    return filteredItems.slice(0, endIndex);
   }, [filteredItems, currentPage, pageSize]);
 
   // Total count for pagination
@@ -666,34 +684,18 @@ const response = await menuService.getPublicMenu(params);
           )}
         </Spin>
 
-        {/* Pagination */}
+        {/* Infinite Scroll Indicator */}
+        {paginatedItems.length < filteredItems.length && (
+          <div style={{ textAlign: "center", padding: "20px 0", marginBottom: 24 }}>
+            <Spin size="large" />
+            <div style={{ marginTop: 8, color: "#999" }}>Loading more items...</div>
+          </div>
+        )}
+
+        {/* Showing count */}
         {filteredItems.length > 0 && (
-          <div 
-            style={{ 
-              marginTop: 32, 
-              marginBottom: 24,
-              display: "flex", 
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={totalItems}
-              onChange={(page, newPageSize) => {
-                setCurrentPage(page);
-                if (newPageSize !== pageSize) {
-                  setPageSize(newPageSize);
-                  setCurrentPage(1);
-                }
-              }}
-              showSizeChanger
-              showTotal={(total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`
-              }
-              pageSizeOptions={[6, 12, 24, 48]}
-            />
+          <div style={{ textAlign: "center", padding: "10px 0", marginBottom: 24, color: "#999" }}>
+            Showing {paginatedItems.length} of {filteredItems.length} items
           </div>
         )}
       </div>
