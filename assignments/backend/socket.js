@@ -368,6 +368,32 @@ function broadcast(namespace, event, data) {
 }
 
 /**
+ * Emit bill requested event to waiters
+ * @param {Object} billData - Bill request data
+ */
+function emitBillRequested(billData) {
+  try {
+    const io = getIO();
+    const eventData = {
+      sessionId: billData.sessionId,
+      sessionNumber: billData.sessionNumber,
+      tableId: billData.tableId,
+      tableNumber: billData.tableNumber,
+      totalAmount: billData.totalAmount,
+      billRequestedAt: billData.billRequestedAt
+    };
+    
+    // Emit to all waiters
+    io.of('/waiter').to('waiter').emit('bill-requested', eventData);
+    console.log(`📋 Emitted bill-requested to waiters: Table ${billData.tableNumber}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error emitting bill-requested:', error.message);
+    return false;
+  }
+}
+
+/**
  * Get connection statistics
  * @returns {Object} Connection stats
  */
@@ -399,6 +425,7 @@ module.exports = {
   emitItemStatusUpdate,
   emitSessionCompleted,
   emitOrderRejected,
+  emitBillRequested,
   broadcast,
   getStats
 };
