@@ -24,6 +24,7 @@ import {
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
 import { formatVND } from "../../utils/currency";
+import ItemReviews from "../../components/customer/ItemReviews";
 
 const statusColor = {
   available: "green",
@@ -540,6 +541,9 @@ export default function GuestItemDetail() {
           </div>
           </div>
         </Card>
+
+        {/* Reviews Section */}
+        <ItemReviews itemId={itemId} itemName={item.name} />
       </div>
     </div>
   );

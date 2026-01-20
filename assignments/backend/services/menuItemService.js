@@ -100,7 +100,7 @@ class MenuItemService {
                 return {
                     ...item.toJSON(),
                     popularity_count: parseInt(item.getDataValue('popularity_count') || 0),
-                    primaryPhoto: primaryPhoto || null,
+                    photos: primaryPhoto ? [primaryPhoto] : [], // Format as array for frontend compatibility
                 };
             })
         );

@@ -31,11 +31,23 @@ class ReviewService {
                 menu_item_id: itemId,
                 status: "approved"
             },
-            include: [{
-                model: User,
-                as: "customer",
-                attributes: ["id", "firstName", "lastName"]
-            }],
+            include: [
+                {
+                    model: User,
+                    as: "customer",
+                    attributes: ["id", "firstName", "lastName"]
+                },
+                {
+                    model: TableSession,
+                    as: "session",
+                    attributes: ["id", "created_at"],
+                    include: [{
+                        model: Table,
+                        as: "table",
+                        attributes: ["table_number"]
+                    }]
+                }
+            ],
             order,
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -48,8 +60,42 @@ class ReviewService {
             ]
         });
         
+        // Calculate stats for all reviews (not just current page)
+        const allReviews = await Review.findAll({
+            where: {
+                menu_item_id: itemId,
+                status: "approved"
+            },
+            attributes: ["rating"]
+        });
+        
+        const stats = {
+            totalReviews: allReviews.length,
+            averageRating: 0,
+            ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        };
+        
+        if (allReviews.length > 0) {
+            const sum = allReviews.reduce((acc, r) => acc + r.rating, 0);
+            stats.averageRating = sum / allReviews.length;
+            
+            allReviews.forEach(r => {
+                stats.ratingDistribution[r.rating]++;
+            });
+        }
+        
+        // Format customer names
+        const formattedReviews = reviews.map(review => {
+            const reviewData = review.toJSON();
+            if (reviewData.customer) {
+                reviewData.customer.name = `${reviewData.customer.firstName || ''} ${reviewData.customer.lastName || ''}`.trim();
+            }
+            return reviewData;
+        });
+        
         return {
-            reviews,
+            reviews: formattedReviews,
+            stats,
             pagination: {
                 total: count,
                 page: parseInt(page),
