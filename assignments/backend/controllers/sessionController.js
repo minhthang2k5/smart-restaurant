@@ -1,6 +1,7 @@
 const sessionService = require("../services/sessionService");
+const billService = require("../services/billService");
 const cartService = require("../services/cartService");
-const { emitNewOrder, emitSessionCompleted } = require("../socket");
+const { emitNewOrder, emitSessionCompleted, emitBillRequested } = require("../socket");
 
 /**
  * Create new table session
@@ -347,6 +348,100 @@ exports.getMySessionHistory = async (req, res) => {
         res.status(500).json({
             success: false,
             message: error.message || "Error fetching session history",
+        });
+    }
+};
+
+/**
+ * Request bill for a session (mock feature - does not trigger payment)
+ * POST /api/sessions/:id/request-bill
+ */
+exports.requestBill = async (req, res) => {
+    try {
+        const { id: sessionId } = req.params;
+        
+        const result = await billService.requestBill(sessionId);
+        
+        // Emit real-time event to waiters
+        emitBillRequested(result);
+        
+        res.status(200).json({
+            success: true,
+            message: "Bill request sent to waiter",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error requesting bill:", error);
+        res.status(400).json({
+            success: false,
+            message: error.message || "Error requesting bill",
+        });
+    }
+};
+
+/**
+ * Get all pending bill requests (for waiter dashboard)
+ * GET /api/waiter/bill-requests
+ */
+exports.getPendingBillRequests = async (req, res) => {
+    try {
+        const requests = await billService.getPendingBillRequests();
+        
+        res.status(200).json({
+            success: true,
+            data: requests,
+        });
+    } catch (error) {
+        console.error("Error fetching bill requests:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error fetching bill requests",
+        });
+    }
+};
+
+/**
+ * Get bill preview for a session
+ * GET /api/sessions/:id/bill-preview
+ */
+exports.getBillPreview = async (req, res) => {
+    try {
+        const { id: sessionId } = req.params;
+        
+        const billData = await billService.getBillPreview(sessionId);
+        
+        res.status(200).json({
+            success: true,
+            data: billData,
+        });
+    } catch (error) {
+        console.error("Error fetching bill preview:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Error fetching bill preview",
+        });
+    }
+};
+
+/**
+ * Clear bill request (waiter acknowledges)
+ * PATCH /api/sessions/:id/clear-bill-request
+ */
+exports.clearBillRequest = async (req, res) => {
+    try {
+        const { id: sessionId } = req.params;
+        
+        const result = await billService.clearBillRequest(sessionId);
+        
+        res.status(200).json({
+            success: true,
+            data: result,
+        });
+    } catch (error) {
+        console.error("Error clearing bill request:", error);
+        res.status(400).json({
+            success: false,
+            message: error.message || "Error clearing bill request",
         });
     }
 };

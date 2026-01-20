@@ -36,6 +36,14 @@ router.get("/table/:tableId/check", sessionController.checkTableSessionStatus);
 router.get("/my-sessions", authenticate, sessionController.getMySessionHistory);
 
 /**
+ * @route   GET /api/sessions/waiter/bill-requests
+ * @desc    Get all pending bill requests
+ * @access  Staff (waiter) - authentication can be added
+ * @note    MUST be before /:id route to avoid UUID parsing conflict
+ */
+router.get("/waiter/bill-requests", sessionController.getPendingBillRequests);
+
+/**
  * @route   GET /api/sessions/:id
  * @desc    Get session details by ID
  * @access  Public
@@ -69,5 +77,26 @@ router.post("/:id/complete", optionalAuthenticate, sessionController.completeSes
  * @access  Staff only (add authenticate + authorize if needed)
  */
 router.post("/:id/cancel", sessionController.cancelSession);
+
+/**
+ * @route   POST /api/sessions/:id/request-bill
+ * @desc    Request bill for session (mock feature - does not trigger payment)
+ * @access  Public (Customer can request)
+ */
+router.post("/:id/request-bill", sessionController.requestBill);
+
+/**
+ * @route   GET /api/sessions/:id/bill-preview
+ * @desc    Get bill preview for a session
+ * @access  Public (Customer or waiter can view)
+ */
+router.get("/:id/bill-preview", sessionController.getBillPreview);
+
+/**
+ * @route   PATCH /api/sessions/:id/clear-bill-request
+ * @desc    Clear bill request (waiter acknowledges)
+ * @access  Staff (waiter) - authentication can be added
+ */
+router.patch("/:id/clear-bill-request", sessionController.clearBillRequest);
 
 module.exports = router;
