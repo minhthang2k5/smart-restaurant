@@ -34,6 +34,8 @@ import CustomerProtectedRoute from "./routes/CustomerProtectedRoute";
 import CustomerLayout from "./layouts/customer/CustomerLayout";
 import OrderHistory from "./pages/customer/OrderHistory";
 import Reviews from "./pages/customer/Reviews";
+import BillRequests from "./pages/waiter/BillRequests";
+import BillPreview from "./pages/waiter/BillPreview";
 
 function App() {
   return (
@@ -151,6 +153,24 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={["admin", "waiter"]}>
                     <AdminOrders />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Bill Requests (Admin + Waiter) */}
+              <Route
+                path="bill-requests"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "waiter"]}>
+                    <BillRequests />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="bill-preview/:sessionId"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "waiter"]}>
+                    <BillPreview />
                   </ProtectedRoute>
                 }
               />
