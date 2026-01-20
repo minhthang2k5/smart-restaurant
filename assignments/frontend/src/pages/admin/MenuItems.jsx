@@ -383,21 +383,21 @@ export default function MenuItems() {
                           >
                             {formatVND(item.price)}
                           </div>
-                          {item.description && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#999",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                              }}
-                            >
-                              {item.description}
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              fontSize: 13,
+                              color: item.description ? "#999" : "#d9d9d9",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              minHeight: "2.6em", // Reserve space for 2 lines
+                              lineHeight: "1.3em",
+                            }}
+                          >
+                            {item.description || "Chưa có mô tả"}
+                          </div>
                         </Space>
                       }
                     />
