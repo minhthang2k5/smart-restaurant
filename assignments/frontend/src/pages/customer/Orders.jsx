@@ -19,6 +19,7 @@ import * as orderService from "../../services/orderService";
 import * as sessionService from "../../services/sessionService";
 import * as cartService from "../../services/cartService";
 import * as paymentService from "../../services/paymentService";
+import * as billService from "../../services/billService";
 import { formatVND } from "../../utils/currency";
 
 const readTableId = () => localStorage.getItem("tableId");
@@ -96,6 +97,8 @@ export default function Orders() {
   const [momoPayInfo, setMoMoPayInfo] = useState(null);
   const [momoStatus, setMoMoStatus] = useState(null);
   const [momoBusy, setMoMoBusy] = useState(false);
+
+  const [billRequesting, setBillRequesting] = useState(false);
 
   const urlTableId = searchParams.get("tableId") || searchParams.get("table");
   const tableId = urlTableId || readTableId();
@@ -398,6 +401,30 @@ export default function Orders() {
     };
   }, [loadAll, momoModalOpen, navigate, session]);
 
+  const handleRequestBill = async () => {
+    const sessionId = session?.id || readSessionId();
+    if (!sessionId) {
+      message.warning("No active session found");
+      return;
+    }
+
+    try {
+      setBillRequesting(true);
+      await billService.requestBill(sessionId);
+      message.success("Bill request sent to waiter. You can still proceed to payment when ready.");
+      
+      // Refresh session to get updated bill_requested_at
+      await loadAll();
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message || "Failed to request bill"
+      );
+      console.error(error);
+    } finally {
+      setBillRequesting(false);
+    }
+  };
+
   return (
     <div
       style={{ minHeight: "100vh", background: "#f5f5f5", padding: "16px 0" }}
@@ -513,7 +540,23 @@ export default function Orders() {
                   </Radio.Group>
                 </div>
 
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Button
+                    block
+                    size="large"
+                    disabled={
+                      !session ||
+                      session.status !== "active" ||
+                      session.payment_status === "paid" ||
+                      billRequesting
+                    }
+                    onClick={handleRequestBill}
+                    loading={billRequesting}
+                    icon={<DollarCircleOutlined />}
+                  >
+                    {session?.bill_requested_at ? "Bill Requested ✓" : "Request Bill"}
+                  </Button>
+                  
                   <Button
                     type="primary"
                     danger
