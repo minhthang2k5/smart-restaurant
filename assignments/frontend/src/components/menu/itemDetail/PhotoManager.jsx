@@ -9,22 +9,16 @@ export default function PhotoManager({ itemId, initialPhotos = [] }) {
   
   // Helper to build full image URL
   const getImageUrl = (url) => {
-    console.log('getImageUrl input:', url);
     if (!url) return '';
     if (url.startsWith('http')) return url;
     // Backend is at localhost:3000
-    const fullUrl = `http://localhost:3000${url}`;
-    console.log('getImageUrl output:', fullUrl);
-    return fullUrl;
+    return `http://localhost:3000${url}`;
   };
 
   useEffect(() => {
     setPhotos(initialPhotos);
   }, [initialPhotos]);
   
-  useEffect(() => {
-    console.log('PhotoManager photos state:', photos);
-  }, [photos]);
 
   const handleUpload = async (files) => {
     if (files.length === 0) return;

@@ -636,13 +636,6 @@ export default function Orders() {
                 <List
                   dataSource={selectedOrder.items || []}
                   renderItem={(it, index) => {
-                    // Debug: log photo data
-                    if (index === 0) {
-                      console.log('Order item:', it);
-                      console.log('MenuItem:', it.menuItem);
-                      console.log('Photos:', it.menuItem?.photos);
-                    }
-                    
                     return (
                     <List.Item>
                       <List.Item.Meta

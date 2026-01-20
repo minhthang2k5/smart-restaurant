@@ -12,8 +12,11 @@ import {
   Spin,
   Alert,
   Input,
-  Carousel,
   Image,
+  Row,
+  Col,
+  Carousel,
+  Pagination,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -44,6 +47,9 @@ export default function GuestItemDetail() {
   const [selectedModifiers, setSelectedModifiers] = useState({});
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [loading, setLoading] = useState(false);
+  const [relatedItems, setRelatedItems] = useState([]);
+  const [relatedPage, setRelatedPage] = useState(1);
+  const [relatedPageSize] = useState(10);
 
   useEffect(() => {
     const fetchItemDetail = async () => {
@@ -57,6 +63,36 @@ export default function GuestItemDetail() {
         setItem(itemData);
         setCategory(itemData.category || null);
         setModifierGroups(itemData.modifierGroups || []);
+
+        // Fetch related items from same category
+        // Support both category_id and categoryId
+        const categoryId = itemData.category_id || itemData.categoryId || itemData.category?.id;
+        
+        if (categoryId) {
+          try {
+            const menuResponse = await menuService.getPublicMenu({
+              status: "available",
+            });
+            const allItems = menuResponse.data?.items || [];
+            
+            // Filter items from same category, exclude current item
+            const related = allItems
+              .filter(i => {
+                const itemCategoryId = i.category_id || i.categoryId || i.category?.id;
+                const sameCategory = itemCategoryId === categoryId;
+                const notCurrentItem = i.id !== itemId;
+                const isAvailable = i.status === "available";
+                
+                return sameCategory && notCurrentItem && isAvailable;
+              })
+              .slice(0, 8); // Limit to 8 items
+            
+            setRelatedItems(related);
+            setRelatedPage(1); // Reset to page 1 when loading new items
+          } catch (err) {
+            console.error("Failed to load related items:", err);
+          }
+        }
       } catch (error) {
         message.error("Failed to load item details");
         console.error(error);
@@ -198,7 +234,7 @@ export default function GuestItemDetail() {
   if (loading) {
     return (
       <div style={{ padding: 24, textAlign: "center" }}>
-        <Spin size="large" tip="Loading item details..." />
+        <Spin size="large" />
       </div>
     );
   }
@@ -544,6 +580,185 @@ export default function GuestItemDetail() {
 
         {/* Reviews Section */}
         <ItemReviews itemId={itemId} itemName={item.name} />
+
+        {/* Related Items Section */}
+        <Card 
+          style={{ marginTop: 24 }}
+          title={
+            <div style={{ fontSize: 20, fontWeight: 600 }}>
+              More from {category?.name || "This Category"}
+              {relatedItems.length > 0 && ` (${relatedItems.length} items)`}
+            </div>
+          }
+        >
+          {relatedItems.length > 0 ? (
+            <>
+              <Row gutter={[16, 16]}>
+                {(() => {
+                  const slicedItems = relatedItems.slice(
+                    (relatedPage - 1) * relatedPageSize, 
+                    relatedPage * relatedPageSize
+                  );
+
+                  return slicedItems.map((relatedItem) => (
+                <Col key={relatedItem.id} xs={24} sm={12} md={8} lg={6}>
+                  <Card
+                    hoverable
+                    onClick={() => {
+                      navigate(`/menu/${relatedItem.id}`);
+                      window.scrollTo(0, 0);
+                    }}
+                    style={{ 
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column"
+                    }}
+                    styles={{
+                      body: {
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        padding: 16
+                      }
+                    }}
+                    cover={
+                      relatedItem.photos && relatedItem.photos.length > 0 ? (
+                        <div
+                          style={{
+                            height: 180,
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        >
+                          <img
+                            alt={relatedItem.name}
+                            src={
+                              relatedItem.photos.find((p) => p.is_primary)?.url ||
+                              relatedItem.photos[0]?.url
+                            }
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            height: 180,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "#f0f0f0",
+                            fontSize: 48,
+                          }}
+                        >
+                          🍴
+                        </div>
+                      )
+                    }
+                  >
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                      {/* Title */}
+                      <div 
+                        style={{ 
+                          fontSize: 16, 
+                          fontWeight: 600,
+                          marginBottom: 8,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 1,
+                          WebkitBoxOrient: "vertical",
+                          minHeight: 24
+                        }}
+                      >
+                        {relatedItem.name}
+                      </div>
+
+                      {/* Description */}
+                      <div
+                        style={{
+                          color: "#666",
+                          fontSize: 13,
+                          marginBottom: 8,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          minHeight: 40,
+                          flex: 1
+                        }}
+                      >
+                        {relatedItem.description || "No description available"}
+                      </div>
+
+                      {/* Rating */}
+                      {relatedItem.average_rating > 0 && (
+                        <div style={{ fontSize: 13, marginBottom: 8 }}>
+                          <StarFilled style={{ color: "#fadb14" }} />{" "}
+                          <span style={{ fontWeight: 600 }}>
+                            {Number(relatedItem.average_rating).toFixed(1)}
+                          </span>
+                          <span style={{ color: "#999" }}>
+                            {" "}
+                            ({relatedItem.review_count || 0})
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Price */}
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontWeight: "bold",
+                          color: "#52c41a",
+                          marginTop: "auto"
+                        }}
+                      >
+                        {formatVND(relatedItem.price)}
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+              ));
+              })()}
+            </Row>
+            
+            {/* Pagination */}
+            <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
+              <Pagination
+                current={relatedPage}
+                pageSize={relatedPageSize}
+                total={relatedItems.length}
+                onChange={(page) => {
+                  setRelatedPage(page);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                showSizeChanger={false}
+                showQuickJumper={false}
+              />
+            </div>
+            </>
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 20px",
+                color: "#999",
+                fontSize: 16,
+              }}
+            >
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🍽️</div>
+              <div>Các món ăn cùng loại không khả dụng</div>
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );

@@ -85,13 +85,14 @@ export default function AdminOrders() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [tableFilter, setTableFilter] = useState("");
-  const [timeFilter, setTimeFilter] = useState("today");
+  const [timeFilter, setTimeFilter] = useState("all");
   const [limit, setLimit] = useState(50);
 
   const [rejectingOrder, setRejectingOrder] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState({});
   const [viewingOrder, setViewingOrder] = useState(null);
+  const [orderSortBy, setOrderSortBy] = useState("created_desc");
 
   const waiterId = useMemo(() => getUserId(user), [user]);
 
@@ -192,81 +193,150 @@ export default function AdminOrders() {
     const query = searchText.trim().toLowerCase();
     const tableQuery = tableFilter.trim().toLowerCase();
 
+    // Determine time range based on filter
+    let startTime = null;
+    let endTime = null;
     const now = new Date();
-    const start = new Date(now);
+
     if (timeFilter === "today") {
-      start.setHours(0, 0, 0, 0);
+      // Today: from 00:00:00 to 23:59:59 today
+      startTime = new Date(now);
+      startTime.setHours(0, 0, 0, 0);
+      endTime = new Date(now);
+      endTime.setHours(23, 59, 59, 999);
     } else if (timeFilter === "yesterday") {
-      start.setDate(start.getDate() - 1);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      end.setHours(23, 59, 59, 999);
-
-      return orders
-        .filter((o) => {
-          if (activeTab !== "all" && o?.status !== activeTab) return false;
-
-          if (query) {
-            const orderNumber = (o?.order_number || "").toLowerCase();
-            const tableNumber = (o?.table?.table_number || "").toLowerCase();
-            if (!orderNumber.includes(query) && !tableNumber.includes(query)) {
-              return false;
-            }
-          }
-
-          if (tableQuery) {
-            const tableId = (o?.table?.id || "").toLowerCase();
-            const tableNumber = (o?.table?.table_number || "").toLowerCase();
-            if (!tableId.includes(tableQuery) && !tableNumber.includes(tableQuery)) {
-              return false;
-            }
-          }
-
-          const createdAt = o?.created_at ? new Date(o.created_at) : null;
-          if (!createdAt || Number.isNaN(createdAt.getTime())) return true;
-          return createdAt >= start && createdAt <= end;
-        })
-        .sort((a, b) => {
-          const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0;
-          const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0;
-          return bTime - aTime;
-        });
+      // Yesterday: from 00:00:00 to 23:59:59 yesterday
+      startTime = new Date(now);
+      startTime.setDate(startTime.getDate() - 1);
+      startTime.setHours(0, 0, 0, 0);
+      endTime = new Date(startTime);
+      endTime.setHours(23, 59, 59, 999);
+    } else if (timeFilter === "week") {
+      // Last 7 days
+      startTime = new Date(now);
+      startTime.setDate(startTime.getDate() - 7);
+      startTime.setHours(0, 0, 0, 0);
+      endTime = new Date(now);
+      endTime.setHours(23, 59, 59, 999);
+    } else if (timeFilter === "month") {
+      // Last 30 days
+      startTime = new Date(now);
+      startTime.setDate(startTime.getDate() - 30);
+      startTime.setHours(0, 0, 0, 0);
+      endTime = new Date(now);
+      endTime.setHours(23, 59, 59, 999);
     }
+    // else timeFilter === "all": no time restriction
 
-    if (timeFilter === "week") start.setDate(start.getDate() - 7);
-    if (timeFilter === "month") start.setDate(start.getDate() - 30);
-    if (timeFilter === "all") start.setTime(0);
+    // Filter orders
+    const filtered = orders.filter((o) => {
+      // Filter by status tab
+      if (activeTab !== "all" && o?.status !== activeTab) return false;
 
-    return orders
-      .filter((o) => {
-        if (activeTab !== "all" && o?.status !== activeTab) return false;
-
-        if (query) {
-          const orderNumber = (o?.order_number || "").toLowerCase();
-          const tableNumber = (o?.table?.table_number || "").toLowerCase();
-          if (!orderNumber.includes(query) && !tableNumber.includes(query)) {
-            return false;
-          }
+      // Filter by search text (order number or table number)
+      if (query) {
+        const orderNumber = (o?.order_number || "").toLowerCase();
+        const tableNumber = (o?.table?.table_number || "").toLowerCase();
+        if (!orderNumber.includes(query) && !tableNumber.includes(query)) {
+          return false;
         }
+      }
 
-        if (tableQuery) {
-          const tableId = (o?.table?.id || "").toLowerCase();
-          const tableNumber = (o?.table?.table_number || "").toLowerCase();
-          if (!tableId.includes(tableQuery) && !tableNumber.includes(tableQuery)) {
-            return false;
-          }
+      // Filter by table
+      if (tableQuery) {
+        const tableId = (o?.table?.id || "").toLowerCase();
+        const tableNumber = (o?.table?.table_number || "").toLowerCase();
+        if (!tableId.includes(tableQuery) && !tableNumber.includes(tableQuery)) {
+          return false;
         }
+      }
 
-        const createdAt = o?.created_at ? new Date(o.created_at) : null;
-        if (!createdAt || Number.isNaN(createdAt.getTime())) return true;
-        return createdAt >= start;
-      })
-      .sort((a, b) => {
-        const aTime = a?.created_at ? new Date(a.created_at).getTime() : 0;
-        const bTime = b?.created_at ? new Date(b.created_at).getTime() : 0;
-        return bTime - aTime;
-      });
-  }, [activeTab, orders, searchText, tableFilter, timeFilter]);
+      // Filter by time range
+      if (startTime && endTime) {
+        // Support both createdAt (camelCase) and created_at (snake_case)
+        const createdAtValue = o?.createdAt || o?.created_at;
+        const createdAt = createdAtValue ? new Date(createdAtValue) : null;
+        
+        // If no valid created_at, exclude from specific time filters
+        if (!createdAt || Number.isNaN(createdAt.getTime())) {
+          return false;
+        }
+        return createdAt >= startTime && createdAt <= endTime;
+      }
+
+      // For "all" filter or when no time filter, include all orders
+      return true;
+    });
+
+    // Sort filtered orders
+    return filtered.sort((a, b) => {
+      switch (orderSortBy) {
+        case "created_asc":
+          // Oldest first - support both createdAt and created_at
+          return new Date(a.createdAt || a.created_at || 0) - new Date(b.createdAt || b.created_at || 0);
+        case "created_desc":
+          // Newest first - support both createdAt and created_at
+          return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
+        case "price_asc":
+          // Price: Low to High
+          return (Number(a.total_amount) || 0) - (Number(b.total_amount) || 0);
+        case "price_desc":
+          // Price: High to Low
+          return (Number(b.total_amount) || 0) - (Number(a.total_amount) || 0);
+        case "popularity": {
+          // Sort by frequency of items across all orders
+          // Count how many times each item appears in all orders
+          const itemFrequency = {};
+          filtered.forEach(order => {
+            const items = Array.isArray(order.items) ? order.items : [];
+            items.forEach(item => {
+              const itemName = item?.item_name || item?.menuItem?.name || '';
+              if (itemName) {
+                itemFrequency[itemName] = (itemFrequency[itemName] || 0) + 1;
+              }
+            });
+          });
+          
+          // Get the most frequently ordered item in each order
+          const getMostFrequentItem = (order) => {
+            const items = Array.isArray(order.items) ? order.items : [];
+            if (items.length === 0) return { name: '', frequency: 0 };
+            
+            let mostFrequent = items[0];
+            let maxFreq = itemFrequency[mostFrequent?.item_name || mostFrequent?.menuItem?.name || ''] || 0;
+            
+            for (const item of items) {
+              const itemName = item?.item_name || item?.menuItem?.name || '';
+              const freq = itemFrequency[itemName] || 0;
+              if (freq > maxFreq) {
+                maxFreq = freq;
+                mostFrequent = item;
+              }
+            }
+            
+            return {
+              name: mostFrequent?.item_name || mostFrequent?.menuItem?.name || '',
+              frequency: maxFreq
+            };
+          };
+          
+          const itemA = getMostFrequentItem(a);
+          const itemB = getMostFrequentItem(b);
+          
+          // First sort by frequency (highest first)
+          if (itemB.frequency !== itemA.frequency) {
+            return itemB.frequency - itemA.frequency;
+          }
+          
+          // Then sort by item name to group same items together
+          return itemA.name.localeCompare(itemB.name);
+        }
+        default:
+          // Default: newest first
+          return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
+      }
+    });
+  }, [activeTab, orders, searchText, tableFilter, timeFilter, orderSortBy]);
 
   const columns = useMemo(
     () => [
@@ -547,6 +617,19 @@ export default function AdminOrders() {
             ]}
             style={{ width: 140 }}
           />
+
+          <Select
+            value={orderSortBy}
+            onChange={setOrderSortBy}
+            style={{ width: 200 }}
+            placeholder="Sort by"
+          >
+            <Select.Option value="created_desc">Newest First</Select.Option>
+            <Select.Option value="created_asc">Oldest First</Select.Option>
+            <Select.Option value="price_desc">Price: High to Low</Select.Option>
+            <Select.Option value="price_asc">Price: Low to High</Select.Option>
+            <Select.Option value="popularity">Popularity</Select.Option>
+          </Select>
         </div>
 
         <Table

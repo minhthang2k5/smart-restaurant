@@ -108,12 +108,7 @@ export default function Menu() {
         params.sortBy = currentSort;
       }
       
-      console.log('🔍 Fetching menu with params:', params);
-      console.log('📊 Current sortBy value:', currentSort);
-      
-      const response = await menuService.getPublicMenu(params);
-      console.log('✅ API Response:', response.data);
-      console.log('📦 Items count:', response.data?.items?.length);
+const response = await menuService.getPublicMenu(params);
       
       // Backend returns { data: { categories, items } }
       setCategories(response.data?.categories || []);

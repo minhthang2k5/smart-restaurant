@@ -22,8 +22,6 @@ const BulkRegenerateButton = ({ tableCount, onSuccess }) => {
     try {
       const response = await tableService.regenerateAllQR(true);
 
-      console.log("Regenerate Response:", response); // Debug log
-
       // api.js interceptor returns response.data, so response is already the backend's response body
       // Backend format: { status: "success", data: { summary, affectedTables } }
       if (response && response.status === "success") {
