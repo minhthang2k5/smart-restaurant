@@ -3,8 +3,17 @@ import customerApi from "./customerApi";
 /**
  * Get all reviews for a menu item (public)
  */
-export const getItemReviews = async (itemId) => {
-  return customerApi.get(`/menu-items/${itemId}/reviews`);
+export const getItemReviews = async (itemId, params = {}) => {
+  const queryParams = new URLSearchParams();
+  
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.sort) queryParams.append('sort', params.sort);
+  
+  const queryString = queryParams.toString();
+  const url = `/menu-items/${itemId}/reviews${queryString ? `?${queryString}` : ''}`;
+  
+  return customerApi.get(url);
 };
 
 /**

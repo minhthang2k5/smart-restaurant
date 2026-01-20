@@ -13,6 +13,7 @@ import {
   Input,
   Space,
   Tag,
+  Pagination,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -37,6 +38,10 @@ export default function Reviews() {
   const [loading, setLoading] = useState(true);
   const [reviewableSessions, setReviewableSessions] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
+  
+  // Pagination for My Reviews
+  const [myReviewsPage, setMyReviewsPage] = useState(1);
+  const [myReviewsPageSize] = useState(5);
   
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -233,24 +238,28 @@ export default function Reviews() {
         {myReviews.length === 0 ? (
           <Empty description="You haven't written any reviews yet" />
         ) : (
-          <List
-            dataSource={myReviews}
-            renderItem={(review) => (
-              <List.Item
-                key={review.id}
-                actions={[
-                  <Button
-                    key="delete"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleDeleteReview(review.id)}
-                  >
-                    Delete
-                  </Button>,
-                ]}
-              >
-                <List.Item.Meta
-                  title={
+          <>
+            <List
+              dataSource={myReviews.slice(
+                (myReviewsPage - 1) * myReviewsPageSize,
+                myReviewsPage * myReviewsPageSize
+              )}
+              renderItem={(review) => (
+                <List.Item
+                  key={review.id}
+                  actions={[
+                    <Button
+                      key="delete"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleDeleteReview(review.id)}
+                    >
+                      Delete
+                    </Button>,
+                  ]}
+                >
+                  <List.Item.Meta
+                    title={
                     <Space>
                       <Rate disabled value={review.rating} />
                       <Text strong>{review.menuItem?.name || "Unknown"}</Text>
@@ -270,6 +279,21 @@ export default function Reviews() {
               </List.Item>
             )}
           />
+          {myReviews.length > myReviewsPageSize && (
+            <div style={{ marginTop: 16, textAlign: "center" }}>
+              <Pagination
+                current={myReviewsPage}
+                pageSize={myReviewsPageSize}
+                total={myReviews.length}
+                onChange={(page) => setMyReviewsPage(page)}
+                showSizeChanger={false}
+                showTotal={(total, range) =>
+                  `${range[0]}-${range[1]} of ${total} reviews`
+                }
+              />
+            </div>
+          )}
+          </>
         )}
       </Card>
 

@@ -3,6 +3,7 @@ import {
   ShoppingCartOutlined,
   FileTextOutlined,
   UserOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 import CustomerBottomNavItem from "./CustomerBottomNavItem";
 import "../../styles/customerBottomNav.css";
@@ -25,6 +26,11 @@ export default function CustomerBottomNav() {
           to="/orders"
           label="Orders"
           icon={<FileTextOutlined />}
+        />
+        <CustomerBottomNavItem
+          to="/customer/reviews"
+          label="Reviews"
+          icon={<StarOutlined />}
         />
         <CustomerBottomNavItem
           to="/customer/profile"
