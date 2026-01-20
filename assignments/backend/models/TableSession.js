@@ -146,6 +146,11 @@ const TableSession = sequelize.define(
             allowNull: true,
             comment: "Special notes about this session",
         },
+        bill_requested_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            comment: "Timestamp when customer requested bill preview - NULL when cleared by waiter",
+        },
     },
     {
         tableName: "table_sessions",
