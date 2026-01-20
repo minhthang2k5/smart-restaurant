@@ -8,7 +8,6 @@ import {
   Col,
   Card,
   Input,
-  Segmented,
   Tag,
   Space,
   Empty,
@@ -25,6 +24,8 @@ import {
   CheckCircleOutlined,
   LeftOutlined,
   RightOutlined,
+  FireOutlined,
+  SortAscendingOutlined,
 } from "@ant-design/icons";
 import * as menuService from "../../services/menuService";
 import * as cartService from "../../services/cartService";
@@ -88,12 +89,32 @@ export default function Menu() {
     }
   };
 
-  const fetchCategories = async () => {
+  // Filters from URL
+  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  const [sortBy, setSortBy] = useState("default");
+
+  const fetchCategories = async (currentSort) => {
     try {
       setLoading(true);
-      const response = await menuService.getPublicMenu({
+      const params = {
         status: "available", // Only show available items
-      });
+      };
+      
+      // Add sortBy if not default
+      if (currentSort !== "default") {
+        params.sortBy = currentSort;
+      }
+      
+      console.log('🔍 Fetching menu with params:', params);
+      console.log('📊 Current sortBy value:', currentSort);
+      
+      const response = await menuService.getPublicMenu(params);
+      console.log('✅ API Response:', response.data);
+      console.log('📦 Items count:', response.data?.items?.length);
+      
       // Backend returns { data: { categories, items } }
       setCategories(response.data?.categories || []);
       setItems(response.data?.items || []);
@@ -105,16 +126,11 @@ export default function Menu() {
     }
   };
 
-  // Filters from URL
-  const [search, setSearch] = useState(searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || "all"
-  );
-
-  // Fetch data on mount
+  // Fetch data on mount and when sortBy changes
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    console.log('🔄 useEffect triggered, sortBy:', sortBy);
+    fetchCategories(sortBy);
+  }, [sortBy]);
 
   // Update URL when filters change
   useEffect(() => {
@@ -379,6 +395,96 @@ export default function Menu() {
               allowClear
               size="middle"
             />
+
+            {/* Sort Options */}
+            <div>
+              <div style={{ marginBottom: 10, fontWeight: 500, fontSize: 14 }}>
+                <SortAscendingOutlined /> Sort by:
+              </div>
+              <div 
+                style={{ 
+                  display: "flex", 
+                  gap: 6,
+                  overflowX: "auto",
+                  overflowY: "hidden",
+                  paddingBottom: 6,
+                  scrollbarWidth: "thin",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                <Button
+                  type={sortBy === "default" ? "primary" : "default"}
+                  size="middle"
+                  onClick={() => setSortBy("default")}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 90,
+                    height: 40,
+                    fontSize: 14,
+                    fontWeight: sortBy === "default" ? 600 : 400
+                  }}
+                >
+                  Default
+                </Button>
+                <Button
+                  type={sortBy === "popularity" ? "primary" : "default"}
+                  size="middle"
+                  onClick={() => setSortBy("popularity")}
+                  icon={<FireOutlined />}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 110,
+                    height: 40,
+                    fontSize: 14,
+                    fontWeight: sortBy === "popularity" ? 600 : 400
+                  }}
+                >
+                  Popular
+                </Button>
+                <Button
+                  type={sortBy === "price_asc" ? "primary" : "default"}
+                  size="middle"
+                  onClick={() => setSortBy("price_asc")}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 130,
+                    height: 40,
+                    fontSize: 14,
+                    fontWeight: sortBy === "price_asc" ? 600 : 400
+                  }}
+                >
+                  Price: Low-High
+                </Button>
+                <Button
+                  type={sortBy === "price_desc" ? "primary" : "default"}
+                  size="middle"
+                  onClick={() => setSortBy("price_desc")}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 130,
+                    height: 40,
+                    fontSize: 14,
+                    fontWeight: sortBy === "price_desc" ? 600 : 400
+                  }}
+                >
+                  Price: High-Low
+                </Button>
+                <Button
+                  type={sortBy === "newest" ? "primary" : "default"}
+                  size="middle"
+                  onClick={() => setSortBy("newest")}
+                  style={{
+                    flexShrink: 0,
+                    minWidth: 90,
+                    height: 40,
+                    fontSize: 14,
+                    fontWeight: sortBy === "newest" ? 600 : 400
+                  }}
+                >
+                  Newest
+                </Button>
+              </div>
+            </div>
 
             {/* Category Filter */}
             <div>

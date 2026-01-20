@@ -61,8 +61,49 @@ exports.verifyAndGetMenu = async (req, res) => {
 
 exports.getPublicMenu = async (req, res) => {
   try {
-    const { categoryId, search, chefRecommended } = req.query;
+    const { categoryId, search, chefRecommended, sortBy } = req.query;
+    
+    console.log('📥 getPublicMenu called with query:', req.query);
+    console.log('🔧 sortBy param:', sortBy);
 
+    // If sortBy is 'popularity', use the specialized service
+    if (sortBy === 'popularity') {
+      const filters = {
+        category_id: categoryId,
+        name: search,
+        status: 'available',
+      };
+
+      // Add chef recommended filter if specified
+      if (chefRecommended === 'true') {
+        filters.is_chef_recommended = true;
+      }
+
+      const options = {
+        order: 'DESC', // Most popular first
+        page: 1,
+        limit: 1000, // Get all for frontend filtering
+      };
+
+      const result = await menuItemService.getItemsByPopularity(filters, options);
+      
+      // Get categories
+      const categories = await MenuCategory.findAll({
+        where: { status: 'active' },
+        attributes: ['id', 'name', 'description', 'display_order'],
+        order: [['display_order', 'ASC']],
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          categories,
+          items: result.items,
+        },
+      });
+    }
+
+    // Original logic for other sort options
     // Build where conditions
     const itemWhere = {
       status: 'available',
@@ -92,6 +133,16 @@ exports.getPublicMenu = async (req, res) => {
       order: [['display_order', 'ASC']],
     });
 
+    // Determine sort order
+    let orderBy = [['name', 'ASC']]; // Default
+    if (sortBy === 'price_asc') {
+      orderBy = [['price', 'ASC']];
+    } else if (sortBy === 'price_desc') {
+      orderBy = [['price', 'DESC']];
+    } else if (sortBy === 'newest') {
+      orderBy = [['created_at', 'DESC']];
+    }
+
     // Get available items with photos
     const items = await MenuItem.findAll({
       where: itemWhere,
@@ -120,7 +171,7 @@ exports.getPublicMenu = async (req, res) => {
           order: [['is_primary', 'DESC']],
         },
       ],
-      order: [['name', 'ASC']],
+      order: orderBy,
     });
 
     res.json({
